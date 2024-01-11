@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('rule_id')->references('id')->on('rules')->default(0)->require()->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('name')->require();
-            $table->string('phone')->require();
-            $table->string('email')->unique()->require();            
-            $table->string('unique_token')->unique()->require();            
+            $table->string('last_name')->nullable();
+            $table->string('phone')->require()->uniqid();
+            $table->string('email')->unique()->require();
+            $table->string('unique_token')->unique()->require();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

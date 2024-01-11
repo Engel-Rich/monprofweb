@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Matieres extends Model
 {
     use HasFactory;
+
+    protected $fillable = ["libelle", "description","app_name"];
 }

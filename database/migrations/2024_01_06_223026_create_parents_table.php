@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('parents', function (Blueprint $table) {
             $table->id();
-            $table->string('profession');
-            $table->string('sexe');
+            $table->string('profession')->nullable();
+            $table->string('sexe')->nullable();
             $table->foreignIdFor(User::class)->unique()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();
         });

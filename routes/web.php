@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Web\ClasseController;
+use App\Http\Controllers\Web\MatieresController;
+use App\Http\Controllers\Web\ProfesseursController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,5 +17,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('index');
+})->name('index');
+Route::resource('classe', ClasseController::class);
+Route::resource('matiere', MatieresController::class);
+Route::resource('professeur', ProfesseursController::class);

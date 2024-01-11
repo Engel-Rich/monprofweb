@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('classes', function (Blueprint $table) {
+        Schema::create('rules', function (Blueprint $table) {
             $table->id();
-            $table->string('libelle')->unique();
-            $table->string('short_name');
-            $table->string('description')->nullable();
+            $table->string('name')->require();
+            $table->string('description')->nullable()->default('Description pour les accès du role');
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('classes');
+        Schema::dropIfExists('roles');
     }
 };

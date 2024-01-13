@@ -27,13 +27,15 @@ class UserValidateRequest extends FormRequest
             'name'=> 'required|max:50',
             'last_name'=> 'nullable|max:30',
             'phone'=> 'required|max:14',                
+            'email'=> 'required|email',                
+            'password'=> 'required|min:4',                
         ];
     }
 
     protected function prepareForValidation()
     {
         $this->merge([
-            'rule_id'=>0
+            'rule_id'=>1
         ]);
     }
 }

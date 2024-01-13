@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\MatieresController;
 use App\Http\Controllers\Web\ProfesseursController;
+use App\Http\Controllers\Web\Usercontroller;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,9 +17,24 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('index');
-})->name('index');
-Route::resource('classe', ClasseController::class);
-Route::resource('matiere', MatieresController::class);
-Route::resource('professeur', ProfesseursController::class);
+
+
+/// Secure routes
+Route::middleware('auth')->group(function () {
+    Route::get('/', function () {
+        return view('index');
+    })->name('index');
+    Route::resource('classe', ClasseController::class);
+    Route::resource('matiere', MatieresController::class);
+    Route::resource('professeur', ProfesseursController::class);
+    Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
+});
+
+/// Lgin and Register routes 
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [Usercontroller::class, 'login'])->name('auth.login');
+    Route::get('/register', [Usercontroller::class, 'register'])->name('auth.register');
+    Route::post('/register', [Usercontroller::class, 'store'])->name('auth.store');
+    Route::post('/login', [Usercontroller::class, 'signIn'])->name('auth.signin');
+});

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\ClasseController;
+use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
 use App\Http\Controllers\Web\ProfesseursController;
 use App\Http\Controllers\Web\Usercontroller;
@@ -26,6 +27,7 @@ Route::middleware('auth')->group(function () {
     })->name('index');
     Route::resource('classe', ClasseController::class);
     Route::resource('matiere', MatieresController::class);
+    Route::get('/eleves', [EleveController::class, 'index'])->name('eleve.index');
     Route::resource('professeur', ProfesseursController::class);
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
 });

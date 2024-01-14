@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Eleve;
 use Illuminate\Http\Request;
 
 class EleveController extends Controller
@@ -12,7 +13,8 @@ class EleveController extends Controller
      */
     public function index()
     {
-        //
+        $matieres = Eleve::with('classe')-> paginate(20);
+        return view('screen.eleve.index_eleve', ['eleves' =>$matieres],);
     }
 
     /**

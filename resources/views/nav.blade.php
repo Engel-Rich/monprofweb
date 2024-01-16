@@ -28,6 +28,13 @@
                     </li>
                     <li>
                         <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Cours</span></a>
+                    </li>
+                    <li>
+                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>                    </li>
+                    <li>                        
+                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Catégories</span></a>
                     </li>
                     {{-- Paiments --}}
@@ -40,6 +47,24 @@
                             </li>
                             <li>
                                 <a href="{{route('matiere.index')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Terminés</span> 2</a>
+                            </li>                           
+                        </ul>
+                    </li>
+
+                    {{-- Codes des élèves --}}
+
+                    <li>
+                        <a href="#submenu3" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-grid"></i> <span class="ms-1 d-none d-sm-inline">Codes</span> </a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu3" data-bs-parent="#menu">
+                            <li class="w-100">
+                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Tous les Codes</span></a>
+                            </li>
+                            <li class="w-100">
+                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Utilisés</span> </a>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Non utilisé</span></a>
                             </li>                           
                         </ul>
                     </li>
@@ -65,7 +90,7 @@
                 <div class="dropdown pb-4">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="https://www.monprof.com/images/france/logo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
-                        <span class="d-none d-sm-inline mx-1">loser</span>
+                        <span class="d-none d-sm-inline mx-1">Autres</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark text-small shadow">                      
                         <li><a class="dropdown-item" href="#">Profile</a></li>

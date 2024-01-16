@@ -36,7 +36,7 @@
             @foreach ($eleves as $eleve)
                 <tr>
                     <th scope="row">{{ $eleve->id }}</th>
-                    {{-- <td>{{$matiere->libelle  }}</td>                 --}}
+                    {{-- <td>{{$matiere->libelle  }}</td> --}}
                     <td>{{ 'prenom' }}</td>
                     <td>{{ 'Téléphone' }}</td>
                     <td>{{ 'email' }}</td>

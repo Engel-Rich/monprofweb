@@ -5,19 +5,20 @@
     <form action="" class="form">
         <div class="row">
 
-            <div class="col-md-3">
-                <h1 class="display-5">Elèves </h1>
+            <div class="col-md-3 d-flex align-content-center">
+                <h1 class="display-5">Enseignants </h1>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <input type="text" class="form-control", placeholder="Recherche">
             </div>
             <div class="col-md-3">
                 <button class="btn btn-outline-primary" type="submit">Rechercher</button>
             </div>
-
+            <div class="col-md-3">
+                <a href="{{route('professeur.create')}}"  class="btn btn-outline-primary" >Ajouter un Prof </a>
+            </div>
         </div>
     </form>
-
 
     <table class="table">
         <thead>
@@ -26,23 +27,18 @@
                 <th scope="col" class="display-7 fw-bold">Prénom</th>
                 <th scope="col" class="display-7 fw-bold">Téléphone</th>
                 <th scope="col" class="display-7 fw-bold">Email</th>
-                <th scope="col" class="display-7 fw-bold">Etablissement</th>
-                <th scope="col" class="display-7 fw-bold">Classe</th>
-                <th scope="col" class="display-7 fw-bold">Sexe</th>
+                <th scope="col" class="display-7 fw-bold">Matieres de base</th>
                 <th scope="col" class="display-7 fw-bold">Action</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($eleves as $eleve)
+            @foreach ($profs as $prof)
                 <tr>
-                    <th scope="row">{{ $eleve->user->name }}</th>
-                    {{-- <td>{{$matiere->libelle  }}</td> --}}
-                    <td>{{ $eleve->user->last_name }}</td>
-                    <td>{{ $eleve->user->phone }}</td>
-                    <td>{{ $eleve->user->email }}</td>
-                    <td>{{ $eleve->etablissement }}</td>
-                    <td>{{ $eleve->classe->libelle }}</td>
-                    <td>{{ $eleve->sexe }}</td>
+                    <th scope="row">{{ $prof->user->name }}</th>
+                    <td>{{ $prof->user->last_name }}</td>
+                    <td>{{ $prof->user->phone }}</td>
+                    <td>{{ $prof->user->email }}</td>
+                    <td>{{ $prof->matiere->libelle }}</td>
                     <td><a href="{{ route('matiere.create') }}">modifier</a></td>
                     {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
                 </tr>

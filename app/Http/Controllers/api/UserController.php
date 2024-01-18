@@ -22,6 +22,10 @@ class UserController extends Controller
     /* Display a listing of the resource.
      */
 
+     public function getUserByID(Request $request)  {
+         
+     }
+
     /**
      * Show the form for creating a new resource.
      */

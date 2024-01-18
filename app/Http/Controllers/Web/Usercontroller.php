@@ -79,7 +79,7 @@ class Usercontroller extends Controller
             }
             return to_route('auth.register')->withErrors([])->onlyInput('email', 'name', 'last_name', 'phone');
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             return to_route('auth.register')->withErrors(['error' => $th->getMessage()])->onlyInput('email', 'name', 'last_name', 'phone');
         }
     }

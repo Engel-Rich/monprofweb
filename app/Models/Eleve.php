@@ -14,4 +14,14 @@ class Eleve extends Model
     public function classe():BelongsTo{
         return $this->belongsTo(Classe::class);
     }
+    /**
+         * Get the user that owns the Eleve
+         *
+         * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+         */
+        public function user(): BelongsTo
+        {
+            return $this->belongsTo(User::class);
+        }
+    
 }

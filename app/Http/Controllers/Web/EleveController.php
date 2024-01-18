@@ -13,7 +13,8 @@ class EleveController extends Controller
      */
     public function index()
     {
-        $matieres = Eleve::with('classe')-> paginate(20);
+        $matieres = Eleve::with('classe', 'user')-> paginate(20);
+        // dd($matieres);
         return view('screen.eleve.index_eleve', ['eleves' =>$matieres],);
     }
 

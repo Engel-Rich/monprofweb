@@ -59,7 +59,7 @@ class User extends Authenticatable implements JWTSubject
         return ['email' => $this->email, 'name' => $this->name,];
     }
 
-    public function eleve():BelongsTo{
-        return $this->belongsTo(Eleve::class);
-    }
+    // public function eleve():BelongsTo{
+    //     return $this->belongsTo(Eleve::class);
+    // }
 }

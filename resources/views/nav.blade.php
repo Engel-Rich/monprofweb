@@ -18,6 +18,10 @@
                         <a href="{{route('matiere.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Matières</span></a>
                     </li>
+                    <li>                        
+                        <a href="{{route('categorie.index')}}" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Catégories</span></a>
+                    </li>
                     <li>
                         <a href="{{route('eleve.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Elèves</span></a>
@@ -27,16 +31,13 @@
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Enseignants</span></a>
                     </li>
                     <li>
-                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
+                        <a href="{{route('cours.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Cours</span></a>
                     </li>
                     <li>
                         <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>                    </li>
-                    <li>                        
-                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Catégories</span></a>
-                    </li>
+                    
                     {{-- Paiments --}}
                     <li>
                         <a href="#submenu3" data-bs-toggle="collapse" class="nav-link px-0 align-middle">

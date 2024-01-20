@@ -11,7 +11,7 @@ class CategorieValidateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class CategorieValidateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'libelle'=>'required|max:20',
+            'description'=>'nullable|string',
         ];
     }
 }

@@ -11,7 +11,7 @@ class CoursValidateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class CoursValidateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "libelle" => 'string|required',
+            "description" => 'string|required',
+            'video' => 'required|file|mimetypes:video/*',
+            'classe_id'=>'required|exists:classes,id',
+            'matieres_id'=>'required|exists:matieres,id',
+            'categorie_id'=>'required|exists:categories,id'
         ];
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
+use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
 use App\Http\Controllers\Web\ProfesseursController;
@@ -29,6 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('matiere', MatieresController::class);
     Route::get('/eleves', [EleveController::class, 'index'])->name('eleve.index');
     Route::resource('professeur', ProfesseursController::class);
+    Route::resource('categorie', CategoriController::class);
+    Route::resource('cours', CoursController::class);
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
 });
 

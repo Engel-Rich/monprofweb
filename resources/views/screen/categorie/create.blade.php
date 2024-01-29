@@ -12,11 +12,16 @@
                         <label for="libelle" class="form-label fw-bold">Nom de la catégorie</label>
                         <input type="text" class="form-control" id="libelle" aria-describedby="classe_name" name="libelle" required>
                         <div id="libelle" class="form-text">Entrer le nom de la catégorie.</div>
-                    </div>                    
+                    </div>   
+                    <div class="mb-3">                        
+                        <label class="form-label fw-bold" for="prix">Prix de la catégorie</label>
+                        <input type="number" class="form-control" id="prix" name="prix" required>
+                    </div>                 
                     <div class="mb-3">                        
                         <label class="form-label fw-bold" for="description">Description de la catégorie</label>
                         <input type="text" class="form-control" id="description" name="description">
                     </div>
+                    
                     <button type="submit" class="btn btn-outline-primary px-5">Submit</button>
                 </form>
 

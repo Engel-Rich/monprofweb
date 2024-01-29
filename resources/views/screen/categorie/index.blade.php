@@ -18,6 +18,7 @@
             <tr>
                 <th scope="col" class="display-7 fw-bold">Nom de la catégorie</th>                
                 <th scope="col" class="display-7 fw-bold">Description</th>
+                <th scope="col" class="display-7 fw-bold">Prix</th>
                 <th scope="col" class="display-7 fw-bold">Action</th>
             </tr>
         </thead>
@@ -25,8 +26,9 @@
             @foreach ($categories as $cat)
             <tr>
                 <th scope="row">{{$cat->libelle }}</th>                
-                <td>{{ $cat->description }}</td>
-                <td><a href="{{route('categorie.create')}}">modifier</a></td>
+                <td><strong> {{ $cat->prix }} XAF</strong> </td>
+                <td>{{ $cat->description }}</td>                
+                <td><a href="{{route('categorie.create')}}">Modifier</a></td>
             </tr>
             @endforeach                            
         </tbody>

@@ -3,16 +3,27 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Classe;
 use Illuminate\Http\Request;
 
 class ClasseController extends Controller
 {
+
+    public function __construct()
+    {
+        // $this->middleware('auth:api');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        try {            
+        $classe= Classe::all();
+        return response()->json(['status' => true,'data'=>$classe,], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
+use App\Http\Controllers\web\PaiementsController;
 use App\Http\Controllers\Web\ProfesseursController;
 use App\Http\Controllers\Web\Usercontroller;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('professeur', ProfesseursController::class);
     Route::resource('categorie', CategoriController::class);
     Route::resource('cours', CoursController::class);
+    Route::resource('paiements', PaiementsController::class)->except(['store','create']);
+    Route::controller(PaiementsController::class);    
+    Route::get('/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');    
+    Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
 });
 

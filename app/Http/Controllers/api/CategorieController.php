@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Matieres;
+use App\Models\Categorie;
 use Illuminate\Http\Request;
 
-class MatiereController extends Controller
+class CategorieController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class MatiereController extends Controller
     public function index()
     {
         try {            
-            $classe= Matieres::all();
+            $classe= Categorie::all();
             return response()->json(['status' => true,'data'=>$classe,], 200);
             } catch (\Throwable $th) {
                 return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);

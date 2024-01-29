@@ -3,22 +3,18 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Matieres;
+use App\Models\Categorie;
+use App\Models\Paiements;
 use Illuminate\Http\Request;
 
-class MatiereController extends Controller
+class PaiementsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        try {            
-            $classe= Matieres::all();
-            return response()->json(['status' => true,'data'=>$classe,], 200);
-            } catch (\Throwable $th) {
-                return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);
-            }
+        //
     }
 
     /**
@@ -34,7 +30,22 @@ class MatiereController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $request->validate([
+                'user_id' => 'integer|required|exists:users,id',
+                'categorie_id' => 'integer|required|exists:categories,id',
+                'nombre_de_code' => 'integer|required',
+                'numero_payeur' => 'required',
+                'numero_client' => 'required',
+            ]);
+            $categorie =  Categorie::find($request->categorie_id);
+            $data = $request->all();
+            $data['montant'] = $categorie->prix * $request->nombre_de_code;
+            $paiment = Paiements::create($data);
+            return response()->json(['status' => true, 'data' => $paiment], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'data' => null, "error" => $th->getMessage()]);
+        }
     }
 
     /**

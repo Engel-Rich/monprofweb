@@ -49,7 +49,7 @@ class ProfesseursController extends Controller
                 'password' => 'required|min:4',
             ]);
             $userData = [
-                'rule_id' => 1,
+                'rule_id' => 3,
                 'name' => $request->name,
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,

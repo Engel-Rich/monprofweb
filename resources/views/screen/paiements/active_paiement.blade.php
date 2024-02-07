@@ -9,7 +9,7 @@
     </div>
 
     @error('error')
-    <div class="m-3 text-danger display-6" >
+    <div class="m-3 text-danger text-small" >
         {{ $message }}
     </div>
 @enderror
@@ -56,7 +56,7 @@
             {{-- @if ($paie->status == 1) --}}
                 <tr>
                     <td scope="col" class="display-7 text-secondary border border-solid">Date de Validation</td>
-                    <th scope="col">{{  DateTime::createFromFormat('Y-m-d H:i:s',$paie->paiement_date)->format('D d M Y - H:m')}}</th>
+                        <th scope="col">{{ $paie->paiement_date !=null? DateTime::createFromFormat('Y-m-d H:i:s',$paie->paiement_date)->format('D d M Y H:m') : '/'}}</th>
                 </tr>
             {{-- @endif --}}
         </tbody>

@@ -34,7 +34,8 @@ class UserController extends Controller
         try {
             $request->validate([
                 'email' => 'email|required',
-                'password' => 'required|min:4'
+                'password' => 'required|min:4',
+                'parent' =>'booleen|nullable'
             ]);
 
             $credential = ["email" => $request->email, 'password' => $request->password];

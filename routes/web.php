@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
+use App\Http\Controllers\web\CodesController;
 use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
@@ -34,9 +35,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('professeur', ProfesseursController::class);
     Route::resource('categorie', CategoriController::class);
     Route::resource('cours', CoursController::class);
-    Route::resource('paiements', PaiementsController::class)->except(['store','create']);
-    Route::controller(PaiementsController::class);    
-    Route::get('/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');    
+    Route::resource('paiements', PaiementsController::class)->only(['index']);
+    Route::prefix('/code')->group(function (){
+        Route::get('/{status}',[CodesController::class,'index'])->name('codes.index');
+    });    
+    Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');    
     Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
 });

@@ -51,13 +51,13 @@
                             <i class="fs-4 bi-grid"></i> <span class="ms-1 d-none d-sm-inline">Codes</span> </a>
                             <ul class="collapse nav flex-column ms-1" id="submenu3" data-bs-parent="#menu">
                             <li class="w-100">
-                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Tous les Codes</span></a>
+                                <a href="{{route('codes.index','all')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Tous les Codes</span></a>
                             </li>
                             <li class="w-100">
-                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Utilisés</span> </a>
+                                <a href="{{route('codes.index','actif')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Codes activés</span></a>
                             </li>
                             <li>
-                                <a href="#" class="nav-link px-0"> <span class="d-none d-sm-inline">Non utilisé</span></a>
+                                <a href="{{route('codes.index','inactif')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Codes non activés</span></a>
                             </li>                           
                         </ul>
                     </li>

@@ -6,9 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Categorie;
 use App\Models\Paiements;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaiementsController extends Controller
 {
+
+
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -32,14 +40,16 @@ class PaiementsController extends Controller
     {
         try {
             $request->validate([
-                'user_id' => 'integer|required|exists:users,id',
+                // 'user_id' => 'integer|required|exists:users,id',
                 'categorie_id' => 'integer|required|exists:categories,id',
                 'nombre_de_code' => 'integer|required',
                 'numero_payeur' => 'required',
                 'numero_client' => 'required',
             ]);
+            $user = Auth::user();
             $categorie =  Categorie::find($request->categorie_id);
             $data = $request->all();
+            $data['user_id'] = $user->id;
             $data['montant'] = $categorie->prix * $request->nombre_de_code;
             $paiment = Paiements::create($data);
             return response()->json(['status' => true, 'data' => $paiment], 200);

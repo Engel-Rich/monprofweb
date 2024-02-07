@@ -136,7 +136,11 @@ class PaiementsController extends Controller
         /**
          * @\Illuminate\Http\Client\Response
          */
-        $data = Http::withHeaders($headers)->get($url, $params);
+        try {
+            $data = Http::withHeaders($headers)->get($url, $params);
+        } catch (\Throwable $th) {
+            return ['error' => $th->getMessage()];
+        }
     }
 
     /**
@@ -161,7 +165,7 @@ class PaiementsController extends Controller
                 "quantite" => count($codes),
                 "file_link" => $fileUrl,
                 "to_email" => $user->email,
-                'from_name'=>"Monprof"
+                'from_name' => "Monprof"
             ];
             $parametter = array(
                 "service_id" => $serviceId,
@@ -181,7 +185,7 @@ class PaiementsController extends Controller
                 $data = Http::withHeaders($headers)->post($smtpUrl, $parametter);
                 // dd($data);
             } catch (\Throwable $th) {
-                return ['error' => 'Les codes ont été généré mais impossible d\'envoyer le mail'.$th->getMessage() ];
+                return ['error' => 'Les codes ont été généré mais impossible d\'envoyer le mail' . $th->getMessage()];
             }
 
             // $curl = curl_init($smtpUrl);
@@ -211,17 +215,17 @@ class PaiementsController extends Controller
             $fileName = 'codes/' . $user->name . now()->format('Ymd_His') . '.txt';
             // $cheminFichier = storage_path('app/' . $fileName);
             $contenu = "Date: " . now()->format('Y-m-d H:i:s') . "\n\n";
-            $contenu = $contenu."Nombre de code : " . $paie->nombre_de_code . "\n";
-            $contenu = $contenu."Montant du paiement: " . $paie->montant . "XAF \n";
-            $contenu = $contenu."Numéro débité " . $paie->numero_payeur . "\n";
-            $contenu = $contenu."Numéro à notifier " . $paie->numero_client . "\n\n";
-            $contenu = $contenu."Liste des codes. \n\n";
+            $contenu = $contenu . "Nombre de code : " . $paie->nombre_de_code . "\n";
+            $contenu = $contenu . "Montant du paiement: " . $paie->montant . "XAF \n";
+            $contenu = $contenu . "Numéro débité " . $paie->numero_payeur . "\n";
+            $contenu = $contenu . "Numéro à notifier " . $paie->numero_client . "\n\n";
+            $contenu = $contenu . "Liste des codes. \n\n";
             foreach ($codeList as $code => $valeur) {
                 $contenu .= "$code:    $valeur\n";
             }
-            $write = Storage::disk('public')->put($fileName,$contenu);           
+            $write = Storage::disk('public')->put($fileName, $contenu);
             if ($write) {
-                $urlFichier = url(Storage::url($fileName));                
+                $urlFichier = url(Storage::url($fileName));
                 return $urlFichier;
             } else {
                 File::delete($fileName);
@@ -248,7 +252,8 @@ class PaiementsController extends Controller
         if ($qte == 1) {
             $code = $this->saveOneCode($id);
             if ($code != null) {
-                $this->sendSMS($paie, code: $code);
+                $messageResponse = $this->sendSMS($paie, code: $code);
+                $error = $error == null ? $messageResponse : $error;
             } else {
                 $error = ['error' => 'Imposible de générer le code'];
             }
@@ -258,10 +263,12 @@ class PaiementsController extends Controller
                 $error = ['error' => 'Imposible de générer les codes'];
             } else {
                 $sendEmail =  $this->sendEmail($data, $paie, $user);
-                if ($sendEmail!=true) {
-                    $error =$sendEmail;
+                if ($sendEmail != true) {
+                    $error = $sendEmail;
                 }
-                $this->sendSMS($paie, message: "Vous venez d'activer " . $qte . " de codes chez MONPROF un mail a été envoyé à l'adresse" . $user->email . " contenant la liste de codes");
+                $messageResponse =     $this->sendSMS($paie, message: "Vous venez d'activer " . $qte . " de codes chez MONPROF un mail a été envoyé à l'adresse email " . $user->email . " contenant la liste de codes");
+                //    dd($messageResponse);
+                $error = $error == null ? $messageResponse : $error;
             }
         }
         if ($error == null) {
@@ -274,7 +281,7 @@ class PaiementsController extends Controller
 
             return redirect()->route('paiements.index');
         } else {
-            return redirect()->route('paiement.active', $paie->id)->withErrors($error);
+            return redirect()->back()->withErrors($error);
         }
     }
     /**

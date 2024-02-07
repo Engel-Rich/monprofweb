@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
-use App\Http\Controllers\web\CodesController;
+use App\Http\Controllers\Web\CodesController;
 use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
-use App\Http\Controllers\web\PaiementsController;
+use App\Http\Controllers\Web\PaiementsController;
 use App\Http\Controllers\Web\ProfesseursController;
 use App\Http\Controllers\Web\Usercontroller;
 use Illuminate\Support\Facades\Route;

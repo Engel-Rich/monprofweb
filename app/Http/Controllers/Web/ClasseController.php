@@ -25,8 +25,8 @@ class ClasseController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        return view('screen.classe.create');
+    {         
+        return view('screen.classe.create', ['classe'=> new Classe(),]);
     }
 
     /**
@@ -48,25 +48,36 @@ class ClasseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+    // public function show(string $id)
+    // {
+    //     $classe =  Classe::find($id);
+
+    // }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        //
+        $classe  = Classe::find($id);
+        return view('screen.classe.create', ['classe'=>$classe]);
+        
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ClasseValidateRequest $request, string $id)
     {
-        //
+        try {
+            
+        $classe = Classe::find($id);
+        $classe->fill($request->all())        ;
+        $classe->save();
+        return   redirect()->route('classe.index');
+        } catch (\Throwable $th) {
+            dd($th);
+        }
     }
 
     /**

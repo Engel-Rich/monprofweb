@@ -28,7 +28,7 @@
                 <th scope="row">{{$matiere->libelle  }}</th>
                 {{-- <td>{{$matiere->libelle  }}</td>                 --}}
                 <td>{{ $matiere->description }}</td>
-                <td><a href="{{route('matiere.create')}}">modifier</a></td>
+                <td><a href="{{route('matiere.edit', $matiere->id)}}">modifier</a></td>
                 <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td>
             </tr>
             @endforeach                            

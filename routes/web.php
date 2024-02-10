@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', function () {
         return view('index');
     })->name('index');
-    Route::resource('classe', ClasseController::class);
+    Route::resource('classe', ClasseController::class)->except(['show']);
     Route::resource('matiere', MatieresController::class);
     Route::get('/eleves', [EleveController::class, 'index'])->name('eleve.index');
     Route::resource('professeur', ProfesseursController::class);

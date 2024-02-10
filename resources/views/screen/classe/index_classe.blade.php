@@ -29,7 +29,7 @@
                 {{-- <td>{{$classe->libelle  }}</td> --}}
                 <td>{{ $classe->short_name }}</td>
                 <td>{{ $classe->description }}</td>
-                <td><a href="{{route('classe.create')}}">modifier</a></td>
+                <td><a href="{{route('classe.edit',$classe->id)}}">modifier</a></td>
             </tr>
             @endforeach                            
         </tbody>

@@ -28,7 +28,7 @@
                 <th scope="row">{{$cat->libelle }}</th>                
                 <td><strong> {{ $cat->prix }} XAF</strong> </td>
                 <td>{{ $cat->description }}</td>                
-                <td><a href="{{route('categorie.create')}}">Modifier</a></td>
+                <td><a href="{{route('categorie.edit', $cat->id)}}">Modifier</a></td>
             </tr>
             @endforeach                            
         </tbody>

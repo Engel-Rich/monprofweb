@@ -53,7 +53,8 @@ class MatieresController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $matiere = Matieres::find($id); 
+        return view('screen.matiere.create',['matiere'=>$matiere]);
     }
 
     /**
@@ -61,7 +62,13 @@ class MatieresController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try{
+            
+            $matiere = Matieres::find($id);            
+            $matiere->fill($request->all());
+            $matiere->save();
+           return  redirect()->route('matiere.index');
+        }catch(Exception $th){}
     }
 
     /**

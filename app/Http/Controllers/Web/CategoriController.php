@@ -24,7 +24,7 @@ class CategoriController extends Controller
      */
     public function create()
     {
-        return view('screen.categorie.create');
+        return view('screen.categorie.create', ['categorie'=> new Categorie()]);
     }
 
     /**
@@ -45,7 +45,7 @@ class CategoriController extends Controller
      */
     public function show(string $id)
     {
-        //
+       
     }
 
     /**
@@ -53,15 +53,23 @@ class CategoriController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $categorie = Categorie::find($id);
+        return view('screen.categorie.create', ['categorie'=> $categorie]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CategorieValidateRequest $request, string $id)
     {
-        //
+        try {            
+            $classe = Categorie::find($id);
+            $classe->fill($request->all())        ;
+            $classe->save();
+            return   redirect()->route('categorie.index');
+            } catch (\Throwable $th) {
+                dd($th);
+            }
     }
 
     /**

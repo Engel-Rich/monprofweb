@@ -43,7 +43,7 @@
                     <td>{{ $eleve->etablissement }}</td>
                     <td>{{ $eleve->classe->libelle }}</td>
                     <td>{{ $eleve->sexe }}</td>
-                    <td><a href="{{ route('matiere.create') }}">modifier</a></td>
+                    <td><a href="{{ route('matiere.create') }}">voire</a></td>
                     {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
                 </tr>
             @endforeach

@@ -69,15 +69,10 @@ class ClasseController extends Controller
      */
     public function update(ClasseValidateRequest $request, string $id)
     {
-        try {
-            
         $classe = Classe::find($id);
         $classe->fill($request->all())        ;
         $classe->save();
         return   redirect()->route('classe.index');
-        } catch (\Throwable $th) {
-            dd($th);
-        }
     }
 
     /**

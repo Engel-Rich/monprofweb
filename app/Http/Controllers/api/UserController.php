@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
@@ -38,8 +39,8 @@ class UserController extends Controller
                 'parent' =>'booleen|nullable'
             ]);
 
-            $credential = ["email" => $request->email, 'password' => $request->password];
-            $token = Auth::guard('api')->attempt($credential);
+            $credential = ["email" => $request->email, 'password' => $request->password];            
+            $token = Auth::guard('api')->attempt($credential);            
             if (!$token) {
                 return response()->json([
                     'status' => false,
@@ -47,11 +48,16 @@ class UserController extends Controller
                     "error" => 'email ou mot de passe incorrete'
                 ], 401);
             }
-            $user = Auth::guard('api')->user();
-            $eleve = Eleve::where('user_id',$user->id)->limit(1)->get()[0];
+            // $refreshToken = JWTAuth::setToken($token)->refresh();
+            $user = Auth::guard('api')->user();       
+            $eleve = Eleve::where('user_id',$user->id)->limit(1)->get()[0];            
             $classe = Classe::where("id",'=', $eleve->classe_id)->limit(1)->get()[0];
             return response()->json([
-                'auth' => ['type' => 'bearer', 'token' => $token],
+                'auth' => [
+                    'type' => 'bearer', 
+                    'token' => $token,
+                    // 'refresh_token'=>$refreshToken
+            ],
                 'status' => true,
                 'data' => [
                     'user' => $user,

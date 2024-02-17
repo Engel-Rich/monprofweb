@@ -31,7 +31,7 @@ class CoursController extends Controller
                 'matiere_id' => "integer|required|exists:matieres,id",
                 'categorie_id' => "integer|required|:categories,id",
             ]);
-
+            
             // Ouvrire les cours si l'élève possède un abonnemnet
 
             $user = Auth::user();

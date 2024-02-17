@@ -69,7 +69,7 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'data' => null,
-                'error' => $th->getMessage(),
+                'error' => $th->getMessage(),500,
             ], );
         }
     }
@@ -135,7 +135,7 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'error' => $th->getMessage(),
-                'data' => null,
+                'data' => null,500
             ], );
         }
     }

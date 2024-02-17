@@ -7,7 +7,6 @@ use App\Http\Controllers\api\CoursController;
 use App\Http\Controllers\api\MatiereController;
 use App\Http\Controllers\api\PaiementsController;
 use App\Http\Controllers\api\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,12 +28,13 @@ Route::post("eleve/login", [UserController::class, 'login'])->name('api.student.
 // });
 Route::resource('classe', ClasseController::class);
 Route::prefix('/code')->group(function ()  {
-    Route::put('active', [CodeController::class, "activeCode"]);    
+    Route::put('/active', [CodeController::class, "activeCode"]);    
 });
-Route::resource('matiere', MatiereController::class);
-Route::resource('categorie', CategorieController::class);
-Route::resource('cours', CoursController::class);
-Route::resource('paiement', PaiementsController::class)->except('index', 'show', 'edit', 'destroy', 'create', 'update');
+Route::resource('matiere', MatiereController::class)->only(['index']);
+Route::resource('categorie', CategorieController::class)->only(['index']);
+Route::get('categorie/status',[CategorieController::class, 'status']);
+Route::resource('cours', CoursController::class)->only(['index']);
+Route::resource('paiement', PaiementsController::class)->except(['index', 'show', 'edit', 'destroy', 'create', 'update']);
 // Route::middleware('auth.api')->group(function ()  {
     
 // });

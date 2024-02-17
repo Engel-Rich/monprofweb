@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Codes;
 use App\Models\Cours;
+use App\Models\Eleve;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CoursController extends Controller
 {
@@ -15,7 +18,7 @@ class CoursController extends Controller
         $this->middleware('auth:api');
     }
 
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -24,32 +27,43 @@ class CoursController extends Controller
 
         try {
             // dd($request->all());
-            $request->
-            validate([
-                'classe_id' => "integer|required|exists:classes,id",
-                'eleve_id' => "integer|required|exists:eleves,id",
+            $request->validate([
                 'matiere_id' => "integer|required|exists:matieres,id",
                 'categorie_id' => "integer|required|:categories,id",
             ]);
 
-            // TODO vérifier si l'élève possède un abonement et ouvrir le cours
+            // Ouvrire les cours si l'élève possède un abonnemnet
 
+            $user = Auth::user();
+            $eleve = Eleve::where('user_id', $user->id)->get()[0];
             $cours  = Cours::where('matieres_id', $request['matiere_id'])
-                ->where('classe_id', $request['classe_id'])
+                ->where('classe_id', $eleve->classe_id)
                 ->where('categorie_id', $request->categorie_id)
                 ->paginate(20);
 
-            // Ouvrire les cours si l'élève possède un abonnemnet
-
+            //CHECK IF USER HAVE ACTIVE CODE
+            $exist = Codes::with('paiement')->whereHas(
+                'paiement',
+                function ($query) use($request) {
+                    $query->where('categorie_id', $request->categorie_id);
+                }
+            )->where('actif', 1)->where('eleve_id', $eleve->id)->exists();
+            if ($exist) {
+                foreach ($cours as $cour) {
+                    $cour->open = true;
+                }
+            }
             return response()->json([
                 'status' => true,
+                'error' => null,
                 'data' => $cours,
             ], 200);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'data' => null,
-                'error'=>$th->getMessage(),
+                'error' => $th->getMessage(),500,
             ]);
         }
     }

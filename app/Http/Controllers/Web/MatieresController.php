@@ -25,7 +25,7 @@ class MatieresController extends Controller
      */
     public function create()
     {
-        return view('screen.matiere.create');
+        return view('screen.matiere.create',['matiere'=>null]);
     }
 
     /**

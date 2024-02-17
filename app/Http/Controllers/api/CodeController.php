@@ -5,7 +5,6 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Codes;
 use App\Models\Eleve;
-use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -60,7 +59,7 @@ class CodeController extends Controller
                 ],);
             }
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()]);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()],500);
         }
     }
 }

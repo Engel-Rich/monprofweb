@@ -68,7 +68,7 @@ class ClasseController extends Controller
      * Update the specified resource in storage.
      */
     public function update(ClasseValidateRequest $request, string $id)
-    {
+    {        
         $classe = Classe::find($id);
         $classe->fill($request->all())        ;
         $classe->save();

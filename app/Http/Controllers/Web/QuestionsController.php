@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+// use APP\Models\Questions;
 
 class QuestionsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the r   esource.
      */
     public function index()
     {
-        //
+        $questions = \App\Models\Questions::with('classe','matiere',"eleve", 'categorie','reponse')->paginate(20);
+        return view('screen.question.index_question',['questions'=>$questions]);
     }
 
     /**
@@ -36,7 +38,8 @@ class QuestionsController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $question = \App\Models\Questions::with('reponse','matiere','classe')->find($id);
+        return view('screen.question.show_question', ['question'=>$question]);
     }
 
     /**

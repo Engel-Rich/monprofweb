@@ -35,12 +35,12 @@
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Cours</span></a>
                     </li>
                     <li>
-                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
+                        <a href="{{route('question.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>                    </li>
                     
                     {{-- Paiments --}}
                     <li>
-                        <a href="{{route('paiements.index')}}" class="nav-link px-0 align-middle">
+                        <a href="{{route('paiement.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Paiements</span></a>
                     </li>
 

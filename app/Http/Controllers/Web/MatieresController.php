@@ -37,7 +37,9 @@ class MatieresController extends Controller
         try{
             Matieres::create($request->all());            
            return  redirect()->route('matiere.index');
-        }catch(Exception $th){}
+        }catch(Exception $th){
+            
+        }
     }
 
     /**

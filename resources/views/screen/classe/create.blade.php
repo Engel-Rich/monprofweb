@@ -8,9 +8,7 @@
             <div class="col-lg col-md">
                 <form method="POST" action="{{$classe->id==null? route('classe.store'):route('classe.update',$classe->id)}}">
                     @csrf
-                    @if ($classe->id==null)
-                        @method('POST')
-                    @else
+                    @if ($classe->id!=null)                  
                         @method('PUT')
                     @endif                   
                     <div class="mb-3">

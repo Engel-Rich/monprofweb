@@ -6,6 +6,7 @@ use App\Http\Controllers\api\CodeController;
 use App\Http\Controllers\api\CoursController;
 use App\Http\Controllers\api\MatiereController;
 use App\Http\Controllers\api\PaiementsController;
+use App\Http\Controllers\api\QuestionController;
 use App\Http\Controllers\api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::resource('matiere', MatiereController::class)->only(['index']);
 Route::resource('categorie', CategorieController::class)->only(['index']);
 Route::get('categorie/status',[CategorieController::class, 'status']);
 Route::resource('cours', CoursController::class)->only(['index']);
+Route::resource('question', QuestionController::class)->only(['index','store']);
 Route::resource('paiement', PaiementsController::class)->except(['index', 'show', 'edit', 'destroy', 'create', 'update']);
 // Route::middleware('auth.api')->group(function ()  {
     

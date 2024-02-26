@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ReponsesController extends Controller
 {
@@ -46,17 +47,18 @@ class ReponsesController extends Controller
                 $image = $request->file('image');
                 $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
+                Log::info($question);
                 $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" .$request->questions_id. '.' . $extention, 'public');
+                Log::info($imageUrl);
                 $validation['image_url'] = asset("storage/$imageUrl");
-               
+                Log::info($validation);               
             }
             unset($validation['image']);
             $validation['user_id'] = Auth::user()->id;
-            // dd($validation);
             $response = \App\Models\Reponses::create($validation);
             return redirect()->route('question.index');
         } catch (\Throwable $th) {
-            dd($th);
+            Log::error($th);
             return to_route('question.show',$request->questions_id)
                 ->withErrors(['error' => $th->getMessage()])
                 ->onlyInput('titre', 'description', 'image');
@@ -93,21 +95,22 @@ class ReponsesController extends Controller
                 'questions_id' => 'required|integer|exists:questions,id',
                 'image' => 'file|nullable|mimetypes:image/*'
             ]);
-            $validation = $request->all();    
-            // dd($request->image);     
+            $validation = $request->all();   
             if ($request->image != null) {
                 $image = $request->file('image');
                 $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
                 $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/".$request->questions_id . '.' . $extention, 'public');
+                Log::info($imageUrl);
                 $validation['image_url'] = asset("storage/$imageUrl");
+                Log::info($validation);
              
             }
             unset($validation['image']);
             $response = $reponse->update($validation);
             return redirect()->route('question.index');
         } catch (\Throwable $th) {
-            dd($th);
+            Log::info($th);
             return to_route('question.show')
                 ->withErrors(['error' => $th->getMessage()])
                 ->onlyInput('titre', 'description', 'image');

@@ -9,6 +9,7 @@ use App\Models\Classe;
 use App\Models\Cours;
 use App\Models\Matieres;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CoursController extends Controller
 {
@@ -56,14 +57,16 @@ class CoursController extends Controller
                 // dd($classe->libelle,$matiere->libelle,$categorie->libelle);
                 
                 $videoUrl = $video->store("videos/$categorie/$classe/$matiere/$titre.$extention", 'public');
+                Log::info($videoUrl);
                 $validation['video_url'] = asset("storage/$videoUrl");
                 $validation['user_id'] = $user;
+                Log::info($validation);
                 Cours::create($validation);
                 return redirect()->route('cours.index');
             }
             dd($validation);
         } catch (\Throwable $th) {
-            dd($th);
+            Log::error($th);
             return to_route('cours.create')->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
         }
     }

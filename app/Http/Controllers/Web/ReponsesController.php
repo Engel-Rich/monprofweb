@@ -41,14 +41,16 @@ class ReponsesController extends Controller
             $validation = $request->all();
             // dd($validation);
             // unset($validation['_token']);
-            unset($validation['image']);
+            // unset($validation['image']);
             if ($request->image != null) {
-                $video = $request->file('image');
-                $extention = $video->extension();
+                $image = $request->file('image');
+                $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                $videoUrl = $video->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
-                $validation['image_url'] = asset("storage/$videoUrl");
+                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
+                $validation['image_url'] = asset("storage/$imageUrl");
+               
             }
+            unset($validation['image']);
             $validation['user_id'] = Auth::user()->id;
             // dd($validation);
             $response = \App\Models\Reponses::create($validation);
@@ -91,15 +93,17 @@ class ReponsesController extends Controller
                 'questions_id' => 'required|integer|exists:questions,id',
                 'image' => 'file|nullable|mimetypes:image/*'
             ]);
-            $validation = $request->all();
-            unset($validation['image']);
+            $validation = $request->all();    
+            // dd($request->image);     
             if ($request->image != null) {
-                $video = $request->file('image');
-                $extention = $video->extension();
+                $image = $request->file('image');
+                $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                $videoUrl = $video->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
-                $validation['image_url'] = asset("storage/$videoUrl");
+                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
+                $validation['image_url'] = asset("storage/$imageUrl");
+             
             }
+            unset($validation['image']);
             $response = $reponse->update($validation);
             return redirect()->route('question.index');
         } catch (\Throwable $th) {

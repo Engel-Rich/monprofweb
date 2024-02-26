@@ -13,6 +13,6 @@ class Reponses extends Model
         'titre',
         'questions_id',
         'description',
-        'image','user_id'
+        'image_url','user_id'
     ];
 }

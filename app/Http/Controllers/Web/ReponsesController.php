@@ -46,7 +46,7 @@ class ReponsesController extends Controller
                 $image = $request->file('image');
                 $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
+                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" .$request->questions_id. '.' . $extention, 'public');
                 $validation['image_url'] = asset("storage/$imageUrl");
                
             }
@@ -99,7 +99,7 @@ class ReponsesController extends Controller
                 $image = $request->file('image');
                 $extention = $image->extension();
                 $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" . '.' . $extention, 'public');
+                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/".$request->questions_id . '.' . $extention, 'public');
                 $validation['image_url'] = asset("storage/$imageUrl");
              
             }

@@ -72,7 +72,7 @@ class ClasseController extends Controller
         
       try {
         $validateTable = [
-            'libelle'=>["string|required"],
+            'libelle'=>["string","required"],
             'short_name'=>"string|required",
             'description'=>"nullable",
         ];

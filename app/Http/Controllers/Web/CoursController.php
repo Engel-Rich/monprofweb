@@ -60,9 +60,11 @@ class CoursController extends Controller
                 $videoUrl = $video->store("videos/$categorie/$classe/$matiere/$titre.$extention", 'public');
                 Log::info($videoUrl);
                 $validation['video_url'] = asset("storage/$videoUrl");
-                $validation['user_id'] = $user;
+                $validation['user_id'] = $user;            
                 Log::info($validation);
+                unset($validation['video']);
                 Cours::create($validation);
+                Log::info($validation);
                 return redirect()->route('cours.index');
             // }
             dd($validation);

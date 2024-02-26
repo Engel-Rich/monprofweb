@@ -8,6 +8,7 @@ use App\Models\Classe;
 use Exception;
 // use App\Models\Classe;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ClasseController extends Controller
@@ -60,19 +61,29 @@ class ClasseController extends Controller
     public function edit(string $id)
     {
         $classe  = Classe::find($id);
-        return view('screen.classe.create', ['classe'=>$classe]);
-        
+        return view('screen.classe.update_classe', ['classe'=>$classe]);        
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(ClasseValidateRequest $request, string $id)
-    {        
+    public function update(Request $request, string $id)
+    {
+        
+      try {
+        $validateTable = [
+            'libelle'=>["string|required"],
+            'short_name'=>"string|required",
+            'description'=>"nullable",
+        ];
+        $request->validate($validateTable);
         $classe = Classe::find($id);
-        $classe->fill($request->all())        ;
+        $classe->fill($request->all());
         $classe->save();
         return   redirect()->route('classe.index');
+      } catch (\Throwable $th) {
+        dd($th);
+      }
     }
 
     /**

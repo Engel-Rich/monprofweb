@@ -24,7 +24,7 @@ class CoursValidateRequest extends FormRequest
         return [
             "libelle" => 'string|required',
             "description" => 'string|required',
-            'video' => 'required|file|mimetypes:video/*',
+            'video' => 'required|file',
             'classe_id'=>'required|exists:classes,id',
             'matieres_id'=>'required|exists:matieres,id',
             'categorie_id'=>'required|exists:categories,id'

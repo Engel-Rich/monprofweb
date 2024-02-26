@@ -6,7 +6,9 @@
     <div class="container py-5 px-5">
         <form method="POST" action="{{ route('cours.store') }}" enctype="multipart/form-data">
             @error('error')
-                <div class="text-danger">{{ $message }}</div>
+                <div class="m-3 text-danger">
+                    {{ $message }}
+                </div>
             @enderror
             <div class="row">
                 <div class="col-lg col-md">
@@ -53,7 +55,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold" for="description">Description du cours</label>
-                        <textarea  rows="5" type="text" class="form-control" id="description" name="description" required>{{old('description')}}</textarea>
+                        <textarea rows="5" type="text" class="form-control" id="description" name="description" required>{{ old('description') }}</textarea>
                     </div>
                 </div>
                 <div class="col-lg col-md">
@@ -63,7 +65,7 @@
                     <div class="mb-3">
                         <label for="libelle" class="form-label fw-bold">Titre du cours</label>
                         <input type="text" class="form-control" id="libelle" aria-describedby="classe_name"
-                            name="libelle" required value="{{old('libelle')}}">
+                            name="libelle" required value="{{ old('libelle') }}">
                         <div id="libelle" class="form-text">Entrer ltitre du nouveau cours</div>
                     </div>
 

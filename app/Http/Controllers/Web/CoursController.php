@@ -44,9 +44,10 @@ class CoursController extends Controller
      */
     public function store(CoursValidateRequest $request)
     {
-        try {
+        try {            
             $validation = $request->all();
-            if ($request->hasFile('video')) {
+            // if ($request->video=) {
+                Log::info($request->all());
                 $titre = $request->libelle;
                 $classe  = Classe::find($request->classe_id)->libelle;
                 $matiere  = Matieres::find($request->matieres_id)->libelle;
@@ -63,9 +64,10 @@ class CoursController extends Controller
                 Log::info($validation);
                 Cours::create($validation);
                 return redirect()->route('cours.index');
-            }
+            // }
             dd($validation);
         } catch (\Throwable $th) {
+            Log::info("Erreur d'ajour du cours");
             Log::error($th);
             return to_route('cours.create')->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
         }

@@ -42,12 +42,22 @@ class CoursController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CoursValidateRequest $request)
+    public function store(Request $request)
     {
-        try {            
+        try {      
+            $validatortable=  [
+                "libelle" => 'string|required',
+                "description" => 'string|required',
+                'video' => 'required|file',
+                'classe_id'=>'required|exists:classes,id',
+                'matieres_id'=>'required|exists:matieres,id',
+                'categorie_id'=>'required|exists:categories,id'
+            ];      
+            
             $validation = $request->all();
             // if ($request->video=) {
                 Log::info($request->all());
+                $request->validate($validatortable);
                 $titre = $request->libelle;
                 $classe  = Classe::find($request->classe_id)->libelle;
                 $matiere  = Matieres::find($request->matieres_id)->libelle;

@@ -21,8 +21,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post("auth/refresh-token", [UserController::class, 'refresh'])->name('api.user.refresh_token');
 Route::post("eleve/register", [UserController::class, 'register'])->name('api.student.register');
-Route::post("eleve/login", [UserController::class, 'login'])->name('api.student.login');
+Route::post("parent/register", [UserController::class, 'registerParent'])->name('api.parent.register');
+Route::post("user/login", [UserController::class, 'login'])->name('api.user.login');
+Route::post("user/update_profile", [UserController::class, 'updateProfile'])->name('api.user.update_profile');
 
 // Route::middleware('auth')->group(function (){
 

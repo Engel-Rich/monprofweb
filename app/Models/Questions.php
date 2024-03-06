@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Questions extends Model
 {
     use HasFactory;
-   
+
     protected $fillable = [
         'titre',
         'description',
         'classe_id',
         'categorie_id',
         'eleve_id',
-        'matieres_id'        
+        'matieres_id', 'image_url','questions_id'
     ];
 
     /**
@@ -36,7 +36,7 @@ class Questions extends Model
      */
     public function matiere(): BelongsTo
     {
-        return $this->belongsTo(Matieres::class,'matieres_id');
+        return $this->belongsTo(Matieres::class, 'matieres_id');
     }
     /**
      * Get the reponse that owns the Questions
@@ -54,7 +54,7 @@ class Questions extends Model
      */
     public function reponse(): HasOne
     {
-        return $this->hasOne(Reponses::class,'questions_id');
+        return $this->hasOne(Reponses::class, 'questions_id');
     }
     /**
      * Get the reponse that owns the Questions

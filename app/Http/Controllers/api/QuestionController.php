@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Eleve;
 // use App\Models\Matieres;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 class QuestionController extends Controller
 {
@@ -25,7 +26,7 @@ class QuestionController extends Controller
         try {
             $request->validate([
                 'categorie_id' => 'integer|required|exists:categories,id',
-                'matiere_id' => 'integer|required|exists:matieres,id',
+                'matiere_id' => 'integer|required|exists:matieres,id',               
             ]);
             $user = Auth::user();
             $eleve = Eleve::where('user_id', $user->id)->get()[0];
@@ -62,6 +63,8 @@ class QuestionController extends Controller
                 'matiere_id' => 'integer|required|exists:matieres,id',
                 'titre' => 'nullable|string',
                 'description' => 'required|string',
+                'image' => 'file|nullable|mimetypes:image/*',
+                'question_id' => 'nullable|intenger',
             ]);
             $data = $request->all();
             $user = Auth::user();
@@ -69,9 +72,19 @@ class QuestionController extends Controller
             $data['eleve_id'] = $eleve->id;
             $data['classe_id'] = $eleve->classe_id;
             $data['matieres_id'] = $request->matiere_id;
-            if ($data['titre'] == null) {
-                $matiere = \App\Models\Matieres::find($request->matiere_id);
+            $data['questions_id'] = $request->question_id;
+            $matiere = \App\Models\Matieres::find($request->matiere_id);
+            if ($data['titre'] == null) {               
                 $data['titre'] = $matiere->libelle;
+            }
+            $timestampMilliseconds = strval(Carbon::now()->valueOf());
+            if ($request->image != null) {
+                $image = $request->file('image');
+                $extention = $image->extension();                
+                $imageUrl = $image->store("questions/eleves/" . $request-> $matiere->libelle .$timestampMilliseconds. '.' . $extention, 'public');
+                Log::info($imageUrl);
+                $data['image_url'] = asset("storage/$imageUrl");
+                Log::info($data);               
             }
             $questions = \App\Models\Questions::create($data);
             return response()->json([

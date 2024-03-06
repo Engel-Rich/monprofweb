@@ -81,7 +81,7 @@ class QuestionController extends Controller
             if ($request->image != null) {
                 $image = $request->file('image');
                 $extention = $image->extension();                
-                $imageUrl = $image->store("questions/eleves/" . $matiere->libelle .$timestampMilliseconds. '.' . $extention, 'public');
+                $imageUrl = $image->store("questions/eleves/" . $matiere->libelle.'/' .$timestampMilliseconds. '.' . $extention, 'public');
                 Log::info($imageUrl);
                 $data['image_url'] = asset("storage/$imageUrl");
                 Log::info($data);               

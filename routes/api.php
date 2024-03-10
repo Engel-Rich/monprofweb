@@ -37,6 +37,7 @@ Route::prefix('/code')->group(function ()  {
 Route::resource('matiere', MatiereController::class)->only(['index']);
 Route::resource('categorie', CategorieController::class)->only(['index']);
 Route::get('categorie/status',[CategorieController::class, 'status']);
+Route::get('categorie/parent/status',[CategorieController::class, 'statusCodesParent']);
 Route::resource('cours', CoursController::class)->only(['index']);
 Route::resource('question', QuestionController::class)->only(['index','store']);
 Route::resource('paiement', PaiementsController::class)->except(['index', 'show', 'edit', 'destroy', 'create', 'update']);

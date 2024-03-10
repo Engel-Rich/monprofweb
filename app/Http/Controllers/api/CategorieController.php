@@ -58,7 +58,7 @@ class CategorieController extends Controller
             foreach ($categorie as $value) {
                 $exist = Codes::with('paiement')->whereHas(
                     'paiement',
-                    function ($query) use ($value) {                                                
+                    function ($query) use ($value) {
                         $query->where('categorie_id', $value->id);
                     }
                 )->where('actif', 1)->where('eleve_id', $eleve->id)->exists();
@@ -69,6 +69,45 @@ class CategorieController extends Controller
             return response()->json(['status' => true, 'data' => $result], 200);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()]);
+        }
+    }
+
+
+    public function statusCodesParent()
+    {
+        try {
+            $categorie = Categorie::all();
+
+            $user = Auth::user();
+
+            $result = array();
+
+            $filter_activeCode = function(Codes $code) {
+                return $code->actif==1;
+            };
+            $filter_unactiveCode = function(Codes $code) {
+                return $code->actif==0;
+            };
+
+            foreach ($categorie as $value) {
+                $codes = Codes::with('paiement')->whereHas(
+                    'paiement',
+                    function ($query) use ($value, $user) {
+                        $query->where('categorie_id', $value->id)->where('user_id', $user->id);
+                    }
+                )->get();
+                $activeCode = array_filter($codes->toArray(),$filter_activeCode);
+                $unactiveCode = array_filter($codes->toArray(),$filter_unactiveCode);
+                $details  = [
+                    'total'  => count($codes),
+                    'actifs'  => count($activeCode),
+                    'unactifs'  => count($unactiveCode),
+                ];
+                array_push($result, ['categorie' => $value, 'details' => $details]);
+            }
+            return response()->json(['status' => true, 'data' => $result], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 500);
         }
     }
 

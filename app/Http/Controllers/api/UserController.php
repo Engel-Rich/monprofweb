@@ -18,7 +18,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout','registerParent']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout', 'registerParent']]);
     }
 
     /* Display a listing of the resource.
@@ -37,7 +37,6 @@ class UserController extends Controller
             $request->validate([
                 'email' => 'email|required',
                 'password' => 'required|min:4',
-                'parent' => 'boolean|nullable'
             ]);
 
             $credential = ["email" => $request->email, 'password' => $request->password];
@@ -49,24 +48,19 @@ class UserController extends Controller
                     "error" => 'email ou mot de passe incorrete'
                 ], 400);
             }
-            
-            $user = Auth::guard('api')->user();
-            $isParent = $request->parent??false;
 
-            if($isParent){
+            $user = Auth::guard('api')->user();
+
+            $isParent = $user->rule_id == 3;
+
+            if ($isParent) {
                 $parent = \App\Models\Parents::where('user_id', $user->id)->limit(1)->get()[0];
                 return response()->json([
-                    'auth' => [
-                        'type' => 'Bearer',
-                        'token' => $token,
-                    ],
+                    'auth' => ['type' => 'Bearer', 'token' => $token],
                     'status' => true,
-                    'data' => [
-                        'user' => $user,
-                        'parent' => $parent,
-                    ],
+                    'data' => ['user' => $user, 'parent' => $parent],
                 ], 200);
-            }else{
+            } else {
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
                 return response()->json([
@@ -83,13 +77,12 @@ class UserController extends Controller
                     ],
                 ], 200);
             }
-           
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'data' => null,
                 'error' => $th->getMessage(),
-            ],400);
+            ], 400);
         }
     }
 
@@ -155,33 +148,33 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ],400);
+            ], 400);
         }
     }
 
 
     public function refresh(Request $request)
     {
-       try {
-        // return response()->json($request->token);
-        // $token = JWTAuth::refresh($request->token);
-        $refreshToken = $request->token;
-        $token = Auth::guard('api')->refresh($refreshToken);
-        return response()->json(
-            [
-                'status' => true,
-                'data' => [
-                    'token' => $token,
-                    'type' => 'Bearer',
-                ]
-            ],
-        );
-       } catch (\Throwable $th) {
-        return response()->json([
-            'status'=> false,
-            'error' => $th->getMessage(),            
-        ],401);
-       }
+        try {
+            // return response()->json($request->token);
+            // $token = JWTAuth::refresh($request->token);
+            $refreshToken = $request->token;
+            $token = Auth::guard('api')->refresh($refreshToken);
+            return response()->json(
+                [
+                    'status' => true,
+                    'data' => [
+                        'token' => $token,
+                        'type' => 'Bearer',
+                    ]
+                ],
+            );
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'error' => $th->getMessage(),
+            ], 401);
+        }
     }
 
     // public function refresh(Request $request)
@@ -220,7 +213,7 @@ class UserController extends Controller
 
             $parent_datas = [
                 'sexe' => $request['sexe'],
-                'profession' => $request['profession'],               
+                'profession' => $request['profession'],
             ];
             // $userData['password'] = Hash::make($request->password);            
             $unique_token = (string) Str::uuid();
@@ -241,10 +234,7 @@ class UserController extends Controller
             return response()->json([
                 'auth' => ['type' => 'Bearer', 'token' => $token],
                 'status' => true,
-                'data' => [
-                    'user' => $user,
-                    'parent' => $student,
-                ],
+                'data' => ['user' => $user, 'parent' => $student],
             ], 200);
         } catch (\Throwable $th) {
             // dd($th);
@@ -252,20 +242,21 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ],400);
+            ], 400);
         }
     }
 
-    
 
-    public function updateProfile(Request $request){
+
+    public function updateProfile(Request $request)
+    {
         try {
             $request->validate(['image' => 'file|required|mimetypes:image/*',]);
             $user = Auth::guard('api')->user();
             $image = $request->file('image');
-            $extention = $image->extension();  
-            $storeArboressence = "profile/users/".str_replace('@','_',$user->email);              
-            $imageUrl = $image->store($storeArboressence. '.' . $extention, 'public');
+            $extention = $image->extension();
+            $storeArboressence = "profile/users/" . str_replace('@', '_', $user->email);
+            $imageUrl = $image->store($storeArboressence . '.' . $extention, 'public');
             \Illuminate\Support\Facades\Log::info($imageUrl);
             $user->profile_image = asset("storage/$imageUrl");
             $user->save();
@@ -279,7 +270,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ],400);
+            ], 400);
         }
     }
 

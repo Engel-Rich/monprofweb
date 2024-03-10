@@ -83,10 +83,11 @@ class CategorieController extends Controller
             $result = array();
 
             $filter_activeCode = function($code) {
-                return $code->actif==1;
+                // dd($code['actif']);
+                return $code['actif']==1;
             };
             $filter_unactiveCode = function($code) {
-                return $code->actif==0;
+                return $code['actif']==0;
             };
 
             foreach ($categorie as $value) {

@@ -68,7 +68,7 @@ class CategorieController extends Controller
 
             return response()->json(['status' => true, 'data' => $result], 200);
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()]);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 500);
         }
     }
 
@@ -82,10 +82,10 @@ class CategorieController extends Controller
 
             $result = array();
 
-            $filter_activeCode = function(Codes $code) {
+            $filter_activeCode = function($code) {
                 return $code->actif==1;
             };
-            $filter_unactiveCode = function(Codes $code) {
+            $filter_unactiveCode = function($code) {
                 return $code->actif==0;
             };
 

@@ -32,6 +32,10 @@ Route::middleware('auth')->group(function () {
         return view('index');
     })->name('index');
     Route::resource('classe', ClasseController::class)->except(['show']);
+
+    Route::post('/classe/add_matiere', [\App\Http\Controllers\web\ClasseController::class, 'addMatiereToClasse'])->name('classe.add_matiere');
+    Route::delete('/classe/delete_matiere', [\App\Http\Controllers\web\ClasseController::class, 'deleteMatiereToClasse'])->name('classe.delete_matiere');
+
     Route::resource('matiere', MatieresController::class)->except(['show']);
     Route::get('/eleves', [EleveController::class, 'index'])->name('eleve.index');
     Route::resource('professeur', ProfesseursController::class);

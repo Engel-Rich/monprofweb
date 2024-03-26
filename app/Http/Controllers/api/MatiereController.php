@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Classe;
+use App\Models\Eleve;
 use App\Models\Matieres;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MatiereController extends Controller
 {
@@ -21,9 +24,13 @@ class MatiereController extends Controller
      */
     public function index()
     {
-        try {            
-            $classe= Matieres::all();
-            return response()->json(['status' => true,'data'=>$classe,], 200);
+        try {   
+            $user = Auth::user();
+            $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()->first();
+             $userClasse = Classe::with('matieres')-> findOrFail($eleve?->id);   
+            //  dd($userClasse)           ;
+            // $matieres= $userClasse?->matieres();
+            return response()->json(['status' => true,'data'=>$userClasse?->matieres], 200);
             } catch (\Throwable $th) {
                 return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);
             }

@@ -27,6 +27,8 @@ Route::post("parent/register", [UserController::class, 'registerParent'])->name(
 Route::post("user/login", [UserController::class, 'login'])->name('api.user.login');
 Route::post("user/update_profile", [UserController::class, 'updateProfile'])->name('api.user.update_profile');
 
+
+
 // Route::middleware('auth')->group(function (){
 
 // });

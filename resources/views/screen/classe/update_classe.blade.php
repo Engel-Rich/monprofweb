@@ -30,7 +30,86 @@
 
             </div>
             <div class="col-lg col-md">
+                <h3 class="display-6">modifier les matières</h3>
+
+                @livewire('manage-matiere-to-classe', ['classe' => $classe])                
             </div>
         </div>
     </div>
 @endsection
+
+
+
+
+{{-- 
+@section('update_classe_scripte')
+    <script>
+        async function ajouterMatiere(classe_id, matiere_id) {
+            try {
+                const response = await fetch('/api/classe/add_matiere', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        classe_id: classe_id,
+                        matiere_id: matiere_id
+                    })
+                });
+                console.log(body);
+                const data = await response.json();
+                console.log(data);
+                if (data.status == true) {
+                    alert('Opération réuissie')
+                } else {
+                    alert('Opération Echoué')
+                }
+                // actualiserListeMatieres();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function supprimerMatiere(classe_id, matiere_id) {
+            try {
+                const response = await fetch('/api/supprimer-matiere', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        classe_id: classe_id,
+                        matiere_id: matiere_id
+                    })
+                });
+                const data = await response.json();
+                console.log(data);
+                if (data.status == true) {
+                    alert('Opération réuissie')
+                } else {
+                    alert('Opération Echoué')
+                }
+                // actualiserListeMatieres();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        const add_matiere_to_class_button = document.getElementById('add_matiere_to_class_button');
+        const delete_matiere_to_class_button = document.getElementById('delete_matiere_to_class_button');
+
+        add_matiere_to_class_button.addEventListener('click', function() {
+            idClasse = document.getElementById('add_matiere_to_class_button').getAttribute('data-classe_id');
+            idMatiere = document.getElementById('add_matiere_to_class_button').getAttribute(' data-matiere_id');
+            ajouterMatiere(idClasse, idMatiere);
+        })
+
+        // delete_matiere_to_class_button.addEventListener('click', function () {
+        //     idClasse = document.getElementById('add_matiere_to_class_button').dataset.classe_id;
+        //     idMatiere = document.getElementById('add_matiere_to_class_button').dataset.matiere_id;
+        //     supprimerMatiere(idClasse, idMatiere);
+        // })
+    </script>
+@endsection --}}

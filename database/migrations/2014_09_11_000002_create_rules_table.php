@@ -17,6 +17,28 @@ return new class extends Migration
             $table->string('description')->nullable()->default('Description pour les accès du role');
             $table->timestamps();
         });
+        DB::table('rules')->insert(
+            [
+                [
+                    'name' => 'Admin',
+                    'description' => 'Administrateur avec tous les droits',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Eleve',
+                    'description' => 'Utilisateur standard qui sont des élèves',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'name' => 'Parent',
+                    'description' => 'Utilisateur standard qui sont des parents',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]
+        );
     }
 
     /**

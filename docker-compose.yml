@@ -5,7 +5,7 @@ services:
     nginx:
         image: nginx:1.22-alpine
         restart: always
-        container_name: nginx
+        container_name: nginx-monprof
         ports:
             - 8800:80
             - 443:443
@@ -28,19 +28,7 @@ services:
             - DB_PASSWORD=Azerty@123
         expose:
             - 9000
-    # phpmyadmin:
-    #     restart: always
-    #     image: phpmyadmin/phpmyadmin
-    #     container_name: phpmyadmin
-    #     ports:
-    #         - 8808:80
-    #     environment:
-    #         - PMA_ARBITRARY=1
-    #         - PMA_HOST=194.163.141.34
-    #         - PMA_USER=richelieu
-    #         - PMA_PASSWORD=Azerty@123
-    #     depends_on:
-    #         - php
-networks:
-    default:
-        driver: bridge
+   
+# networks:
+#     default:
+#         driver: bridge

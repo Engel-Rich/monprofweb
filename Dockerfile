@@ -11,11 +11,10 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 
 COPY --chown=www:www . /www/html/monprof
 
-COPY custom-php.ini /usr/local/etc/php/conf.d/
-
-
 WORKDIR /www/html/monprof
 
+RUN composer install --no-dev --optimize-autoloader
+COPY custom-php.ini /usr/local/etc/php/conf.d/
 EXPOSE 9000
 
 

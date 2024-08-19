@@ -8,6 +8,7 @@ use App\Models\Cours;
 use App\Models\Eleve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\FileManager;
 
 class CoursController extends Controller
 {
@@ -39,6 +40,7 @@ class CoursController extends Controller
             $cours  = Cours::where('matieres_id', $request['matiere_id'])
                 ->where('classe_id', $eleve->classe_id)
                 ->where('categorie_id', $request->categorie_id)
+                ->with('matiere')
                 ->paginate(20);
 
             //CHECK IF USER HAVE ACTIVE CODE
@@ -53,6 +55,14 @@ class CoursController extends Controller
                     $cour->open = true;
                 }
             }
+            $result = $cours->getCollection()->transform(function ($value) {
+                // dd($value->video_url);
+                $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
+                $value->video_url = $fileManager->get($value->video_url);
+                // dd($value->video_url);
+                return $value;
+            });
+            $cours->setCollection($result);
             return response()->json([
                 'status' => true,
                 'error' => null,

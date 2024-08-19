@@ -37,6 +37,7 @@
         </thead>
         <tbody>
             @foreach ($cours as $cour)
+            
                 <tr>
                     <th scope="row">{{ $cour->libelle }}</th>
                     {{-- <td>{{$matiere->libelle  }}</td> --}}

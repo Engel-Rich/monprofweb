@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendMailJob;
+use App\Jobs\SendMessageJob;
 use App\Models\Codes;
 use App\Models\Paiements;
 use App\Models\User;
+use App\Services\SendMessageService;
 use Carbon\Carbon;
-use DateTime;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
@@ -75,12 +76,12 @@ class PaiementsController extends Controller
     protected function saveManyCod(int $paiement_id, int $qte): array
     {
         $count = 1;
-        $codeList = [];
-        $error = null;
+        $codeList = [];   
         do {
             $code = $this->saveOneCode($paiement_id);
             if ($code != null) {
-                $codeList[$count] = $code;
+                // $codeList[$count] = $code;
+                array_push($codeList, $code);
                 $count++;
             } else {
                 Codes::where('paiement_id', $paiement_id)->deleted();
@@ -119,29 +120,7 @@ class PaiementsController extends Controller
     /**
      * Function permettant d'envoiyer le sms
      */
-    protected function sendSMS(Paiements $paie, string $code = null, string $message = null)
-    {
-
-        $url = 'https://sms.etech-keys.com/ss/api.php';
-        $params = [
-            'login' => '699784188',
-            'password' => 'NA9n335',
-            'sender_id' => 'MonProf',
-            'destinataire' => $paie->numero_client,
-            'message' => $message ?: 'Bonjour Mr/Mm Votre code d\'activation est le ssuivant   ' . $code . ' a utiliser pour se connecter sur mon prof',
-        ];
-        $headers = [
-            'Accept' => 'application/json', // Exemple d'en-tête pour indiquer le type de contenu attendu            
-        ];
-        /**
-         * @\Illuminate\Http\Client\Response
-         */
-        try {
-            $data = Http::withHeaders($headers)->get($url, $params);
-        } catch (\Throwable $th) {
-            return ['error' => $th->getMessage()];
-        }
-    }
+   
 
     /**
      * 
@@ -149,93 +128,14 @@ class PaiementsController extends Controller
      * 
      */
 
-    protected function sendEmail(array $codes, Paiements $paie, User $user): bool|array
-    {
-        $fichier = $this->createandStoreFile($codes, $paie, $user);
 
-        if ($fichier !== null) {
-            $fileUrl = $fichier;
-            $smtpUrl = "https://api.emailjs.com/api/v1.0/email/send";
-            $tamplate_id = "template_ljtz61w";
-            $publicKey = "OpI44bJgBxEW76yfA";
-            $privateKey = 'Ff_WCj2VjcsMvAx6JyqC6';
-            $serviceId = 'service_bslmdnc';
-            $templateParam = [
-                "to_name" => $user->name . ' ' . $user->last_name,
-                "quantite" => count($codes),
-                "file_link" => $fileUrl,
-                "to_email" => $user->email,
-                'from_name' => "Monprof"
-            ];
-            $parametter = array(
-                "service_id" => $serviceId,
-                "template_id" => $tamplate_id,
-                "user_id" => $publicKey,
-                "template_params" => $templateParam,
-                "accessToken" => $privateKey,
-            );
-
-            $headers = ['Content-Type' => 'application/json'];
-
-            /////////////////////////////////////////////////////////////////
-            // initialisation de le requette vers l'API rest 
-            // //////////////////////////////////////////////
-
-            try {
-                $data = Http::withHeaders($headers)->post($smtpUrl, $parametter);
-                // dd($data);
-            } catch (\Throwable $th) {
-                return ['error' => 'Les codes ont été généré mais impossible d\'envoyer le mail' . $th->getMessage()];
-            }
-
-            // $curl = curl_init($smtpUrl);
-            // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            // curl_setopt($curl, CURLOPT_POST, true);
-            // curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($parametter));
-            // curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            // $response = curl_exec($curl);
-            // curl_close($curl);
-
-            return true;
-        } else {
-            return ['error' => 'Les codes ont été généré mais impossible de générer le ficher'];
-            // echo "Erreur de création du fichier";
-
-        }
-    }
 
 
     /**
      * Function permettant de générer les fichier 
      */
 
-    protected  function createAndStoreFile(array $codeList, Paiements $paie, User $user)
-    {
-        try {
-            $fileName = 'codes/' . $user->name . now()->format('Ymd_His') . '.txt';
-            // $cheminFichier = storage_path('app/' . $fileName);
-            $contenu = "Date: " . now()->format('Y-m-d H:i:s') . "\n\n";
-            $contenu = $contenu . "Nombre de code : " . $paie->nombre_de_code . "\n";
-            $contenu = $contenu . "Montant du paiement: " . $paie->montant . "XAF \n";
-            $contenu = $contenu . "Numéro débité " . $paie->numero_payeur . "\n";
-            $contenu = $contenu . "Numéro à notifier " . $paie->numero_client . "\n\n";
-            $contenu = $contenu . "Liste des codes. \n\n";
-            foreach ($codeList as $code => $valeur) {
-                $contenu .= "$code:    $valeur\n";
-            }
-            $write = Storage::disk('public')->put($fileName, $contenu);
-            if ($write) {
-                $urlFichier = url(Storage::url($fileName));
-                return $urlFichier;
-            } else {
-                File::delete($fileName);
-                return null;
-            }
-        } catch (\Throwable $th) {
-            // echo $th;
-            return null;
-        }
-    }
+   
 
 
     /**
@@ -249,40 +149,38 @@ class PaiementsController extends Controller
         $user = User::find($paie->user_id);
         $qte = $paie->nombre_de_code;
         $error = null;
+        
+        $messageService  = new SendMessageService($paie, $user);
         if ($qte == 1) {
             $code = $this->saveOneCode($id);
-            if ($code != null) {
-                $messageResponse = $this->sendSMS($paie, code: $code);
-                $error = $error == null ? $messageResponse : $error;
-            } else {
-                $error = ['error' => 'Imposible de générer le code'];
-            }
+
+            SendMessageJob::dispatch($messageService, $code)->delay(now());
+
+            return redirect()->route('paiement.index');
         } else {
-            $data = $this->saveManyCod($id, $qte);
+            $data = $this->saveManyCod($id, $qte);        
             if (count($data) == 0) {
-                $error = ['error' => 'Imposible de générer les codes'];
-            } else {
-                $sendEmail =  $this->sendEmail($data, $paie, $user);
-                if ($sendEmail != true) {
-                    $error = $sendEmail;
-                }
-                $messageResponse =     $this->sendSMS($paie, message: "Vous venez d'activer " . $qte . " de codes chez MONPROF un mail a été envoyé à l'adresse email " . $user->email . " contenant la liste de codes");
-                //    dd($messageResponse);
-                $error = $error == null ? $messageResponse : $error;
+                  return redirect()->route('paiement.index');
+            }
+             else {            
+            SendMailJob::dispatch($messageService, $data)->delay(now());
+            return redirect()->route('paiement.index');
             }
         }
-        if ($error == null) {
+        
+       
+        // if ($error == null) {
 
-            $dateTime =  Carbon::now();
-            $paieUp = Paiements::find($id);
-            $paieUp->paiement_date = $dateTime;
-            $paieUp->status = true;
-            $paieUp->save();
+        //     $dateTime =  Carbon::now();
+        //     $paieUp = Paiements::find($id);
+        //     $paieUp->paiement_date = $dateTime;
+        //     $paieUp->status = true;
+        //     $paieUp->save();
 
-            return redirect()->route('paiements.index');
-        } else {
-            return redirect()->back()->withErrors($error);
-        }
+        //     return redirect()->route('paiements.index');
+        // } else {
+        //     return redirect()->back()->withErrors($error);
+        // }
     }
     /**
      * Display the specified resource.

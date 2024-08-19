@@ -8,6 +8,7 @@ use App\Models\Categorie;
 use App\Models\Classe;
 use App\Models\Cours;
 use App\Models\Matieres;
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -18,8 +19,17 @@ class CoursController extends Controller
      */
     public function index()
     {
-        $cours = Cours::with('classe', 'user', "matiere",'categorie')->paginate(10);
+        
+        $cours = Cours::with('classe', 'user', "matiere",'categorie')->paginate(20);
         // dd($matieres);
+        $result = $cours->getCollection()->transform(function ($value) {
+            // dd($value->video_url);
+            $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
+            $value->video_url = $fileManager->get($value->video_url);
+            // dd($value->video_url);
+            return $value;
+        });
+        $cours->setCollection($result);
         return view('screen.cours.index', ['cours' => $cours],);
     }
 
@@ -67,9 +77,10 @@ class CoursController extends Controller
                 $user = $request->user()->id;
                 // dd($classe->libelle,$matiere->libelle,$categorie->libelle);
                 
-                $videoUrl = $video->store("videos/$categorie/$classe/$matiere/$titre.$extention", 'public');
+                $filemanager = new FileManager('Videos/'.$matiere);
+                $videoUrl = $filemanager->store($video);  //$video->store("videos/$categorie/$classe/$matiere/$titre.$extention", 'public');
                 Log::info($videoUrl);
-                $validation['video_url'] = asset("storage/$videoUrl");
+                $validation['video_url'] = $videoUrl;//asset("storage/$videoUrl");
                 $validation['user_id'] = $user;            
                 Log::info($validation);
                 unset($validation['video']);
@@ -77,7 +88,7 @@ class CoursController extends Controller
                 Log::info($validation);
                 return redirect()->route('cours.index');
             // }
-            dd($validation);
+            // dd($validation);
         } catch (\Throwable $th) {
             Log::info("Erreur d'ajour du cours");
             Log::error($th);

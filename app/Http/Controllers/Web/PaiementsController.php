@@ -64,6 +64,7 @@ class PaiementsController extends Controller
         $dateActuelleDetail = explode('/', $dateActuelle);
         $heureActuelleDetail = explode(':', $heureActuelle);
         $code = $dateActuelleDetail[1] . $dateActuelleDetail[0] . $dateActuelleDetail[2] . "" . $id_paiement_attente;
+       
         $finalCode = "";
         for ($i = 0; $i < 10; $i++) {
             $index = rand(0, strlen($code) - 1);

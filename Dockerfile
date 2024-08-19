@@ -4,7 +4,9 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 RUN apk --no-cache add shadow
 
 RUN addgroup -g 1000 monprof && adduser -u 1000 -G monprof -D monprof
+
 RUN addgroup -g 1001 -S www && adduser -u 1001 -S www -G www
+
 # Installer Supervisor
 RUN apk --no-cache add supervisor
 

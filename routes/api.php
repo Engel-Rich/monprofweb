@@ -37,6 +37,7 @@ Route::prefix('/code')->group(function ()  {
     Route::put('/active', [CodeController::class, "activeCode"]);    
 });
 Route::resource('matiere', MatiereController::class)->only(['index']);
+Route::put('/auth/fcm_token', [UserController::class,'updateTocken' ]);
 Route::resource('categorie', CategorieController::class)->only(['index']);
 Route::get('categorie/status',[CategorieController::class, 'status']);
 Route::get('categorie/parent/status',[CategorieController::class, 'statusCodesParent']);

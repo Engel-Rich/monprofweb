@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use App\Models\Eleve;
 // use App\Models\Matieres;
@@ -34,6 +35,16 @@ class QuestionController extends Controller
                 ->where('matieres_id', $request->matiere_id)
                 ->where('categorie_id', '=', $request->categorie_id)
                 ->paginate(20);
+            $result = $questions->getCollection()->transform(function ($value){
+                $fileManager = new FileManager("questions/eleves/");
+                if($value->image_url!=null){
+                    $value->image_url = $fileManager->get($value->image_url);
+                }
+                return $value;
+            });
+
+            $questions->setCollection($result);
+
             return response()->json(['status' => true, 'data' => $questions, 'error' => null]);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => 'null', 'error' => $th->getMessage(),], 500);
@@ -79,9 +90,10 @@ class QuestionController extends Controller
             }
             $timestampMilliseconds = strval(Carbon::now()->valueOf());
             if ($request->image != null) {
+             $fileManager = new FileManager("questions/eleves/");
                 $image = $request->file('image');
-                $extention = $image->extension();                
-                $imageUrl = $image->store("questions/eleves/" . $matiere->libelle.'/' .$timestampMilliseconds. '.' . $extention, 'public');
+                // $extention = $image->extension();                
+                $imageUrl = $fileManager->store($image); //$image->store("questions/eleves/" . $matiere->libelle.'/' .$timestampMilliseconds. '.' . $extention, 'public');
                 Log::info($imageUrl);
                 $data['image_url'] = asset("storage/$imageUrl");
                 Log::info($data);               

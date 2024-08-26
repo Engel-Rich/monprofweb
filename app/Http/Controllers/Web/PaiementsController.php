@@ -11,9 +11,9 @@ use App\Models\User;
 use App\Services\SendMessageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
+// use Illuminate\Support\Facades\Http;
+// use Illuminate\Support\Facades\File;
+// use Illuminate\Support\Facades\Storage;
 
 class PaiementsController extends Controller
 {
@@ -149,17 +149,20 @@ class PaiementsController extends Controller
         $paie = Paiements::find($request->paiement);
         $user = User::find($paie->user_id);
         $qte = $paie->nombre_de_code;
-        $error = null;
+    
         
         $messageService  = new SendMessageService($paie, $user);
+        $paie->paiement_date = Carbon::now();
+        
         if ($qte == 1) {
             $code = $this->saveOneCode($id);
 
             SendMessageJob::dispatch($messageService, $code)->delay(now());
-
+            $paie->save(); 
             return redirect()->route('paiement.index');
         } else {
-            $data = $this->saveManyCod($id, $qte);        
+            $data = $this->saveManyCod($id, $qte);
+            $paie->save();         
             if (count($data) == 0) {
                   return redirect()->route('paiement.index');
             }
@@ -168,20 +171,7 @@ class PaiementsController extends Controller
             return redirect()->route('paiement.index');
             }
         }
-        
-       
-        // if ($error == null) {
-
-        //     $dateTime =  Carbon::now();
-        //     $paieUp = Paiements::find($id);
-        //     $paieUp->paiement_date = $dateTime;
-        //     $paieUp->status = true;
-        //     $paieUp->save();
-
-        //     return redirect()->route('paiements.index');
-        // } else {
-        //     return redirect()->back()->withErrors($error);
-        // }
+                
     }
     /**
      * Display the specified resource.

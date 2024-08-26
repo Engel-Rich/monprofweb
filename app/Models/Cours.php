@@ -10,7 +10,7 @@ class Cours extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'libelle', 'description', 'video_url', 'classe_id', 'matieres_id', 'matieres_id', 'user_id', 'categorie_id',
+        'libelle', 'description', 'video_url', 'classe_id', 'matieres_id', 'matieres_id', 'user_id', 'categorie_id','open'
     ];
 
     /**

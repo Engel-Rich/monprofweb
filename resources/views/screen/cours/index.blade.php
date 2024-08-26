@@ -1,5 +1,5 @@
 @extends('nav')
-
+@extends('base')
 
 @section('content')
 <form action="" class="form">

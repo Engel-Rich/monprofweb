@@ -23,6 +23,7 @@
                 <th scope="col" class="display-7 fw-bold border border-solid">Date d'activation</th>
                 <th scope="col" class="display-7 fw-bold border border-solid">Elèves.user</th>
                 <th scope="col" class="display-7 fw-bold border border-solid">Status du code</th>
+                <th scope="col" class="display-7 fw-bold border border-solid">Numéro.SMS.code</th>
                 <th scope="col" class="display-7 fw-bold border border-solid">Actions</th>
             </tr>
         </thead>
@@ -36,6 +37,7 @@
                     </td>
                     <td>{{ $code->eleve?->user==null? '/': $code->eleve?->user?->name.' '.($code->eleve?->user?->last_name?:'') }}</td>                                      
                     <td>{{ $code->actif==0?'En attente':"Activé"}}</td>                    
+                    <td>{{ $code->paiement->numero_client}}</td>                    
                     <td><a href="#">Détails</a></td>
                 </tr>
             @endforeach

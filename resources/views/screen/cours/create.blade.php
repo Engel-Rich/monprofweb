@@ -60,21 +60,44 @@
                 </div>
                 <div class="col-lg col-md">
 
+
                     {{-- Titre de la vidéo  --}}
 
                     <div class="mb-3">
                         <label for="libelle" class="form-label fw-bold">Titre du cours</label>
                         <input type="text" class="form-control" id="libelle" aria-describedby="classe_name"
                             name="libelle" required value="{{ old('libelle') }}">
-                        <div id="libelle" class="form-text">Entrer ltitre du nouveau cours</div>
+                        <div id="libelle" class="form-text">Entrer le titre du nouveau cours</div>
                     </div>
 
                     {{-- Fichier  --}}
 
+                    {{-- dire si le bouton est oui ou non actif --}}
+                    <div class="mb-3">
+                        <div class="row">
+                            <label for="libelle" class="form-label fw-bold">Cours gratuit</label>
+                            <div class="col">
+                                <input class="form-check-input" type="radio" name="open" value="1"
+                                    id="flexRadioDefault1">
+                                <label class="form-check-label" for="flexRadioDefault1">
+                                    Gratuit
+                                </label>
+                            </div>
+                            <div class="col">
+                                <input class="form-check-input" type="radio" name="open" value="0"
+                                    id="flexRadioDefault2" checked>
+                                <label class="form-check-label" for="flexRadioDefault2">
+                                    Payant
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+
                     <div class="mb-3">
                         <label class="form-label fw-bold" for="video">Chargez une Vidéo</label>
                         <input type="file" class="form-control" id="video" name="video"
-                            accept="video/mp4, video/webm, video/ogg" required></textarea>
+                            accept="video/mp4, video/webm, video/ogg" ></textarea>
                     </div>
 
                     {{-- Bouton de validation  --}}

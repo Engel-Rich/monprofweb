@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UserValidateRequest;
+// use App\Http\Requests\UserValidateRequest;
 use App\Models\Classe;
 use App\Models\Eleve;
 // use App\Models\Parents;
@@ -86,6 +86,24 @@ class UserController extends Controller
         }
     }
 
+    public function updateTocken(Request $request){
+        try {
+            $request->validate(['fcm_token'=>'string|required']);
+            $user = Auth::user();
+            $userapp = User::find($user->id);
+            $userapp->fcm_token = $request->fcm_token;
+            $userapp->save();
+            return response()->json([
+                'status'=>true,
+                'data'=> 'success'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'=>false,
+                'data'=> $th->getMessage()
+            ], $th->getCode());
+        }
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -148,7 +166,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], 400);
+            ], $th->getCode());
         }
     }
 
@@ -242,7 +260,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], 400);
+            ], $th->getCode());
         }
     }
 
@@ -270,7 +288,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], 400);
+            ], $th->getCode());
         }
     }
 

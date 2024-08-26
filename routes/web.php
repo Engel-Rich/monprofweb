@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CodesController;
@@ -33,8 +34,8 @@ Route::middleware('auth')->group(function () {
     })->name('index');
     Route::resource('classe', ClasseController::class)->except(['show']);
 
-    Route::post('/classe/add_matiere', [\App\Http\Controllers\web\ClasseController::class, 'addMatiereToClasse'])->name('classe.add_matiere');
-    Route::delete('/classe/delete_matiere', [\App\Http\Controllers\web\ClasseController::class, 'deleteMatiereToClasse'])->name('classe.delete_matiere');
+    Route::post('/classe/add_matiere', [ClasseController::class, 'addMatiereToClasse'])->name('classe.add_matiere');
+    Route::delete('/classe/delete_matiere', [ClasseController::class, 'deleteMatiereToClasse'])->name('classe.delete_matiere');
 
     Route::resource('matiere', MatieresController::class)->except(['show']);
     Route::get('/eleves', [EleveController::class, 'index'])->name('eleve.index');
@@ -43,7 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('cours', CoursController::class);
     Route::resource('question', QuestionsController::class)->only(['index', 'show']);
     Route::resource('reponse', ReponsesController::class)->only(['store','update']);
-    Route::resource('paiements', \App\Http\Controllers\Web\ReponsesController::class)->only(['index']);
+    Route::resource('paiements', ReponsesController::class)->only(['index']);
     Route::prefix('/code')->group(function (){
         Route::get('/{status}',[CodesController::class,'index'])->name('codes.index');
     });    
@@ -51,6 +52,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');    
     Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
+    Route::controller(AppMessageController::class)->group(function(){
+        Route::get('/messages', 'index')->name('messages.index');        
+        Route::post('/messages', 'store')->name('messages.store');
+        Route::get('/messages/new', 'create')->name('messages.create');
+    });
 });
 
 /// Lgin and Register routes 

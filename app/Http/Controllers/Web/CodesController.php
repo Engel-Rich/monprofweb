@@ -16,7 +16,7 @@ class CodesController extends Controller
 
         $codes =  Codes::with('eleve')->orderBy('id', 'desc')->paginate(20);
         $codesactif =  Codes::with('eleve')->where('actif',1)->orderBy('id', 'desc')->paginate(20);
-        $codesinactif =  Codes::with('eleve')->where('actif',0)->orderBy('id', 'desc')->paginate(20);
+        $codesinactif =  Codes::with('eleve', 'paiement')->where('actif',0)->orderBy('id', 'desc')->paginate(20);
         // dd($codes);
         return $status === 'all' ? view("screen.codes.index_codes", ['codes' => $codes]) :
            ( $status === "actif" ? view("screen.codes.index_codes", ['codes' => $codesactif]) :

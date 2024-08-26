@@ -44,7 +44,9 @@ class ClasseController extends Controller
             // route('classe.index')
             return   redirect()->route('classe.index');
         } catch (Exception $th) {
-            dd($th);
+            return to_route('screen.classe.create')->withErrors([
+                'error' => $th->getMessage(), 
+            ])->onlyInput('libelle','short_name','description');
         }
     }
 
@@ -86,7 +88,9 @@ class ClasseController extends Controller
             $classe->save();
             return   redirect()->route('classe.index');
         } catch (\Throwable $th) {
-            dd($th);
+            return to_route('screen.classe.create')->withErrors([
+                'error' => $th->getMessage(), 
+            ])->onlyInput('libelle','short_name','description');
         }
     }
 

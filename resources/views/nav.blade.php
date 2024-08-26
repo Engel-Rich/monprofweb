@@ -35,6 +35,10 @@
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Cours</span></a>
                     </li>
                     <li>
+                        <a href="{{route('messages.index')}}" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Messages</span></a>
+                    </li>
+                    <li>
                         <a href="{{route('question.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>                    </li>
                     
@@ -100,4 +104,27 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('search-script')
+    
+<script>
+    
+    $(document).ready(function() {        
+       $('#searchTextfield').on('input', function() {    
+           var searchQuery = $(this).val();                             
+           $.ajax({
+               url: '{{ route('eleve.index') }}',
+               type: 'GET',
+               data: { search: searchQuery },
+               success: function(data) {                
+                   $('#article-list').html($(data).find('#article-list').html());
+               },
+               error: function(xhr) {
+                   console.error("An error occurred: " + xhr.status + " " + xhr.statusText);
+               }
+           });
+       });
+   });
+</script>
 @endsection

@@ -54,18 +54,22 @@ class CoursController extends Controller
      */
     public function store(Request $request)
     {
-        try {      
+        try {                  
+            // dd($request->all());
+
             $validatortable=  [
                 "libelle" => 'string|required',
                 "description" => 'string|required',
                 'video' => 'required|file',
                 'classe_id'=>'required|exists:classes,id',
                 'matieres_id'=>'required|exists:matieres,id',
-                'categorie_id'=>'required|exists:categories,id'
-            ];      
-            
+                'categorie_id'=>'required|exists:categories,id'     ,    
+                'open'=> "integer|required"                      
+            ];                  
             $validation = $request->all();
             // if ($request->video=) {
+            $validation['open']= $request->open;
+            dd($validation);
                 Log::info($request->all());
                 $request->validate($validatortable);
                 $titre = $request->libelle;

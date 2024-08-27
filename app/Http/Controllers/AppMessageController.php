@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendNotifiCationJob;
+// use App\Services\PushNotifictaionService;
+// use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use App\Models\AppMessage;
 use App\Models\NotificationReade;
 use Illuminate\Http\Request;
@@ -12,6 +15,7 @@ class AppMessageController extends Controller
     /**
      * Display a listing of the resource.
      */
+    
     public function index(Request $request)
     {
         $user = $request->user();
@@ -19,11 +23,23 @@ class AppMessageController extends Controller
             $messageList = AppMessage::paginate();
             return view('screen.message.message_index', ['messages' => $messageList]);
         } else {
-            $messageList = AppMessage::paginate(page: $request->page ?: 1);
+            try {
+                $messageList = AppMessage::orderBy('created_at','desc')-> paginate(page: $request->page ?: 1);
+            $result = $messageList->getCollection()->transform( function ($value) use ($user){
+                $value->status = NotificationReade::where('app_message_id','=', $value->id)->where('user_id','=', $user->id)->exists();
+                return $value;
+            });
+            $messageList->setCollection($result);
             return response()->json([
                 'status' => true,
                 'data' => $messageList,
             ], 200);
+            } catch (\Throwable $th) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                ], $th->getCode());
+            }
         }
     }
 
@@ -41,7 +57,7 @@ class AppMessageController extends Controller
             })->get();
             return response()->json([
                 'status' => true,
-                'data' => $unreadMessageList,
+                'data' => count($unreadMessageList),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -66,14 +82,13 @@ class AppMessageController extends Controller
             $dataToSave = [
                 'title' => $request->title,
                 'body' => $request->body,
-            ];            
+            ];
             $message = AppMessage::create($dataToSave);
-            SendNotifiCationJob::dispatch($message->id)->delay(now());          
-            // dd($message);
+            SendNotifiCationJob::dispatch($message->id)->delay(now()->addSeconds(2));
             return redirect()->route('messages.index');
 
         } catch (\Throwable $th) {
-            dd($th);
+            Log::info($th->getMessage());
             return to_route('messages.create')->withErrors([
                 'error' => $th->getMessage(),
             ])->onlyInput('title', 'body');
@@ -85,26 +100,32 @@ class AppMessageController extends Controller
      */
     public function readNotification(Request $request)
     {
-        $userId = auth()->id();
+        
 
         try {
+            $userId = auth()->id();
             $request->validate([
-                'message_id' => 'integer|exists:notification_reades,id'
+                'message_id' => 'integer|exists:app_messages,id'
             ]);
-            $messageId = $request->message_id;
-            $notificationReaderInstance = NotificationReade::where('user_id', $userId)->where('app_message_id', $messageId)->exists();
+            $id = $request->message_id;
+            $notificationReaderInstance = NotificationReade::where('user_id', $userId)->where('app_message_id', $id)->exists();
             if (!$notificationReaderInstance) {
                 NotificationReade::create([
                     'user_id' => $userId,
-                    'app_message_id' => $messageId,
+                    'app_message_id' => $id,
                 ]);
                 return response()->json([
                     'status' => true,
                     'data' => 'notification has been read succesfully',
                 ], 200);
+            }else{
+                return response()->json([
+                    'status' => false,
+                    'data' => 'Notification not found',
+                ], 400);
             }
         } catch (\Throwable $th) {
-           
+            dd($th);
             return response()->json([
                 'status' => false,
                 'data' => $th->getMessage(),

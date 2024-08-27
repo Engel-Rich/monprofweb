@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppMessageController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CodesController;
@@ -56,7 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', 'index')->name('messages.index');        
         Route::post('/messages', 'store')->name('messages.store');
         Route::get('/messages/new', 'create')->name('messages.create');
-    });
+    })->middleware('auth');
+    Route::get('/suggestion', [SuggestionController::class, 'index'])->name('index.suggestion');
 });
 
 /// Lgin and Register routes 

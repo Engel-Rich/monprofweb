@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\api\CategorieController;
 use App\Http\Controllers\api\ClasseController;
 use App\Http\Controllers\api\CodeController;
@@ -8,6 +8,7 @@ use App\Http\Controllers\api\MatiereController;
 use App\Http\Controllers\api\PaiementsController;
 use App\Http\Controllers\api\QuestionController;
 use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,13 +38,19 @@ Route::prefix('/code')->group(function ()  {
     Route::put('/active', [CodeController::class, "activeCode"]);    
 });
 Route::resource('matiere', MatiereController::class)->only(['index']);
-Route::put('/auth/fcm_token', [UserController::class,'updateTocken' ]);
+Route::middleware('auth:api')->put('/auth/fcm_token', [UserController::class,'updateTocken' ]);
+Route::post('/sugestion', [SuggestionController::class,'store' ]);
 Route::resource('categorie', CategorieController::class)->only(['index']);
 Route::get('categorie/status',[CategorieController::class, 'status']);
 Route::get('categorie/parent/status',[CategorieController::class, 'statusCodesParent']);
 Route::resource('cours', CoursController::class)->only(['index']);
 Route::resource('question', QuestionController::class)->only(['index','store']);
 Route::resource('paiement', PaiementsController::class)->except(['index', 'show', 'edit', 'destroy', 'create', 'update']);
+Route::controller(AppMessageController::class)->prefix('/notifications')->middleware('auth:api')->group(function(){
+    Route::get('/', 'index')->name('messages.api.index');        
+    Route::get('/unread', 'getNotificationsOnRead')->name('messages.get-unread');
+    Route::put('/read', 'readNotification')->name('messages.read');
+});
 // Route::middleware('auth.api')->group(function ()  {
     
 // });

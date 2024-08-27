@@ -39,6 +39,10 @@
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Messages</span></a>
                     </li>
                     <li>
+                        <a href="{{route('index.suggestion')}}" class="nav-link px-0 align-middle">
+                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Sugestion</span></a>
+                    </li>
+                    <li>
                         <a href="{{route('question.index')}}" class="nav-link px-0 align-middle">
                             <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>                    </li>
                     

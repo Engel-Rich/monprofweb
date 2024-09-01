@@ -36,7 +36,7 @@
 
                     <div class="my-3">
                         <div class="form-group">
-                            <button class="btn btn-outline-primary" type="submit">Sign Up</button>
+                            <button class="btn btn-outline-primary" type="submit">Connexion</button>
                         </div>
                     </div>
 

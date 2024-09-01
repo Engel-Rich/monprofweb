@@ -13,6 +13,10 @@
         <p>
             {{$question->description}}
         </p>
+        @if ($question->image_url!=null)
+        <h5 class="">Description : </h5>
+        <img src="{{$question->image_url}}" alt="" style="width: 20rem;height:25rem" srcset="">
+        @endif
     </div>
     <div class="col"> 
             <h2 class="display-5">Reponse</h2>

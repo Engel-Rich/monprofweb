@@ -10,10 +10,12 @@ use Kreait\Laravel\Firebase\Facades\Firebase;
 class PushNotifictaionService
 {
 
-    protected AppMessage $appMessage;
-    public function __construct(AppMessage $appMessage)
+    protected string $appMessage;
+    protected string $title;
+    public function __construct(string $appMessage, string $title)
     {
         $this->appMessage = $appMessage;
+        $this->title = $title;
     }
 
     public function sendNotificationToToken(string $token)
@@ -22,8 +24,8 @@ class PushNotifictaionService
             $messaging = Firebase::messaging();
             $notification = Notification::fromArray(
                 [
-                    'title' => $this->appMessage->title,
-                    'body' => $this->appMessage->body,
+                    'title' => $this->title,
+                    'body' => $this->appMessage,
                 ]
             );
             $message = CloudMessage::withTarget('token', $token)

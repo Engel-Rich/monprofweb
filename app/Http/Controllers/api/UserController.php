@@ -8,6 +8,7 @@ use App\Models\Classe;
 use App\Models\Eleve;
 // use App\Models\Parents;
 use App\Models\User;
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -63,6 +64,11 @@ class UserController extends Controller
             } else {
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
+                if($user->profile_image!=null){
+                    $storeArboressence = "profile/users/$user->phone";
+                    $fileService = new FileManager($storeArboressence);
+                    $user->profile_image = $fileService->get($user->profile_image);
+                }
                 return response()->json([
                     'auth' => [
                         'type' => 'Bearer',
@@ -101,7 +107,7 @@ class UserController extends Controller
             return response()->json([
                 'status'=>false,
                 'data'=> $th->getMessage()
-            ], $th->getCode());
+            ], 400);
         }
     }
     /**
@@ -166,7 +172,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], $th->getCode());
+            ],400);
         }
     }
 
@@ -248,7 +254,7 @@ class UserController extends Controller
 
             $token = Auth::guard('api')->login($user);
             $parent_datas['user_id'] = Auth::guard('api')->user()->id;
-            $student = \App\Models\Parents::create($parent_datas);
+            $student = \App\Models\Parents::create($parent_datas);            
             return response()->json([
                 'auth' => ['type' => 'Bearer', 'token' => $token],
                 'status' => true,
@@ -260,7 +266,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], $th->getCode());
+            ], 400,);
         }
     }
 
@@ -270,14 +276,16 @@ class UserController extends Controller
     {
         try {
             $request->validate(['image' => 'file|required|mimetypes:image/*',]);
-            $user = Auth::guard('api')->user();
+            $user = Auth::user();
             $image = $request->file('image');
-            $extention = $image->extension();
-            $storeArboressence = "profile/users/" . str_replace('@', '_', $user->email);
-            $imageUrl = $image->store($storeArboressence . '.' . $extention, 'public');
-            \Illuminate\Support\Facades\Log::info($imageUrl);
-            $user->profile_image = asset("storage/$imageUrl");
-            $user->save();
+            // $extention = $image->extension();
+            $storeArboressence = "profile/users/" .$user->phone;
+            $fileService = new FileManager($storeArboressence);
+            $imageUrl = $fileService->store($image);
+            // \Illuminate\Support\Facades\Log::info($imageUrl);
+            $user->profile_image = $imageUrl;
+            $user->save();            
+            $user->profile_image = $fileService->get($imageUrl);
             return response()->json([
                 'status' => true,
                 'error' => null,
@@ -288,7 +296,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], $th->getCode());
+            ], 400);
         }
     }
 

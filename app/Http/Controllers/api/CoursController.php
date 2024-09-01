@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categorie;
 use App\Models\Codes;
 use App\Models\Cours;
 use App\Models\Eleve;
@@ -36,13 +37,13 @@ class CoursController extends Controller
             // Ouvrire les cours si l'élève possède un abonnemnet
 
             $user = Auth::user();
-            $eleve = Eleve::where('user_id', $user->id)->get()[0];
+            $eleve = Eleve::where('user_id', $user->id)->with('classe')->get()[0];
             $cours  = Cours::where('matieres_id', $request['matiere_id'])
                 ->where('classe_id', $eleve->classe_id)
                 ->where('categorie_id', $request->categorie_id)
                 ->with('matiere')
                 ->paginate(20);
-
+            $categorie = Categorie::find($request->categorie_id);
             //CHECK IF USER HAVE ACTIVE CODE
             $exist = Codes::with('paiement')->whereHas(
                 'paiement',
@@ -55,9 +56,16 @@ class CoursController extends Controller
                     $cour->open = true;
                 }
             }
-            $result = $cours->getCollection()->transform(function ($value) {
+            
+            $categorie = $categorie->libelle;
+            $classe = $eleve->classe->libelle;
+
+            $result = $cours->getCollection()->transform(function ($value) use ($classe, $categorie) {
                 // dd($value->video_url);
-                $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
+                $matiere = $value->matiere->libelle;
+                $fileManager = new FileManager("Videos/$categorie/$classe/$matiere".$value->video);
+
+                // $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
                 $value->video_url = $fileManager->get($value->video_url);
                 // dd($value->video_url);
                 return $value;
@@ -73,7 +81,7 @@ class CoursController extends Controller
             return response()->json([
                 'status' => false,
                 'data' => null,
-                'error' => $th->getMessage(),500,
+                'error' => $th->getMessage(),400,
             ]);
         }
     }

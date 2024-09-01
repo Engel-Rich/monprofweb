@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppMessage;
 use App\Models\Categorie;
 use App\Models\Paiements;
+use App\Models\User;
+use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,15 +49,23 @@ class PaiementsController extends Controller
                 'numero_payeur' => 'required',
                 'numero_client' => 'required',
             ]);
-            $user = Auth::user();
-            $categorie =  Categorie::find($request->categorie_id);
+            $user = User::find(auth()->id());
+            $categorie = Categorie::find($request->categorie_id);
             $data = $request->all();
             $data['user_id'] = $user->id;
             $data['montant'] = $categorie->prix * $request->nombre_de_code;
             $paiment = Paiements::create($data);
+            $token = $user->fcm_token;
+            if ($request->nombre_de_code == 1) {
+                $notifOneCode = new PushNotifictaionService("Votre nouvelle commande de code chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');
+                $notifOneCode->sendNotificationToToken($token);
+            } else {
+                $notifManyCode = new PushNotifictaionService("Votre nouvelle commande de $request->nombre_de_code codes chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez la liste des codes par Mail à l'adresse $user->email.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');
+                $notifManyCode->sendNotificationToToken($token);
+            }
             return response()->json(['status' => true, 'data' => $paiment], 200);
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, "error" => $th->getMessage()],500);
+            return response()->json(['status' => false, 'data' => null, "error" => $th->getMessage()], 400);
         }
     }
 

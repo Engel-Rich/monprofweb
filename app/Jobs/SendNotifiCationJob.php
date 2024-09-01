@@ -18,10 +18,12 @@ class SendNotifiCationJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    protected $messageID;
-    public function __construct(  $messageID)
+    protected $message;
+    protected $title;
+    public function __construct( $message,$title)
     {
-        $this->messageID = $messageID;
+        $this->title = $title;
+        $this->message = $message;
     }
 
     /**
@@ -29,9 +31,8 @@ class SendNotifiCationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        try {
-            $message = AppMessage::find($this->messageID);        
-            $notification = new PushNotifictaionService($message);
+        try {      
+            $notification = new PushNotifictaionService($this->message, $this->title);
             $userLis  = User::where('fcm_token', '!=', null)->get();  
             foreach ($userLis as $user) {
                 $token = $user->fcm_token;

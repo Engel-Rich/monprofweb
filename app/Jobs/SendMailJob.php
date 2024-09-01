@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\PushNotifictaionService;
 use App\Services\SendMessageService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,6 +30,6 @@ class SendMailJob implements ShouldQueue
      */
     public function handle(): void
     {
-      $this->sendMessageService->sendEmail($this->codeList);
+      $this->sendMessageService->sendEmail($this->codeList);   
     }
 }

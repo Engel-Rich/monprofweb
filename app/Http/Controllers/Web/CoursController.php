@@ -19,18 +19,21 @@ class CoursController extends Controller
      */
     public function index()
     {
-        
-        $cours = Cours::with('classe', 'user', "matiere",'categorie')->paginate(20);
-        // dd($matieres);
+
+        $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(20);
         $result = $cours->getCollection()->transform(function ($value) {
             // dd($value->video_url);
-            $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
+            $matiere = $value->matiere->libelle;
+            $categorie = $value->categorie->libelle;
+            $classe = $value->classe->libelle;
+            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere".$value->video);
             $value->video_url = $fileManager->get($value->video_url);
             // dd($value->video_url);
             return $value;
         });
+        // dd($result);
         $cours->setCollection($result);
-        return view('screen.cours.index', ['cours' => $cours],);
+        return view('screen.cours.index', ['cours' => $cours], );
     }
 
     /**
@@ -54,43 +57,45 @@ class CoursController extends Controller
      */
     public function store(Request $request)
     {
-        try {                  
+        try {
             // dd($request->all());
 
-            $validatortable=  [
+            $validatortable = [
                 "libelle" => 'string|required',
                 "description" => 'string|required',
                 'video' => 'required|file',
-                'classe_id'=>'required|exists:classes,id',
-                'matieres_id'=>'required|exists:matieres,id',
-                'categorie_id'=>'required|exists:categories,id'     ,    
-                'open'=> "integer|required"                      
-            ];                  
+                'classe_id' => 'required|exists:classes,id',
+                'matieres_id' => 'required|exists:matieres,id',
+                'categorie_id' => 'required|exists:categories,id',
+                'open' => "integer|required"
+            ];
             $validation = $request->all();
             // if ($request->video=) {
-            $validation['open']= $request->open;
-            dd($validation);
-                Log::info($request->all());
-                $request->validate($validatortable);
-                $titre = $request->libelle;
-                $classe  = Classe::find($request->classe_id)->libelle;
-                $matiere  = Matieres::find($request->matieres_id)->libelle;
-                $categorie  = Categorie::find($request->categorie_id)->libelle;
-                $video = $request->file('video');
-                $extention = $video->extension();
-                $user = $request->user()->id;
-                // dd($classe->libelle,$matiere->libelle,$categorie->libelle);
-                
-                $filemanager = new FileManager('Videos/'.$matiere);
-                $videoUrl = $filemanager->store($video);  //$video->store("videos/$categorie/$classe/$matiere/$titre.$extention", 'public');
-                Log::info($videoUrl);
-                $validation['video_url'] = $videoUrl;//asset("storage/$videoUrl");
-                $validation['user_id'] = $user;            
+            $validation['open'] = $request->open;
+            Log::info($request->all());
+            $request->validate($validatortable);
+            // $titre = $request->libelle;
+            $classe  = Classe::find($request->classe_id)->libelle;
+            $matiere = Matieres::find($request->matieres_id)->libelle;
+            $categorie  = Categorie::find($request->categorie_id)->libelle;
+            $video = $request->file('video');
+            // $extention = $video->extension();
+            $user = $request->user()->id;          
+            $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
+            $videoUrl = $filemanager->store($video); // $video->store("Videos/$categorie/$classe/$matiere", 'public');
+            // dd($videoUrl,asset("storage/$videoUrl"), url("storage/$videoUrl"), url($videoUrl));
+            $validation['video_url'] = $videoUrl; //asset("storage/$videoUrl");
+            $validation['user_id'] = $user;
+            try {
                 Log::info($validation);
                 unset($validation['video']);
                 Cours::create($validation);
                 Log::info($validation);
-                return redirect()->route('cours.index');
+            } catch (\Throwable $th) {
+                $filemanager->delete($videoUrl);
+                return to_route('cours.create')->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
+            }
+            return redirect()->route('cours.index');
             // }
             // dd($validation);
         } catch (\Throwable $th) {

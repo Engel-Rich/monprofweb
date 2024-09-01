@@ -84,7 +84,7 @@ class AppMessageController extends Controller
                 'body' => $request->body,
             ];
             $message = AppMessage::create($dataToSave);
-            SendNotifiCationJob::dispatch($message->id)->delay(now()->addSeconds(2));
+            SendNotifiCationJob::dispatch($message->body,$message->title)->delay(now()->addSeconds(2));
             return redirect()->route('messages.index');
 
         } catch (\Throwable $th) {

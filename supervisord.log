@@ -12129,3 +12129,99 @@
 2024-08-21 12:09:17,030 INFO waiting for laravel-queue, php-fpm to die
 2024-08-21 12:09:17,038 INFO stopped: php-fpm (exit status 0)
 2024-08-21 12:09:18,044 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-08-31 15:18:57,182 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-08-31 15:18:57,191 INFO supervisord started with pid 1
+2024-08-31 15:18:58,200 INFO spawned: 'laravel-queue' with pid 7
+2024-08-31 15:18:58,204 INFO spawned: 'php-fpm' with pid 8
+2024-08-31 15:18:59,313 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 15:18:59,313 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 16:19:09,466 INFO exited: laravel-queue (exit status 0; expected)
+2024-08-31 16:19:10,472 INFO spawned: 'laravel-queue' with pid 14
+2024-08-31 16:19:11,475 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 17:19:13,548 INFO exited: laravel-queue (exit status 0; expected)
+2024-08-31 17:19:14,553 INFO spawned: 'laravel-queue' with pid 18
+2024-08-31 17:19:15,556 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 17:29:57,849 INFO exited: laravel-queue (exit status 0; expected)
+2024-08-31 17:29:58,855 INFO spawned: 'laravel-queue' with pid 22
+2024-08-31 17:29:59,860 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 18:30:00,903 INFO exited: laravel-queue (exit status 0; expected)
+2024-08-31 18:30:01,907 INFO spawned: 'laravel-queue' with pid 26
+2024-08-31 18:30:02,910 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-08-31 18:31:52,225 WARN received SIGQUIT indicating exit request
+2024-08-31 18:31:52,226 INFO waiting for laravel-queue, php-fpm to die
+2024-08-31 18:31:52,236 INFO stopped: php-fpm (exit status 0)
+2024-08-31 18:31:52,238 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 09:18:22,686 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 09:18:22,692 INFO supervisord started with pid 1
+2024-09-01 09:18:23,701 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 09:18:23,706 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 09:18:24,818 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 09:18:24,819 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 10:19:59,420 WARN received SIGQUIT indicating exit request
+2024-09-01 10:19:59,429 INFO waiting for laravel-queue, php-fpm to die
+2024-09-01 10:19:59,441 INFO stopped: php-fpm (exit status 0)
+2024-09-01 10:20:00,444 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 10:20:05,888 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 10:20:05,893 INFO supervisord started with pid 1
+2024-09-01 10:20:06,901 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 10:20:06,904 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 10:20:07,941 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 10:20:07,943 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 11:20:12,469 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 11:20:13,474 INFO spawned: 'laravel-queue' with pid 14
+2024-09-01 11:20:14,477 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 12:20:14,503 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 12:20:15,508 INFO spawned: 'laravel-queue' with pid 22
+2024-09-01 12:20:16,511 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 13:20:22,856 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 13:20:23,860 INFO spawned: 'laravel-queue' with pid 26
+2024-09-01 13:20:24,863 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 14:20:26,654 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 14:20:27,666 INFO spawned: 'laravel-queue' with pid 31
+2024-09-01 14:20:28,670 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 15:20:33,341 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 15:20:34,347 INFO spawned: 'laravel-queue' with pid 35
+2024-09-01 15:20:35,351 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 16:14:26,280 WARN received SIGQUIT indicating exit request
+2024-09-01 16:14:26,285 INFO waiting for laravel-queue, php-fpm to die
+2024-09-01 16:14:26,294 INFO stopped: php-fpm (exit status 0)
+2024-09-01 16:14:26,296 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 19:16:51,042 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 19:16:51,047 INFO supervisord started with pid 1
+2024-09-01 19:16:52,052 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 19:16:52,057 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 19:16:53,227 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 19:16:53,228 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 19:28:13,113 WARN received SIGQUIT indicating exit request
+2024-09-01 19:28:13,114 INFO waiting for laravel-queue, php-fpm to die
+2024-09-01 19:28:13,123 INFO stopped: php-fpm (exit status 0)
+2024-09-01 19:28:14,129 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 19:28:31,446 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 19:28:31,450 INFO supervisord started with pid 1
+2024-09-01 19:28:32,458 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 19:28:32,462 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 19:28:33,497 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 19:28:33,498 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 19:47:21,377 INFO exited: laravel-queue (exit status 0; expected)
+2024-09-01 19:47:22,382 INFO spawned: 'laravel-queue' with pid 27
+2024-09-01 19:47:23,386 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 20:17:10,064 WARN received SIGQUIT indicating exit request
+2024-09-01 20:17:10,073 INFO waiting for laravel-queue, php-fpm to die
+2024-09-01 20:17:10,097 INFO stopped: php-fpm (exit status 0)
+2024-09-01 20:17:11,103 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 20:17:52,224 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 20:17:52,229 INFO supervisord started with pid 1
+2024-09-01 20:17:53,234 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 20:17:53,236 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 20:17:54,271 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 20:17:54,271 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 20:28:46,761 WARN received SIGQUIT indicating exit request
+2024-09-01 20:28:46,763 INFO waiting for laravel-queue, php-fpm to die
+2024-09-01 20:28:46,769 INFO stopped: php-fpm (exit status 0)
+2024-09-01 20:28:46,771 WARN stopped: laravel-queue (terminated by SIGTERM)
+2024-09-01 20:28:56,983 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-09-01 20:28:56,990 INFO supervisord started with pid 1
+2024-09-01 20:28:57,997 INFO spawned: 'laravel-queue' with pid 7
+2024-09-01 20:28:58,000 INFO spawned: 'php-fpm' with pid 8
+2024-09-01 20:28:59,033 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-09-01 20:28:59,034 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

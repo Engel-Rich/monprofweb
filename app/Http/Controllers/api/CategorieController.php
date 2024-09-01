@@ -68,7 +68,7 @@ class CategorieController extends Controller
 
             return response()->json(['status' => true, 'data' => $result], 200);
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 500);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);
         }
     }
 
@@ -108,7 +108,7 @@ class CategorieController extends Controller
             }
             return response()->json(['status' => true, 'data' => $result], 200);
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 500);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);
         }
     }
 

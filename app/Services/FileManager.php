@@ -28,10 +28,10 @@ class FileManager{
             
             $fileExtention = $file->extension();
             $timestam = Carbon::now()->getTimestamp();
-            $filename = $this->filefolder . '/' . $timestam . "." . $fileExtention;
+            $filename = "$this->filefolder/$timestam.$fileExtention";
             $storage = Storage::disk($storedisk)->put($filename, file_get_contents($file));
             if ($storage) {
-                return $timestam . "." . $fileExtention;
+                return "$timestam.$fileExtention";
             }
             return null;
         } catch (\Throwable $th) {
@@ -46,7 +46,7 @@ class FileManager{
 
     public function delete(string $filename, $storedisk = "public"): bool {
         try {
-            return Storage::disk($storedisk)->delete($this->filefolder . '/' . $filename);
+            return Storage::disk($storedisk)->delete("$this->filefolder/$filename");
         } catch (\Throwable $th) {
             Log::info($th->getMessage());
             return false;
@@ -58,7 +58,7 @@ class FileManager{
 
     public function get(string $filename, $storedisk = "public"): string|null {
         try {
-            return Storage::disk($storedisk)->url($this->filefolder . '/' . $filename);
+            return Storage::disk($storedisk)->url("$this->filefolder/$filename");
         } catch (\Throwable $th) {
             Log::info($th->getMessage());
             return null;

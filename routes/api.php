@@ -39,6 +39,7 @@ Route::prefix('/code')->group(function ()  {
 });
 Route::resource('matiere', MatiereController::class)->only(['index']);
 Route::middleware('auth:api')->put('/auth/fcm_token', [UserController::class,'updateTocken' ]);
+Route::middleware('auth:api')->put('/auth/update_profile', [UserController::class,'updateTocken' ]);
 Route::post('/sugestion', [SuggestionController::class,'store' ]);
 Route::resource('categorie', CategorieController::class)->only(['index']);
 Route::get('categorie/status',[CategorieController::class, 'status']);

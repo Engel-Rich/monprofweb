@@ -59,7 +59,7 @@ class CodeController extends Controller
                 ],);
             }
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()],500);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()],400);
         }
     }
 }

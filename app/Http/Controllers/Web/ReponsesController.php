@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 // use App\Models\Reponses;
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -45,12 +46,12 @@ class ReponsesController extends Controller
             // unset($validation['image']);
             if ($request->image != null) {
                 $image = $request->file('image');
-                $extention = $image->extension();
-                $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                Log::info($question);
-                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" .$request->questions_id. '.' . $extention, 'public');
-                Log::info($imageUrl);
-                $validation['image_url'] = asset("storage/$imageUrl");
+                // $extention = $image->extension();
+                // $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
+                $fileManager = new FileManager("Reponses/$request->questions_id");
+                $imageUrl = $fileManager->store($image);  //$image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/" .$request->questions_id. '.' . $extention, 'public');
+                // Log::info($imageUrl);
+                $validation['image_url'] =$imageUrl; //asset("storage/$imageUrl");
                 Log::info($validation);               
             }
             unset($validation['image']);
@@ -98,11 +99,12 @@ class ReponsesController extends Controller
             $validation = $request->all();   
             if ($request->image != null) {
                 $image = $request->file('image');
-                $extention = $image->extension();
-                $question = \App\Models\Questions::with('matiere', 'classe')->find($request->questions_id);
-                $imageUrl = $image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/".$request->questions_id . '.' . $extention, 'public');
+                // $extention = $image->extension();
+                // $question = \App\Models\Questions::find($request->questions_id);
+                $fileManager = new FileManager("Reponses/$request->questions_id");
+                $imageUrl = $fileManager->store($image);  //$image->store("questions/images/" . $question->classe->libelle . "/" . $question->matiere->libelle . "/".$request->questions_id . '.' . $extention, 'public');
                 Log::info($imageUrl);
-                $validation['image_url'] = asset("storage/$imageUrl");
+                $validation['image_url'] =$imageUrl; //asset("storage/$imageUrl");
                 Log::info($validation);
              
             }

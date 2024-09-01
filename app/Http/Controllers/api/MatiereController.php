@@ -32,7 +32,7 @@ class MatiereController extends Controller
             // $matieres= $userClasse?->matieres();
             return response()->json(['status' => true,'data'=>$userClasse?->matieres], 200);
             } catch (\Throwable $th) {
-                return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);
+                return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()],400);
             }
     }
 

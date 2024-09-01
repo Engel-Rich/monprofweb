@@ -28,5 +28,6 @@
     
     @yield('update_classe_scripte')
     @yield('search-script')
+    @yield('save-cours-script')
 </body>
 </html>

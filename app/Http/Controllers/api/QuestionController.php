@@ -35,16 +35,18 @@ class QuestionController extends Controller
                 ->where('matieres_id', $request->matiere_id)
                 ->where('categorie_id', '=', $request->categorie_id)
                 ->paginate(20);
-            $result = $questions->getCollection()->transform(function ($value){
-                $fileManager = new FileManager("questions/eleves/");
+            $result = $questions->getCollection()->transform(function ($value){                
                 if($value->image_url!=null){
+                    $fileManager = new FileManager("questions/eleves/");
                     $value->image_url = $fileManager->get($value->image_url);
+                }
+                if($value->reponse!=null && $value->reponse->image_url!=null){
+                    $fileManager = new FileManager("Reponses/$value->id");
+                    $value->reponse->image_url = $fileManager->get($value->reponse->image_url);
                 }
                 return $value;
             });
-
             $questions->setCollection($result);
-
             return response()->json(['status' => true, 'data' => $questions, 'error' => null]);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => 'null', 'error' => $th->getMessage(),], 500);
@@ -88,14 +90,14 @@ class QuestionController extends Controller
             if ($data['titre'] == null) {               
                 $data['titre'] = $matiere->libelle;
             }
-            $timestampMilliseconds = strval(Carbon::now()->valueOf());
+            // $timestampMilliseconds = strval(Carbon::now()->valueOf());
             if ($request->image != null) {
              $fileManager = new FileManager("questions/eleves/");
                 $image = $request->file('image');
                 // $extention = $image->extension();                
                 $imageUrl = $fileManager->store($image); //$image->store("questions/eleves/" . $matiere->libelle.'/' .$timestampMilliseconds. '.' . $extention, 'public');
                 Log::info($imageUrl);
-                $data['image_url'] = asset("storage/$imageUrl");
+                $data['image_url'] = $imageUrl;// asset("storage/$imageUrl");
                 Log::info($data);               
             }
             $questions = \App\Models\Questions::create($data);
@@ -109,7 +111,7 @@ class QuestionController extends Controller
                 'status' => false,
                 'data' => 'null',
                 'error' => $th->getMessage()
-            ], 500);
+            ], 400);
         }
     }
 

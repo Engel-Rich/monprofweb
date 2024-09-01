@@ -110,10 +110,8 @@
 </div>
 @endsection
 
-@section('search-script')
-    
-<script>
-    
+@section('search-script')    
+<script>    
     $(document).ready(function() {        
        $('#searchTextfield').on('input', function() {    
            var searchQuery = $(this).val();                             
@@ -131,4 +129,10 @@
        });
    });
 </script>
+@endsection
+
+@section('save-cours-script')
+
+
+    
 @endsection

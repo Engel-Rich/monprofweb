@@ -8,6 +8,7 @@ use App\Jobs\SendMessageJob;
 use App\Models\Codes;
 use App\Models\Paiements;
 use App\Models\User;
+use App\Services\PushNotifictaionService;
 use App\Services\SendMessageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class PaiementsController extends Controller
      */
     public function index()
     {
-        $paiments  =  Paiements::with('user', 'categorie')->paginate(20);
+        $paiments = Paiements::with('user', 'categorie')->paginate(20);
         return view('screen.paiements.index_paiements', ['paiements' => $paiments]);
     }
 
@@ -64,7 +65,7 @@ class PaiementsController extends Controller
         $dateActuelleDetail = explode('/', $dateActuelle);
         $heureActuelleDetail = explode(':', $heureActuelle);
         $code = $dateActuelleDetail[1] . $dateActuelleDetail[0] . $dateActuelleDetail[2] . "" . $id_paiement_attente;
-       
+
         $finalCode = "";
         for ($i = 0; $i < 10; $i++) {
             $index = rand(0, strlen($code) - 1);
@@ -77,7 +78,7 @@ class PaiementsController extends Controller
     protected function saveManyCod(int $paiement_id, int $qte): array
     {
         $count = 1;
-        $codeList = [];   
+        $codeList = [];
         do {
             $code = $this->saveOneCode($paiement_id);
             if ($code != null) {
@@ -104,7 +105,7 @@ class PaiementsController extends Controller
             $code = $this->genererCodeActivation($id);
             // dd($code);
             while (Codes::where('code', $code)->exists()) {
-                $code =     $this->genererCodeActivation($id);
+                $code = $this->genererCodeActivation($id);
             }
             Codes::create([
                 'paiements_id' => $id,
@@ -121,7 +122,7 @@ class PaiementsController extends Controller
     /**
      * Function permettant d'envoiyer le sms
      */
-   
+
 
     /**
      * 
@@ -136,7 +137,7 @@ class PaiementsController extends Controller
      * Function permettant de générer les fichier 
      */
 
-   
+
 
 
     /**
@@ -149,29 +150,36 @@ class PaiementsController extends Controller
         $paie = Paiements::find($request->paiement);
         $user = User::find($paie->user_id);
         $qte = $paie->nombre_de_code;
-    
-        
-        $messageService  = new SendMessageService($paie, $user);
+
+
+        $messageService = new SendMessageService($paie, $user);        
         $paie->paiement_date = Carbon::now();
-        
+        $token = $user->fcm_token;
+        // dd($user->fcm_token);
         if ($qte == 1) {
             $code = $this->saveOneCode($id);
-
-            SendMessageJob::dispatch($messageService, $code)->delay(now());
-            $paie->save(); 
+            SendMessageJob::dispatch($messageService, $code, $token)->delay(now());
+            if ($token != null) {
+                $notifOneCode = new PushNotifictaionService("Votre paiement a été validé avec succès et votre code a été activé\n Vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
+                $notifOneCode->sendNotificationToToken($token);
+            }
+            $paie->save();
             return redirect()->route('paiement.index');
         } else {
             $data = $this->saveManyCod($id, $qte);
-            $paie->save();         
+            $paie->save();
             if (count($data) == 0) {
-                  return redirect()->route('paiement.index');
-            }
-             else {            
-            SendMailJob::dispatch($messageService, $data)->delay(now());
-            return redirect()->route('paiement.index');
+                return redirect()->route('paiement.index');
+            } else {
+                SendMailJob::dispatch($messageService, $data, $token)->delay(now());
+                if ($token != null) {
+                    $notifManyCode = new PushNotifictaionService("Votre paiement de $qte a été validé avec succès et vos codes ont été activé\n Vous recevrez la liste des codes par Mail.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
+                    $notifManyCode->sendNotificationToToken($token);
+                }
+                return redirect()->route('paiement.index');
             }
         }
-                
+
     }
     /**
      * Display the specified resource.

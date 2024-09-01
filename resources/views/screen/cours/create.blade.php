@@ -3,8 +3,10 @@
 @section('content')
     <h1 class="display-5"> Ajouter Un nouveau cours</h1>
 
+    {{-- Formulaire d'ajout de cours --}}
+
     <div class="container py-5 px-5">
-        <form method="POST" action="{{ route('cours.store') }}" enctype="multipart/form-data">
+        <form id="cours-save-form" method="POST" action="{{ route('cours.store') }}" enctype="multipart/form-data">
             @error('error')
                 <div class="m-3 text-danger">
                     {{ $message }}
@@ -97,12 +99,19 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold" for="video">Chargez une Vidéo</label>
                         <input type="file" class="form-control" id="video" name="video"
-                            accept="video/mp4, video/webm, video/ogg" ></textarea>
+                            accept="video/mp4, video/webm, video/ogg"></textarea>
                     </div>
 
                     {{-- Bouton de validation  --}}
 
                     <button type="submit" class="btn btn-outline-primary px-5">Submit</button>
+
+                    {{-- Progress bar --}}
+                    
+                    <div class="progress mt-3">
+                        <div class="progress-bar" role="progressbar" style="width: 0%;" id="progressBar">0%</div>
+                    </div>
+                    <div id="uploadStatus"></div>
 
                 </div>
             </div>

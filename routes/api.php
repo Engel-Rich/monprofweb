@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('emei-verify')->group(function () {
     Route::post("auth/refresh-token", [UserController::class, 'refresh'])->name('api.user.refresh_token');
     Route::post("eleve/register", [UserController::class, 'register'])->name('api.student.register');
-    Route::post("eleve/login", [UserController::class, 'login'])->name('api.student.register');
+    Route::post("user/login", [UserController::class, 'login'])->name('api.student.register');
     Route::post("parent/register", [UserController::class, 'registerParent'])->name('api.parent.register');
     Route::post("user/logout", [UserController::class, 'logout'])->name('api.user.logout');
     Route::post("user/update_profile", [UserController::class, 'updateProfile'])->name('api.user.update_profile');

@@ -170,6 +170,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FileServiceProvider::class,
         Kreait\Laravel\Firebase\ServiceProvider::class,
+        App\Providers\SMSServiceProvider::class,
     ])->toArray(),
 
     /*

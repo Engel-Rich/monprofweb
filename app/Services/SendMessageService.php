@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Paiements;
@@ -19,7 +20,7 @@ class SendMessageService
         $this->paie = $paie;
         $this->user = $user;
     }
-   
+
 
     public function sendSMS(string $code = null, string $message = null)
     {
@@ -86,7 +87,7 @@ class SendMessageService
     {
         // $paie = $this->paie;
         $fichier = $this->createandStoreFile($codes);
-        
+
         if ($fichier !== null) {
 
             $fileUrl = $fichier;
@@ -118,17 +119,11 @@ class SendMessageService
 
             try {
                 $data = Http::withHeaders($headers)->post($smtpUrl, $parametter);
-               
             } catch (\Throwable $th) {
                 Log::info('Les codes ont été généré mais impossible d\'envoyer le mail' . $th->getMessage());
-                
-            }        
+            }
         } else {
             Log::info("Les codes ont été généré mais impossible de générer le ficher");
         }
     }
-
-
-
-
 }

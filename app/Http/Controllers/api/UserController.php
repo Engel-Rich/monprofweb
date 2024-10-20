@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 // use App\Http\Requests\UserValidateRequest;
 use App\Models\Classe;
 use App\Models\Eleve;
+use App\Models\OTP;
 // use App\Models\Parents;
 use App\Models\User;
 use App\Services\FileManager;
@@ -19,7 +20,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout', 'registerParent']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout', 'registerParent', 'resetPassword']]);
     }
 
     /* Display a listing of the resource.
@@ -62,9 +63,18 @@ class UserController extends Controller
                     'data' => ['user' => $user, 'parent' => $parent],
                 ], 200);
             } else {
+                if ($user->user_phone_emei != $request->header('phone-emei')) {
+                    Auth::guard('api')->logout();
+                    return response()->json([
+                        'status' => false,
+                        'data' => null,
+                        'type' => 'phone-emei',
+                        'error' => 'Vous n\'etes pas autorisé a vous connecter sur ce telephone',
+                    ], 400);
+                }
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
-                if($user->profile_image!=null){
+                if ($user->profile_image != null) {
                     $storeArboressence = "profile/users/$user->phone";
                     $fileService = new FileManager($storeArboressence);
                     $user->profile_image = $fileService->get($user->profile_image);
@@ -92,21 +102,22 @@ class UserController extends Controller
         }
     }
 
-    public function updateTocken(Request $request){
+    public function updateTocken(Request $request)
+    {
         try {
-            $request->validate(['fcm_token'=>'string|required']);
+            $request->validate(['fcm_token' => 'string|required']);
             $user = Auth::user();
             $userapp = User::find($user->id);
             $userapp->fcm_token = $request->fcm_token;
             $userapp->save();
             return response()->json([
-                'status'=>true,
-                'data'=> 'success'
+                'status' => true,
+                'data' => 'success'
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
-                'status'=>false,
-                'data'=> $th->getMessage()
+                'status' => false,
+                'data' => $th->getMessage()
             ], 400);
         }
     }
@@ -134,6 +145,7 @@ class UserController extends Controller
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'password' =>  Hash::make($request->password),
+                'user_phone_emei' => $request->header('phone-emei'),
             ];
 
             $eleve_data = [
@@ -172,7 +184,7 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ],400);
+            ], 400);
         }
     }
 
@@ -180,8 +192,6 @@ class UserController extends Controller
     public function refresh(Request $request)
     {
         try {
-            // return response()->json($request->token);
-            // $token = JWTAuth::refresh($request->token);
             $refreshToken = $request->token;
             $token = Auth::guard('api')->refresh($refreshToken);
             return response()->json(
@@ -213,6 +223,84 @@ class UserController extends Controller
     //     ]);
     // }
 
+    public function logout(Request $request)
+    {
+        try {
+            Auth::guard('api')->logout();
+            return response()->json([
+                'status' => true,
+                'data' => 'success',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => $th->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Reset password with OTP
+     */
+
+    public function resetPassword(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'phone' => 'required|string|exists:users,phone',
+                'type' => 'required|string|in:password,phone_emei',
+                'verification_id' => 'required|string',
+                'otp' => 'required|string|exists:otps,otp',
+            ]);
+            if ($request->type == 'password') {
+                $request->validate([
+                    'password' => 'string|min:6',
+                    // 'confirm_password' => 'required|string|same:password',
+                ]);
+            }
+            $otp = OTP::where('phone', $request->phone)
+                ->where('otp', $request->otp)
+                ->where('verification_id', $request->verification_id)
+                ->where('is_used', false)
+                ->where('expired_at', '>', now())->first();
+            if (!$otp) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'error' => 'Code de verification a expiré vous pouvez en demander un autre',
+                ], 400);
+            }
+            $user = User::where('phone', $request->phone)->first();
+            if ($request->type == 'password') {
+                $user->password = Hash::make($request->password);
+                $user->save();
+            } else {
+                $user->user_phone_emei = $request->header('phone-emei');
+                $user->save();
+            }
+            $otp->update(['is_used' => true]);
+            return response()->json([
+                'status' => true,
+                'data' => $user,
+                'error' => null,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'error' => $th->getMessage(),
+            ], 400);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'error' => $th->getMessage(),
+            ]);
+        }
+    }
+
+
     public function registerParent(Request $request)
     {
         try {
@@ -233,6 +321,7 @@ class UserController extends Controller
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'password' =>  Hash::make($request->password),
+                'user_phone_emei' => $request->header('phone-emei'),
             ];
 
             $parent_datas = [
@@ -254,7 +343,7 @@ class UserController extends Controller
 
             $token = Auth::guard('api')->login($user);
             $parent_datas['user_id'] = Auth::guard('api')->user()->id;
-            $student = \App\Models\Parents::create($parent_datas);            
+            $student = \App\Models\Parents::create($parent_datas);
             return response()->json([
                 'auth' => ['type' => 'Bearer', 'token' => $token],
                 'status' => true,
@@ -279,12 +368,12 @@ class UserController extends Controller
             $user = Auth::user();
             $image = $request->file('image');
             // $extention = $image->extension();
-            $storeArboressence = "profile/users/" .$user->phone;
+            $storeArboressence = "profile/users/" . $user->phone;
             $fileService = new FileManager($storeArboressence);
             $imageUrl = $fileService->store($image);
             // \Illuminate\Support\Facades\Log::info($imageUrl);
             $user->profile_image = $imageUrl;
-            $user->save();            
+            $user->save();
             $user->profile_image = $fileService->get($imageUrl);
             return response()->json([
                 'status' => true,

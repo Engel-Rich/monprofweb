@@ -22,7 +22,9 @@ class ClasseController extends Controller
         $classe= Classe::all();
         return response()->json(['status' => true,'data'=>$classe,], 200);
         } catch (\Throwable $th) {
+                
             return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()]);
+
         }
     }
 

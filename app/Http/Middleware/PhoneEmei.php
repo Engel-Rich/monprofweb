@@ -20,16 +20,16 @@ class PhoneEmei
         if ($requestHeaderEmei == null) {
             return response()->json([
                 'message' => 'Veuillez renseigner un idifiant de téléphone',
-                'status' => 402
-            ]);
+                'status' => false
+            ], 402);
         }
         if ($request->user() != null) {
             $emeiUser = $request->user()->user_phone_emei;
             if ($requestHeaderEmei != $emeiUser) {
                 return response()->json([
                     'message' => 'Vous devez vous connecter avec votre ancien téléphone',
-                    'status' => 401
-                ]);
+                    'status' => false
+                ], 401);
             }
         }
         return $next($request);

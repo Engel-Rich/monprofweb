@@ -17,6 +17,8 @@ COPY --chown=www:www . /www/html/monprof
 # RUN composer install --no-dev --optimize-autoloader
 COPY custom-php.ini /usr/local/etc/php/conf.d/
 
+RUN composer install --no-dev --optimize-autoloader
+RUN php artisan migrate
 # supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

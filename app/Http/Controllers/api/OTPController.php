@@ -5,7 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\OTP;
 use Illuminate\Http\Request;
-use App\DTO\OTPDTO;
+use App\DTO\OtpDTO;
 use App\Services\SendSMSService;
 use Illuminate\Support\Str;
 

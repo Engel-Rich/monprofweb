@@ -29,7 +29,7 @@ class PhoneEmei
                 return response()->json([
                     'message' => 'Vous devez vous connecter avec votre ancien téléphone',
                     'status' => false
-                ], 401);
+                ], 402);
             }
         }
         return $next($request);

@@ -9,6 +9,7 @@ use App\DTO\OtpDTO;
 use App\Services\SendSMSService;
 use Illuminate\Support\Str;
 
+
 class OTPController extends Controller
 {
     /**
@@ -84,7 +85,6 @@ class OTPController extends Controller
             ]);
         }
     }
-
 
     public function verifyOtp(Request $request)
     {

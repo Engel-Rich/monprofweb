@@ -27,7 +27,7 @@ class QuestionController extends Controller
         try {
             $request->validate([
                 'categorie_id' => 'integer|required|exists:categories,id',
-                'matiere_id' => 'integer|required|exists:matieres,id',               
+                'matiere_id' => 'integer|required|exists:matieres,id',
             ]);
             $user = Auth::user();
             $eleve = Eleve::where('user_id', $user->id)->get()[0];
@@ -35,12 +35,12 @@ class QuestionController extends Controller
                 ->where('matieres_id', $request->matiere_id)
                 ->where('categorie_id', '=', $request->categorie_id)
                 ->paginate(20);
-            $result = $questions->getCollection()->transform(function ($value){                
-                if($value->image_url!=null){
+            $result = $questions->getCollection()->transform(function ($value) {
+                if ($value->image_url != null) {
                     $fileManager = new FileManager("questions/eleves/");
                     $value->image_url = $fileManager->get($value->image_url);
                 }
-                if($value->reponse!=null && $value->reponse->image_url!=null){
+                if ($value->reponse != null && $value->reponse->image_url != null) {
                     $fileManager = new FileManager("Reponses/$value->id");
                     $value->reponse->image_url = $fileManager->get($value->reponse->image_url);
                 }
@@ -87,18 +87,18 @@ class QuestionController extends Controller
             $data['matieres_id'] = $request->matiere_id;
             $data['questions_id'] = $request->question_id;
             $matiere = \App\Models\Matieres::find($request->matiere_id);
-            if ($data['titre'] == null) {               
+            if ($data['titre'] == null) {
                 $data['titre'] = $matiere->libelle;
             }
             // $timestampMilliseconds = strval(Carbon::now()->valueOf());
             if ($request->image != null) {
-             $fileManager = new FileManager("questions/eleves/");
+                $fileManager = new FileManager("questions/eleves/");
                 $image = $request->file('image');
                 // $extention = $image->extension();                
                 $imageUrl = $fileManager->store($image); //$image->store("questions/eleves/" . $matiere->libelle.'/' .$timestampMilliseconds. '.' . $extention, 'public');
                 Log::info($imageUrl);
-                $data['image_url'] = $imageUrl;// asset("storage/$imageUrl");
-                Log::info($data);               
+                $data['image_url'] = $imageUrl; // asset("storage/$imageUrl");
+                Log::info($data);
             }
             $questions = \App\Models\Questions::create($data);
             return response()->json([

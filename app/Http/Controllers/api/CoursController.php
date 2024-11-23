@@ -17,7 +17,7 @@ class CoursController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth:sanctum');
     }
 
 
@@ -33,7 +33,7 @@ class CoursController extends Controller
                 'matiere_id' => "integer|required|exists:matieres,id",
                 'categorie_id' => "integer|required|:categories,id",
             ]);
-            
+
             // Ouvrire les cours si l'élève possède un abonnemnet
 
             $user = Auth::user();
@@ -47,7 +47,7 @@ class CoursController extends Controller
             //CHECK IF USER HAVE ACTIVE CODE
             $exist = Codes::with('paiement')->whereHas(
                 'paiement',
-                function ($query) use($request) {
+                function ($query) use ($request) {
                     $query->where('categorie_id', $request->categorie_id);
                 }
             )->where('actif', 1)->where('eleve_id', $eleve->id)->exists();
@@ -56,14 +56,14 @@ class CoursController extends Controller
                     $cour->open = true;
                 }
             }
-            
+
             $categorie = $categorie->libelle;
             $classe = $eleve->classe->libelle;
 
             $result = $cours->getCollection()->transform(function ($value) use ($classe, $categorie) {
                 // dd($value->video_url);
                 $matiere = $value->matiere->libelle;
-                $fileManager = new FileManager("Videos/$categorie/$classe/$matiere".$value->video);
+                $fileManager = new FileManager("Videos/$categorie/$classe/$matiere" . $value->video);
 
                 // $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
                 $value->video_url = $fileManager->get($value->video_url);
@@ -76,12 +76,12 @@ class CoursController extends Controller
                 'error' => null,
                 'data' => $cours,
             ], 200);
-
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'data' => null,
-                'error' => $th->getMessage(),400,
+                'error' => $th->getMessage(),
+                400,
             ]);
         }
     }

@@ -20,7 +20,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout', 'registerParent', 'resetPassword']]);
+        $this->middleware('auth:sanctum', ['except' => ['login', 'register', 'refresh', 'logout', 'registerParent', 'resetPassword']]);
     }
 
     /* Display a listing of the resource.
@@ -42,8 +42,8 @@ class UserController extends Controller
             ]);
 
             $credential = ["email" => $request->email, 'password' => $request->password];
-            $token = Auth::guard('api')->attempt($credential);
-            if (!$token) {
+            $exist = Auth::attempt($credential);
+            if (!$exist) {
                 return response()->json([
                     'status' => false,
                     'data' => null,
@@ -51,14 +51,16 @@ class UserController extends Controller
                 ], 400);
             }
 
-            $user = Auth::guard('api')->user();
+            $user = Auth::user();
 
             $isParent = $user->rule_id == 3;
+            $token = User::find($user->id)->createToken('MONPROF_WEB')->plainTextToken;
+            $refreshToken = $this->createRefreshTokem($user);
 
             if ($isParent) {
                 $parent = \App\Models\Parents::where('user_id', $user->id)->limit(1)->get()[0];
                 return response()->json([
-                    'auth' => ['type' => 'Bearer', 'token' => $token],
+                    'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                     'status' => true,
                     'data' => ['user' => $user, 'parent' => $parent],
                 ], 200);
@@ -83,6 +85,7 @@ class UserController extends Controller
                     'auth' => [
                         'type' => 'Bearer',
                         'token' => $token,
+                        'refresh_token' => $refreshToken,
                         // 'refresh_token'=>$refreshToken
                     ],
                     'status' => true,
@@ -124,6 +127,8 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+
     public function register(Request $request)
     {
         try {
@@ -165,12 +170,12 @@ class UserController extends Controller
                 }
             }
             $user = User::create($userData);
-
-            $token = Auth::guard('api')->login($user);
-            $eleve_data['user_id'] = Auth::guard('api')->user()->id;
+            $refreshToken = $this->createRefreshTokem($user);
+            $token = $user->createToken('MONPROF_WEB')->plainTextToken; //Auth::guard('api')->login($user);
+            $eleve_data['user_id'] = $user->id;
             $student = Eleve::create($eleve_data);
             return response()->json([
-                'auth' => ['type' => 'Bearer', 'token' => $token],
+                'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                 'status' => true,
                 'data' => [
                     'user' => $user,
@@ -192,17 +197,28 @@ class UserController extends Controller
     public function refresh(Request $request)
     {
         try {
-            $refreshToken = $request->token;
-            $token = Auth::guard('api')->refresh($refreshToken);
-            return response()->json(
-                [
-                    'status' => true,
-                    'data' => [
-                        'token' => $token,
-                        'type' => 'Bearer',
-                    ]
+            $request->validate(['refresh_token' => 'required']);
+
+            $user = User::where('refresh_token', $request->refresh_token)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'error' => 'Invalid refresh token',
+                ], 401);
+            }
+            // Générer un nouveau token
+            $newToken = $user->createToken('auth-token')->plainTextToken;
+            // Optionnel : Regénérer le refresh token
+            $refreshToken = Str::random(64);
+            $user->update(['refresh_token' => $refreshToken]);
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'token' => $newToken,
+                    'refresh_token' => $refreshToken,
                 ],
-            );
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -226,7 +242,11 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         try {
-            Auth::guard('api')->logout();
+
+            $user = $request->user();
+            $user->currentAccessToken()->delete();
+            $user->refresh_token = null;
+            $user->save();
             return response()->json([
                 'status' => true,
                 'data' => 'success',
@@ -272,6 +292,7 @@ class UserController extends Controller
                 ], 400);
             }
             $user = User::where('phone', $request->phone)->first();
+            $user->refresh_token = null;
             if ($request->type == 'password') {
                 $user->password = Hash::make($request->password);
                 $user->save();
@@ -341,11 +362,12 @@ class UserController extends Controller
             }
             $user = User::create($userData);
 
-            $token = Auth::guard('api')->login($user);
-            $parent_datas['user_id'] = Auth::guard('api')->user()->id;
+            $token =  $user->createToken('MONPROF_WEB')->plainTextToken;
+            $refreshToken = $this->createRefreshTokem($user);
+            $parent_datas['user_id'] = $user->id;
             $student = \App\Models\Parents::create($parent_datas);
             return response()->json([
-                'auth' => ['type' => 'Bearer', 'token' => $token],
+                'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                 'status' => true,
                 'data' => ['user' => $user, 'parent' => $student],
             ], 200);
@@ -373,7 +395,7 @@ class UserController extends Controller
             $imageUrl = $fileService->store($image);
             // \Illuminate\Support\Facades\Log::info($imageUrl);
             $user->profile_image = $imageUrl;
-            $user->save();
+            User::find($user->id)->save();
             $user->profile_image = $fileService->get($imageUrl);
             return response()->json([
                 'status' => true,
@@ -387,6 +409,13 @@ class UserController extends Controller
                 'data' => null,
             ], 400);
         }
+    }
+
+    private function createRefreshTokem($user): string
+    {
+        $refreshToken = Str::random(64);
+        $user->update(['refresh_token' => $refreshToken]);
+        return $refreshToken;
     }
 
     /**

@@ -43,8 +43,8 @@ Route::middleware('emei-verify')->group(function () {
         Route::put('/active', [CodeController::class, "activeCode"]);
     });
     Route::resource('matiere', MatiereController::class)->only(['index']);
-    Route::middleware('auth:api')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
-    Route::middleware('auth:api')->put('/auth/update_profile', [UserController::class, 'updateTocken']);
+    Route::middleware('auth:sanctum')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
+    Route::middleware('auth:sanctum')->put('/auth/update_profile', [UserController::class, 'updateTocken']);
     Route::post('/sugestion', [SuggestionController::class, 'store']);
     Route::resource('categorie', CategorieController::class)->only(['index']);
     Route::get('categorie/status', [CategorieController::class, 'status']);
@@ -52,15 +52,9 @@ Route::middleware('emei-verify')->group(function () {
     Route::resource('cours', CoursController::class)->only(['index']);
     Route::resource('question', QuestionController::class)->only(['index', 'store']);
     Route::resource('paiement', PaiementsController::class)->except(['index', 'show', 'edit', 'destroy', 'create', 'update']);
-    Route::controller(AppMessageController::class)->prefix('/notifications')->middleware(['auth:api'])->group(function () {
+    Route::controller(AppMessageController::class)->prefix('/notifications')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/', 'index')->name('messages.api.index');
         Route::get('/unread', 'getNotificationsOnRead')->name('messages.get-unread');
         Route::put('/read', 'readNotification')->name('messages.read');
     });
-    // Route::middleware('auth.api')->group(function ()  {
-
-    // });
-    // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    //     return $request->user();
-    // });
 });

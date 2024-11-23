@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
+// use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable //implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -26,8 +26,10 @@ class User extends Authenticatable implements JWTSubject
         'last_name',
         'phone',
         'rule_id',
-        'unique_token','profile_image',
+        'unique_token',
+        'profile_image',
         'user_phone_emei',
+        'refresh_token'
     ];
 
     /**
@@ -50,18 +52,19 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
+    // public function getJWTIdentifier()
+    // {
+    //     return $this->getKey();
+    // }
 
-    public function getJWTCustomClaims()
-    {
-        return ['email' => $this->email, 'name' => $this->name,];
-    }
+    // public function getJWTCustomClaims()
+    // {
+    //     return ['email' => $this->email, 'name' => $this->name,];
+    // }
 
     // une fois 
-    public function eleve():BelongsTo{
+    public function eleve(): BelongsTo
+    {
         return $this->belongsTo(Eleve::class);
     }
 }

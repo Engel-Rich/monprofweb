@@ -7,7 +7,7 @@ use App\Http\Requests\UserValidateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+// use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -35,8 +35,8 @@ class Usercontroller extends Controller
                 'email' => 'email|required',
                 'password' => 'required|min:4'
             ]);
-            
-            $credential = ["email" => $request->email, 'password'=>$request->password];
+
+            $credential = ["email" => $request->email, 'password' => $request->password];
             if (Auth::attempt($credential)) {
                 $request->session()->regenerate();
                 return redirect()->intended(route('index'));
@@ -47,7 +47,7 @@ class Usercontroller extends Controller
         } catch (\Throwable $th) {
             // dd($th);
             return to_route('auth.login')->withErrors([
-                'error' => $th->getMessage(), 
+                'error' => $th->getMessage(),
             ])->onlyInput('email');
         }
     }
@@ -59,18 +59,18 @@ class Usercontroller extends Controller
     {
         try {
             $userData = $request->all();
-            $userData['password'] = Hash::make($request->password);            
+            $userData['password'] = Hash::make($request->password);
             $unique_token = (string) Str::uuid();
             while (true) {
                 $user = User::where('unique_token', '=', $unique_token)->exists();
-                if($user){
+                if ($user) {
                     $unique_token = (string) Str::uuid();
-                }else{
+                } else {
                     $userData['unique_token'] = $unique_token;
-                    break;                    
-                }                
+                    break;
+                }
             }
-            
+
             User::create($userData);
             $credential  = $request->only('email', "password");
             if (Auth::attempt($credential)) {
@@ -117,6 +117,5 @@ class Usercontroller extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('auth.login');
-
     }
 }

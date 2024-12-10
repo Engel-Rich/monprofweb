@@ -66,7 +66,7 @@ class UserController extends Controller
                 ], 200);
             } else {
                 if ($user->user_phone_emei != $request->header('phone-emei')) {
-                    Auth::guard('api')->logout();
+              //      Auth::guard('api')->logout();
                     return response()->json([
                         'status' => false,
                         'data' => null,

@@ -21,7 +21,7 @@ class PhoneEmei
             return response()->json([
                 'message' => 'Veuillez renseigner un idifiant de téléphone',
                 'status' => false
-            ], 402);
+            ], 422);
         }
         if ($request->user() != null) {
             $emeiUser = $request->user()->user_phone_emei;
@@ -29,7 +29,7 @@ class PhoneEmei
                 return response()->json([
                     'message' => 'Vous devez vous connecter avec votre ancien téléphone',
                     'status' => false
-                ], 402);
+                ], 422);
             }
         }
         return $next($request);

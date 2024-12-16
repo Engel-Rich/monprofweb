@@ -72,7 +72,7 @@ class UserController extends Controller
                         'data' => null,
                         'type' => 'phone-emei',
                         'error' => 'Vous n\'etes pas autorisé a vous connecter sur ce telephone',
-                    ], 400);
+                    ], 422);
                 }
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
@@ -282,7 +282,6 @@ class UserController extends Controller
             $otp = OTP::where('phone', $request->phone)
                 ->where('otp', $request->otp)
                 ->where('verification_id', $request->verification_id)
-                ->where('is_used', false)
                 ->where('expired_at', '>', now())->first();
             if (!$otp) {
                 return response()->json([

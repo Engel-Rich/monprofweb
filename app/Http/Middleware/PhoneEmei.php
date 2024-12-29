@@ -25,7 +25,8 @@ class PhoneEmei
         }
         if ($request->user() != null) {
             $emeiUser = $request->user()->user_phone_emei;
-            if ($requestHeaderEmei != $emeiUser) {
+		$currentUser=$request->user();
+            if ($requestHeaderEmei != $emeiUser && $currentUser->rule_id==2 ) {
                 return response()->json([
                     'message' => 'Vous devez vous connecter avec votre ancien téléphone',
                     'status' => false

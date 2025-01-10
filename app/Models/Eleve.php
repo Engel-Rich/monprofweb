@@ -9,19 +9,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Eleve extends Model
 {
     use HasFactory;
-    protected $fillable = ['sexe','etablissement','user_id', "classe_id"];
+    protected $fillable = ['sexe', 'etablissement', 'user_id', "classe_id"];
 
-    public function classe():BelongsTo{
+    public function classe(): BelongsTo
+    {
         return $this->belongsTo(Classe::class);
     }
     /**
-         * Get the user that owns the Eleve
-         *
-         * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-         */
-        public function user(): BelongsTo
-        {
-            return $this->belongsTo(User::class);
-        }
-    
+     * Get the user that owns the Eleve
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+    // public function classe(): BelongsTo
+    // {
+    //     return $this->belongsTo(Classe::class, 'classe_id', 'id');
+    // }
 }

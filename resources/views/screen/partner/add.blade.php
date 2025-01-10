@@ -1,13 +1,13 @@
 @extends('base')
 
-@section('login')
+@section('register')
 <div class="container min-vh-100 min-vw-100  align-items-center justify-content-center">
     <div class="register-photo">
         <div class="form-container">
             <div class="image-holder"></div>
-            <form method="post" action="{{ route('auth.signin') }}">
+            <form method="post" action="{{route('partner.store')}}">
                 @csrf
-                <h2 class="text-center">Connexion au panel de <strong>Monprof</strong></h2>
+                <h2 class="text-center">Ajouter un partenaire sur <strong>Monprof</strong></h2>
                 @error('error')
                 <div class="m-3 text-danger">
                     {{ $message }}
@@ -16,11 +16,28 @@
                 <div class="mb-3">
                     <div class="form-group">
                         <label class="form-label fw-bold" for="email">Adresse email</label>
-                        <input class="form-control" type="email" name="email" placeholder="Email" required
-                            value="{{ old('email') }}">
+                        <input class="form-control" type="email" name="email" placeholder="Email" required value="{{ old('email') }}">
                         @error('email')
-                        <div class="text-danger"> {{ $message }} </div>
+                        {{$message}}
                         @enderror
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-group">
+                        <label class="form-label fw-bold" for="name">Nom </label>
+                        <input class="form-control" type="text" name="name" placeholder="Nom" required value="{{ old('name') }}">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-group">
+                        <label class="form-label fw-bold" for="last_name">Prenom</label>
+                        <input class="form-control" type="text" name="last_name" placeholder="Prenom" value="{{ old('last_name') }}">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-group">
+                        <label class="form-label fw-bold" for="phone">Numéro de téléphone</label>
+                        <input class="form-control" type="phone" name="phone" placeholder="+237" required value="{{ old('phone') }}">
                     </div>
                 </div>
                 <div class="mb-3 ">
@@ -29,6 +46,8 @@
                         <input class="form-control" type="password" name="password" placeholder="Mot de passe" required>
                     </div>
                 </div>
+                <input type="hidden" name="rule_id" value="4">
+
                 {{-- <div class="form-group">
                         <div class="form-check"><label class="form-check-label"><input class="form-check-input"
                                     type="checkbox">I agree to the license terms.</label></div>
@@ -36,23 +55,19 @@
 
                 <div class="my-3">
                     <div class="form-group">
-                        <button class="btn btn-outline-primary" type="submit">Connexion</button>
+                        <button class="btn btn-outline-primary" type="submit">Enregistrer le partenaire</button>
                     </div>
                 </div>
-
-                <!-- <div class="already">Vous n'avez pas de compte? <a href="{{ route('auth.register') }}"><strong
-                                class="lien"> Inscrivez vous</strong></a>.</div> -->
         </div>
         </form>
     </div>
-</div>
 </div>
 @endsection
 
 
 {{-- section de style CSS  --}}
 
-@section('login-style')
+@section('register-style')
 <style>
     .register-photo {
         background: #f1f7fc;

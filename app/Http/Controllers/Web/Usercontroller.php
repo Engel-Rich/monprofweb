@@ -25,6 +25,17 @@ class Usercontroller extends Controller
         return view('screen.auth.register');
     }
 
+    public function add_partner()
+    {
+        return view('screen.partner.add');
+    }
+
+    public function partnerIndex()
+    {
+        $partners = User::where('rule_id', 4)->get();
+        return view('screen.partner.partner_index', ['partners' => $partners]);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -70,8 +81,13 @@ class Usercontroller extends Controller
                     break;
                 }
             }
-
+            dd($userData);
             User::create($userData);
+            //Case add partner account
+            if ($request->rule_id == 4) {
+                // retun to parner list pages
+                return redirect()->route('partner.index');
+            }
             $credential  = $request->only('email', "password");
             if (Auth::attempt($credential)) {
                 $request->session()->regenerate();
@@ -81,6 +97,31 @@ class Usercontroller extends Controller
         } catch (\Throwable $th) {
             // dd($th);
             return to_route('auth.register')->withErrors(['error' => $th->getMessage()])->onlyInput('email', 'name', 'last_name', 'phone');
+        }
+    }
+    public function storePartner(UserValidateRequest $request)
+    {
+        try {
+            $userData = $request->all();
+            $userData['password'] = Hash::make($request->password);
+            $unique_token = (string) Str::uuid();
+            while (true) {
+                $user = User::where('unique_token', '=', $unique_token)->exists();
+                if ($user) {
+                    $unique_token = (string) Str::uuid();
+                } else {
+                    $userData['unique_token'] = $unique_token;
+                    break;
+                }
+            }
+            $userData['rule_id'] = 4;
+            // dd($userData);
+            User::create($userData);
+            return redirect()->route('partner.index');
+            // return to_route('partner.add')->withErrors([])->onlyInput('email', 'name', 'last_name', 'phone');
+        } catch (\Throwable $th) {
+            // dd($th);
+            return to_route('partner.add')->withErrors(['error' => $th->getMessage()])->onlyInput('email', 'name', 'last_name', 'phone');
         }
     }
 

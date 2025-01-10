@@ -44,21 +44,25 @@ Route::middleware('auth')->group(function () {
     Route::resource('categorie', CategoriController::class);
     Route::resource('cours', CoursController::class);
     Route::resource('question', QuestionsController::class)->only(['index', 'show']);
-    Route::resource('reponse', ReponsesController::class)->only(['store','update']);
+    Route::resource('reponse', ReponsesController::class)->only(['store', 'update']);
     Route::resource('paiements', ReponsesController::class)->only(['index']);
-    Route::prefix('/code')->group(function (){
-        Route::get('/{status}',[CodesController::class,'index'])->name('codes.index');
-    });    
+    Route::prefix('/code')->group(function () {
+        Route::get('/{status}', [CodesController::class, 'index'])->name('codes.index');
+    });
     Route::get('/paiement', [PaiementsController::class, 'index'])->name('paiement.index');
-    Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');    
+    Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');
     Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
-    Route::controller(AppMessageController::class)->group(function(){
-        Route::get('/messages', 'index')->name('messages.index');        
+    Route::controller(AppMessageController::class)->group(function () {
+        Route::get('/messages', 'index')->name('messages.index');
         Route::post('/messages', 'store')->name('messages.store');
         Route::get('/messages/new', 'create')->name('messages.create');
     })->middleware('auth');
     Route::get('/suggestion', [SuggestionController::class, 'index'])->name('index.suggestion');
+    Route::get('/partenaires', [Usercontroller::class, 'partnerIndex'])->name('partner.index');
+    Route::get('/partenaires/add', [Usercontroller::class, 'add_partner'])->name('partner.add');
+    Route::post('/partenaires/add', [Usercontroller::class, 'storePartner'])->name('partner.store');
+    Route::get('/statistiques', [CategoriController::class, 'statistiques'])->name('statistiques');
 });
 
 /// Lgin and Register routes 

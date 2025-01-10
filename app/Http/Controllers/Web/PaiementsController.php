@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendMailJob;
 use App\Jobs\SendMessageJob;
 use App\Models\Codes;
-use App\Models\Paiements;
 use App\Models\User;
 use App\Services\PushNotifictaionService;
 use App\Services\SendMessageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Paiements;
 // use Illuminate\Support\Facades\Http;
 // use Illuminate\Support\Facades\File;
 // use Illuminate\Support\Facades\Storage;
@@ -152,18 +152,19 @@ class PaiementsController extends Controller
         $qte = $paie->nombre_de_code;
 
 
-        $messageService = new SendMessageService($paie, $user);        
+        $messageService = new SendMessageService($paie, $user);
         $paie->paiement_date = Carbon::now();
         $token = $user->fcm_token;
         // dd($user->fcm_token);
         if ($qte == 1) {
-            $code = $this->saveOneCode($id);
-            SendMessageJob::dispatch($messageService, $code, $token)->delay(now());
+            // $code = $this->saveOneCode($id);
+            // SendMessageJob::dispatch($messageService, $code, $token)->delay(now());
+            // $paie->save();
+            // $messageService->sendSMS($code);
             if ($token != null) {
                 $notifOneCode = new PushNotifictaionService("Votre paiement a été validé avec succès et votre code a été activé\n Vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
                 $notifOneCode->sendNotificationToToken($token);
             }
-            $paie->save();
             return redirect()->route('paiement.index');
         } else {
             $data = $this->saveManyCod($id, $qte);
@@ -174,12 +175,11 @@ class PaiementsController extends Controller
                 SendMailJob::dispatch($messageService, $data, $token)->delay(now());
                 if ($token != null) {
                     $notifManyCode = new PushNotifictaionService("Votre paiement de $qte a été validé avec succès et vos codes ont été activé\n Vous recevrez la liste des codes par Mail.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
-                    $notifManyCode->sendNotificationToToken($token);
+                    $notifManyCode->sendNotificationToToken($token, even_type: "PAYMENT");
                 }
                 return redirect()->route('paiement.index');
             }
         }
-
     }
     /**
      * Display the specified resource.

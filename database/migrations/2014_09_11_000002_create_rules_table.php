@@ -37,6 +37,12 @@ return new class extends Migration
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
+                [
+                    'name' => 'Partenaire',
+                    'description' => 'Utilisateur standard qui sont des partenaires',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
             ]
         );
     }

@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Services;
-use App\Models\AppMessage;
+
+// use App\Models\AppMessage;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
@@ -18,8 +20,9 @@ class PushNotifictaionService
         $this->title = $title;
     }
 
-    public function sendNotificationToToken(string $token)
+    public function sendNotificationToToken(string $token, string $even_type = "APP_MESSAGE"): void
     {
+        Log::info("Token reçu : $token");
         try {
             $messaging = Firebase::messaging();
             $notification = Notification::fromArray(
@@ -28,13 +31,16 @@ class PushNotifictaionService
                     'body' => $this->appMessage,
                 ]
             );
+
             $message = CloudMessage::withTarget('token', $token)
                 ->withNotification($notification)
-                ->withData(['EVENT_TYPE' => 'APP_MESSAGE']);
+                ->withData(['EVENT_TYPE' => $even_type]);
             $messaging->send($message);
         } catch (\Throwable $th) {
-            Log::info("Erreur de notification dans le service " . $th->getMessage());
+            Log::error("Erreur de notification : " . $th->getMessage(), [
+                'token' => $token,
+                // 'trace' => $th->getTraceAsString()
+            ]);
         }
     }
-
 }

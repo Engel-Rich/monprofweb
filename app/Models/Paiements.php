@@ -20,6 +20,7 @@ class Paiements extends Model
         'status'
     ];
 
+    protected $table = 'paiements';
     /**
      * Get the user that owns the Paiements
      *
@@ -35,8 +36,8 @@ class Paiements extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function categorie(): BelongsTo
+    function categorie(): BelongsTo
     {
-        return $this->belongsTo(Categorie::class);
+        return $this->belongsTo(Categorie::class, 'categorie_id', 'id');
     }
 }

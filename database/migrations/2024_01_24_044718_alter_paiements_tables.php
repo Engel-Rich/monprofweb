@@ -16,7 +16,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table("paiements",function(Blueprint $table){            
+        Schema::table("paiements", function (Blueprint $table) {
             $table->dateTimeTz('paiement_date')->nullable();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignIdFor(Categorie::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
@@ -28,12 +28,12 @@ return new class extends Migration
             $table->boolean('status')->default(0);
         });
 
-        Schema::table("codes",function(Blueprint $table){
-           $table->foreignIdFor(Paiements::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
-           $table->foreignIdFor(Eleve::class)->nullable()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
-           $table->string('code')->unique();
-           $table->dateTimeTz('active_date');
-           $table->boolean('actif')->default(0);
+        Schema::table("codes", function (Blueprint $table) {
+            $table->foreignIdFor(Paiements::class)->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignIdFor(Eleve::class)->nullable()->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string('code')->unique();
+            $table->dateTimeTz('active_date');
+            $table->boolean('actif')->default(0);
         });
     }
 

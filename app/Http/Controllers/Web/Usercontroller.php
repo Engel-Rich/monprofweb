@@ -81,13 +81,8 @@ class Usercontroller extends Controller
                     break;
                 }
             }
-            dd($userData);
+            // dd($userData);
             User::create($userData);
-            //Case add partner account
-            if ($request->rule_id == 4) {
-                // retun to parner list pages
-                return redirect()->route('partner.index');
-            }
             $credential  = $request->only('email', "password");
             if (Auth::attempt($credential)) {
                 $request->session()->regenerate();

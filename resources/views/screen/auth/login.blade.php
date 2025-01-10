@@ -40,8 +40,8 @@
                     </div>
                 </div>
 
-                <!-- <div class="already">Vous n'avez pas de compte? <a href="{{ route('auth.register') }}"><strong
-                                class="lien"> Inscrivez vous</strong></a>.</div> -->
+                <div class="already">Vous n'avez pas de compte? <a href="{{ route('auth.register') }}"><strong
+                            class="lien"> Inscrivez vous</strong></a>.</div>
         </div>
         </form>
     </div>

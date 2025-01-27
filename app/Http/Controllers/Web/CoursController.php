@@ -17,23 +17,80 @@ class CoursController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
 
-        $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(20);
+        $classe = $request->classe;
+        $categorie = $request->categorie;
+        $matiere = $request->matiere;
+
+        // dd($classe, $categorie, $matiere, $request->all());
+
+        if ($classe != null && $matiere != null && $categorie != null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('classe_id', $classe)
+                ->where('matieres_id', $matiere)
+                ->where('categorie_id', $categorie)
+                ->paginate(10);
+        } elseif ($classe != null && $matiere != null && $categorie == null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('classe_id', $classe)
+                ->where('matieres_id', $matiere)
+                ->paginate(10);
+        } elseif ($classe != null && $matiere == null && $categorie != null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('classe_id', $classe)
+                ->where('categorie_id', $categorie)
+                ->paginate(10);
+        } elseif ($classe == null && $matiere != null && $categorie != null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('matieres_id', $matiere)
+                ->where('categorie_id', $categorie)
+                ->paginate(10);
+        } elseif ($classe != null && $matiere == null && $categorie == null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('classe_id', $classe)
+                ->paginate(10);
+        } elseif ($classe == null && $matiere != null && $categorie == null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('matieres_id', $matiere)
+                ->paginate(10);
+        } elseif ($classe == null && $matiere == null && $categorie != null) {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')
+                ->where('categorie_id', $categorie)
+                ->paginate(10);
+        } else {
+            $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(10);
+        }
+
+        // $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(10);
         $result = $cours->getCollection()->transform(function ($value) {
             // dd($value->video_url);
             $matiere = $value->matiere->libelle;
             $categorie = $value->categorie->libelle;
             $classe = $value->classe->libelle;
-            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere".$value->video);
+            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere" . $value->video);
             $value->video_url = $fileManager->get($value->video_url);
             // dd($value->video_url);
             return $value;
         });
+        $matieres = Matieres::all();
+        $classes = Classe::all();
+        $categories = Categorie::all();
         // dd($result);
         $cours->setCollection($result);
-        return view('screen.cours.index', ['cours' => $cours], );
+        return view(
+            'screen.cours.index',
+            [
+                'cours' => $cours,
+                'matieres' => $matieres,
+                "classes" => $classes,
+                "categories" => $categories,
+                "classe" => Classe::find($classe),
+                "categorie" => Categorie::find($categorie),
+                "matiere" => Matieres::find($matiere),
+            ],
+        );
     }
 
     /**
@@ -80,7 +137,7 @@ class CoursController extends Controller
             $categorie  = Categorie::find($request->categorie_id)->libelle;
             $video = $request->file('video');
             // $extention = $video->extension();
-            $user = $request->user()->id;          
+            $user = $request->user()->id;
             $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
             $videoUrl = $filemanager->store($video); // $video->store("Videos/$categorie/$classe/$matiere", 'public');
             // dd($videoUrl,asset("storage/$videoUrl"), url("storage/$videoUrl"), url($videoUrl));

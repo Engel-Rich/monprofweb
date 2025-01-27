@@ -22,9 +22,9 @@ class CategorieValidateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'libelle'=>'required|max:20',
-            'description'=>'nullable|string',
-            'prix'=>'required|numeric',
+            'libelle' => 'required',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric',
         ];
     }
 }

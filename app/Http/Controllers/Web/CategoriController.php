@@ -70,6 +70,7 @@ class CategoriController extends Controller
             Categorie::create($request->all());
             return   redirect()->route('categorie.index');
         } catch (Exception $th) {
+            return redirect()->back()->withInput()->withErrors($th->getMessage(), 'errors');
             dd($th);
         }
     }

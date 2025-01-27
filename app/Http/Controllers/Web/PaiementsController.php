@@ -157,10 +157,10 @@ class PaiementsController extends Controller
         $token = $user->fcm_token;
         // dd($user->fcm_token);
         if ($qte == 1) {
-            // $code = $this->saveOneCode($id);
+            $code = $this->saveOneCode($id);
             // SendMessageJob::dispatch($messageService, $code, $token)->delay(now());
-            // $paie->save();
-            // $messageService->sendSMS($code);
+            $paie->save();
+            $messageService->sendSMS($code);
             if ($token != null) {
                 $notifOneCode = new PushNotifictaionService("Votre paiement a été validé avec succès et votre code a été activé\n Vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
                 $notifOneCode->sendNotificationToToken($token);

@@ -27,9 +27,9 @@ class MatiereController extends Controller
         try {   
             $user = Auth::user();
             $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()->first();
-             $userClasse = Classe::with('matieres')-> findOrFail($eleve?->id);   
-            //  dd($userClasse)           ;
-            // $matieres= $userClasse?->matieres();
+             $userClasse = Classe::with('matieres')-> findOrFail($eleve?->classe_id);   
+            //dd($userClasse)           ;
+            //$matieres= $userClasse?->matieres();
             return response()->json(['status' => true,'data'=>$userClasse?->matieres], 200);
             } catch (\Throwable $th) {
                 return response()->json(['status' => false, 'data'=>null, 'error'=> $th->getMessage()],400);

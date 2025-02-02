@@ -15699,3 +15699,50 @@
 2024-10-20 00:58:28,042 INFO exited: laravel-queue (exit status 0; expected)
 2024-10-20 00:58:29,052 INFO spawned: 'laravel-queue' with pid 4744
 2024-10-20 00:58:30,054 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 08:14:01,654 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-02-02 08:14:01,669 INFO supervisord started with pid 101
+2025-02-02 08:14:02,688 INFO spawned: 'laravel-queue' with pid 102
+2025-02-02 08:14:02,702 INFO spawned: 'php-fpm' with pid 103
+2025-02-02 08:14:02,800 WARN exited: php-fpm (exit status 78; not expected)
+2025-02-02 08:14:03,803 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 08:14:03,805 INFO spawned: 'php-fpm' with pid 107
+2025-02-02 08:14:03,849 WARN exited: php-fpm (exit status 78; not expected)
+2025-02-02 08:14:05,856 INFO spawned: 'php-fpm' with pid 108
+2025-02-02 08:14:05,892 WARN exited: php-fpm (exit status 78; not expected)
+2025-02-02 08:14:08,901 INFO spawned: 'php-fpm' with pid 109
+2025-02-02 08:14:08,937 WARN exited: php-fpm (exit status 78; not expected)
+2025-02-02 08:14:09,940 INFO gave up: php-fpm entered FATAL state, too many start retries too quickly
+2025-02-02 08:14:59,061 WARN received SIGINT indicating exit request
+2025-02-02 08:14:59,063 INFO waiting for laravel-queue to die
+2025-02-02 08:15:01,068 WARN stopped: laravel-queue (terminated by SIGTERM)
+2025-02-02 09:00:22,792 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-02-02 09:00:22,801 INFO supervisord started with pid 1
+2025-02-02 09:00:23,805 INFO spawned: 'laravel-migrations' with pid 7
+2025-02-02 09:00:23,808 INFO spawned: 'laravel-queue' with pid 8
+2025-02-02 09:00:23,810 INFO spawned: 'php-fpm' with pid 9
+2025-02-02 09:00:24,841 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 09:00:24,842 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 09:00:24,842 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 09:00:27,516 INFO exited: laravel-migrations (exit status 0; expected)
+2025-02-02 10:00:26,204 INFO exited: laravel-queue (exit status 0; expected)
+2025-02-02 10:00:27,250 INFO spawned: 'laravel-queue' with pid 20
+2025-02-02 10:00:28,254 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 10:22:41,420 WARN exited: laravel-queue (exit status 1; not expected)
+2025-02-02 10:22:42,425 INFO spawned: 'laravel-queue' with pid 24
+2025-02-02 10:22:43,428 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 11:22:44,407 INFO exited: laravel-queue (exit status 0; expected)
+2025-02-02 11:22:45,416 INFO spawned: 'laravel-queue' with pid 36
+2025-02-02 11:22:46,419 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 12:08:12,898 WARN received SIGQUIT indicating exit request
+2025-02-02 12:08:12,908 INFO waiting for laravel-queue, php-fpm to die
+2025-02-02 12:08:12,922 INFO stopped: php-fpm (exit status 0)
+2025-02-02 12:08:13,925 WARN stopped: laravel-queue (terminated by SIGTERM)
+2025-02-02 12:09:02,088 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-02-02 12:09:02,096 INFO supervisord started with pid 1
+2025-02-02 12:09:03,099 INFO spawned: 'laravel-migrations' with pid 7
+2025-02-02 12:09:03,105 INFO spawned: 'laravel-queue' with pid 8
+2025-02-02 12:09:03,107 INFO spawned: 'php-fpm' with pid 9
+2025-02-02 12:09:04,156 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 12:09:04,157 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 12:09:04,158 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-02-02 12:09:06,755 INFO exited: laravel-migrations (exit status 0; expected)

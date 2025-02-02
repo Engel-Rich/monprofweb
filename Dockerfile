@@ -28,8 +28,8 @@ WORKDIR /www/html/monprof
 # Installer les dépendances Composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Exécuter les migrations
-RUN php artisan migrate
+# # Exécuter les migrations
+# RUN php artisan migrate
 
 # Configuration de Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -38,5 +38,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 9000
 
 # Ajuster les permissions
+RUN chown -R www:www /www/html/monprof
 RUN chown -R www:www /www/html/monprof/storage /www/html/monprof/bootstrap/cache
 RUN chmod -R 777 /www/html/monprof/storage /www/html/monprof/bootstrap/cache
+
+CMD ["supervisord", "-n"]

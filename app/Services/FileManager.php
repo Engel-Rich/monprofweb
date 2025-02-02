@@ -1,67 +1,81 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-class FileManager{
+use Kreait\Firebase\Contract\Storage;
+use Kreait\Laravel\Firebase\Facades\Firebase;
+
+// use Kreait\Laravel\Firebase\Facades\Firebase;
+
+class FileManager
+{
 
     protected string $filefolder;
 
+    protected Storage $storage;
+    protected $bucket;
 
-    public function __construct(string $filefolder){
-        $this->filefolder = $filefolder;
+    public function __construct(string $filefolder)
+    {
+        try {
+            $this->filefolder = $filefolder;
+            $this->storage = Firebase::storage();
+            $this->bucket = $this->storage->getBucket();
+        } catch (\Throwable $th) {
+            Log::error("Erreur d'initialisation Firebase : " . $th->getMessage());
+            throw $th;
+        }
     }
 
-     /**
-     * Store the uploaded file.
-     *
+    /**
      * @param  UploadedFile  $file
      * @param  string  $path
      * @return string
      */
 
-    public function store(UploadedFile $file, $storedisk = "public",): string|null {
-
+    public function store(UploadedFile $file): string|null
+    {
         try {
-            
-            $fileExtention = $file->extension();
-            $timestam = Carbon::now()->getTimestamp();
-            $filename = "$this->filefolder/$timestam.$fileExtention";
-            $storage = Storage::disk($storedisk)->put($filename, file_get_contents($file));
-            if ($storage) {
-                return "$timestam.$fileExtention";
-            }
-            return null;
-        } catch (\Throwable $th) {
-            Log::info($th->getMessage());
-            return null;
-        }
 
-       
+            $fileName =  time() . '_' . $file->getExtension();
+            $filePath = $this->filefolder . '/' . $fileName;
+            $this->bucket->upload(
+                fopen($file->getPathname(), 'r'),
+                [
+                    'name' => $filePath,
+                    'metadata' => [
+                        'contentType' => $file->getClientMimeType(),
+                    ],
+                ]
+            );
+            return $fileName;
+        } catch (\Throwable $th) {
+            Log::error("Erreur de stockage de fichier : " . $th->getMessage());
+        }
     }
 
 
 
-    public function delete(string $filename, $storedisk = "public"): bool {
+    public function delete(string $filename): bool
+    {
         try {
-            return Storage::disk($storedisk)->delete("$this->filefolder/$filename");
+            $this->bucket->object($this->filefolder . '/' . $filename)->delete();
+            return true;
         } catch (\Throwable $th) {
-            Log::info($th->getMessage());
+            Log::error("Erreur de suppression de fichier : " . $th->getMessage());
             return false;
         }
-
-
-
     }
 
-    public function get(string $filename, $storedisk = "public"): string|null {
+    public function get(string $filename,): string|null
+    {
         try {
-            return Storage::disk($storedisk)->url("$this->filefolder/$filename");
+            $object = $this->bucket->object($this->filefolder . '/' . $filename);
+            return $object->signedUrl(now()->addMinutes(30));
         } catch (\Throwable $th) {
-            Log::info($th->getMessage());
-            return null;
+            Log::error("Erreur de récupération de fichier : " . $th->getMessage());
         }
     }
 }

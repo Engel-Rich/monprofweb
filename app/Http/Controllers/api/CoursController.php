@@ -63,7 +63,7 @@ class CoursController extends Controller
             $result = $cours->getCollection()->transform(function ($value) use ($classe, $categorie) {
                 // dd($value->video_url);
                 $matiere = $value->matiere->libelle;
-                $fileManager = new FileManager("Videos/$categorie/$classe/$matiere" . $value->video);
+                $fileManager = new FileManager("Videos/$categorie/$classe/$matiere");
 
                 // $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
                 $value->video_url = $fileManager->get($value->video_url);

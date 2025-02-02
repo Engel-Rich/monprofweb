@@ -3,7 +3,7 @@
 namespace App\Services;
 
 // use App\Models\AppMessage;
-use Kreait\Firebase\Contract\Messaging;
+// use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +32,7 @@ class PushNotifictaionService
                 ]
             );
 
-            $message = CloudMessage::withTarget('token', $token)
+            $message = CloudMessage::new()->toToken($token)
                 ->withNotification($notification)
                 ->withData(['EVENT_TYPE' => $even_type]);
             $messaging->send($message);
@@ -41,6 +41,28 @@ class PushNotifictaionService
                 'token' => $token,
                 // 'trace' => $th->getTraceAsString()
             ]);
+        }
+    }
+
+
+    public function sendMultiCastFCM(array $tokens, string $even_type = "APP_MESSAGE"): void
+    {
+        try {
+            $splitTokens = array_chunk($tokens, 500);
+            $messaging = Firebase::messaging();
+            $notification = Notification::fromArray(
+                [
+                    'title' => $this->title,
+                    'body' => $this->appMessage,
+                ]
+            );
+            $message = CloudMessage::new()->withNotification($notification)
+                ->withData(['EVENT_TYPE' => $even_type]);
+            foreach ($splitTokens as $token) {
+                $messaging->sendMulticast($message, $token);
+            }
+        } catch (\Throwable $th) {
+            Log::error("Erreur de notification : " . $th->getMessage());
         }
     }
 }

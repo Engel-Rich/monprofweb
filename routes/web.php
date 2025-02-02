@@ -63,6 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/partenaires/add', [Usercontroller::class, 'add_partner'])->name('partner.add');
     Route::post('/partenaires/add', [Usercontroller::class, 'storePartner'])->name('partner.store');
     Route::get('/statistiques', [CategoriController::class, 'statistiques'])->name('statistiques');
+
+    // Route::get('/test-firebase', function () {
+    //     dd(app('firebase.storage'));
+    // });
 });
 
 /// Lgin and Register routes 

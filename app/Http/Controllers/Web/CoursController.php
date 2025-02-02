@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CoursValidateRequest;
+use App\Jobs\AddCourseNotificationJob;
 use App\Models\Categorie;
 use App\Models\Classe;
 use App\Models\Cours;
@@ -69,7 +70,7 @@ class CoursController extends Controller
             $matiere = $value->matiere->libelle;
             $categorie = $value->categorie->libelle;
             $classe = $value->classe->libelle;
-            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere" . $value->video);
+            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere");
             $value->video_url = $fileManager->get($value->video_url);
             // dd($value->video_url);
             return $value;
@@ -115,8 +116,6 @@ class CoursController extends Controller
     public function store(Request $request)
     {
         try {
-            // dd($request->all());
-
             $validatortable = [
                 "libelle" => 'string|required',
                 "description" => 'string|required',
@@ -136,17 +135,16 @@ class CoursController extends Controller
             $matiere = Matieres::find($request->matieres_id)->libelle;
             $categorie  = Categorie::find($request->categorie_id)->libelle;
             $video = $request->file('video');
-            // $extention = $video->extension();
             $user = $request->user()->id;
             $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
-            $videoUrl = $filemanager->store($video); // $video->store("Videos/$categorie/$classe/$matiere", 'public');
-            // dd($videoUrl,asset("storage/$videoUrl"), url("storage/$videoUrl"), url($videoUrl));
+            $videoUrl = $filemanager->store($video); // $video->store("Videos/$categorie/$classe/$matiere", 'public');            
             $validation['video_url'] = $videoUrl; //asset("storage/$videoUrl");
             $validation['user_id'] = $user;
             try {
                 Log::info($validation);
                 unset($validation['video']);
-                Cours::create($validation);
+                $cour =  Cours::create($validation);
+                AddCourseNotificationJob::dispatch($cour->id);
                 Log::info($validation);
             } catch (\Throwable $th) {
                 $filemanager->delete($videoUrl);

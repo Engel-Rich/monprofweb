@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Jobs;
+
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Models\AppMessage;
@@ -20,10 +21,12 @@ class SendNotifiCationJob implements ShouldQueue
      */
     protected $message;
     protected $title;
-    public function __construct( $message,$title)
+    protected $event_type = "APP_MESSAGE";
+    public function __construct($message, $title, $event_type = "APP_MESSAGE")
     {
         $this->title = $title;
         $this->message = $message;
+        $this->event_type = $event_type;
     }
 
     /**
@@ -31,16 +34,14 @@ class SendNotifiCationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        try {      
+        try {
             $notification = new PushNotifictaionService($this->message, $this->title);
-            $userLis  = User::where('fcm_token', '!=', null)->get();  
-            foreach ($userLis as $user) {
-                $token = $user->fcm_token;
-                Log::info($token);
-                if($token!=null) $notification->sendNotificationToToken($token);
-            }             
+            $userLis  = User::where('fcm_token', '!=', null)->get();
+            $arrayTokens = $userLis->pluck('fcm_token')->toArray();
+            Log::info($arrayTokens);
+            $notification->sendMultiCastFCM($arrayTokens);
         } catch (\Throwable $th) {
-            Log::info("Erreur de notification dans le job".$th->getMessage());
+            Log::info("Erreur de notification dans le job" . $th->getMessage());
         }
     }
 }

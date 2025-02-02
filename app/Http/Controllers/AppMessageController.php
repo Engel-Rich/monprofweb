@@ -15,7 +15,7 @@ class AppMessageController extends Controller
     /**
      * Display a listing of the resource.
      */
-    
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -24,16 +24,16 @@ class AppMessageController extends Controller
             return view('screen.message.message_index', ['messages' => $messageList]);
         } else {
             try {
-                $messageList = AppMessage::orderBy('created_at','desc')-> paginate(page: $request->page ?: 1);
-            $result = $messageList->getCollection()->transform( function ($value) use ($user){
-                $value->status = NotificationReade::where('app_message_id','=', $value->id)->where('user_id','=', $user->id)->exists();
-                return $value;
-            });
-            $messageList->setCollection($result);
-            return response()->json([
-                'status' => true,
-                'data' => $messageList,
-            ], 200);
+                $messageList = AppMessage::orderBy('created_at', 'desc')->paginate(page: $request->page ?: 1);
+                $result = $messageList->getCollection()->transform(function ($value) use ($user) {
+                    $value->status = NotificationReade::where('app_message_id', '=', $value->id)->where('user_id', '=', $user->id)->exists();
+                    return $value;
+                });
+                $messageList->setCollection($result);
+                return response()->json([
+                    'status' => true,
+                    'data' => $messageList,
+                ], 200);
             } catch (\Throwable $th) {
                 return response()->json([
                     'status' => false,
@@ -84,9 +84,8 @@ class AppMessageController extends Controller
                 'body' => $request->body,
             ];
             $message = AppMessage::create($dataToSave);
-            SendNotifiCationJob::dispatch($message->body,$message->title)->delay(now()->addSeconds(2));
+            SendNotifiCationJob::dispatch($message->body, $message->title)->delay(now()->addSeconds(2));
             return redirect()->route('messages.index');
-
         } catch (\Throwable $th) {
             Log::info($th->getMessage());
             return to_route('messages.create')->withErrors([
@@ -100,7 +99,7 @@ class AppMessageController extends Controller
      */
     public function readNotification(Request $request)
     {
-        
+
 
         try {
             $userId = auth()->id();
@@ -118,7 +117,7 @@ class AppMessageController extends Controller
                     'status' => true,
                     'data' => 'notification has been read succesfully',
                 ], 200);
-            }else{
+            } else {
                 return response()->json([
                     'status' => false,
                     'data' => 'Notification not found',
@@ -141,10 +140,7 @@ class AppMessageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AppMessage $appMessage)
-    {
-
-    }
+    public function edit(AppMessage $appMessage) {}
 
     /**
      * Update the specified resource in storage.

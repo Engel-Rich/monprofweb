@@ -5,11 +5,12 @@ services:
         restart: always
         container_name: nginx-monprof
         ports:
-            - 8800:80
-            - 8443:443
+            - 8801:80
         volumes:
             - ./nginx.conf:/etc/nginx/nginx.conf
             - ./:/www/html/monprof
+            - /etc/letsencrypt:/etc/letsencrypt
+            - /etc/ssl/certs:/etc/ssl/certs
         depends_on:
             - php
     php:

@@ -65,7 +65,7 @@ class UserController extends Controller
                     'data' => ['user' => $user, 'parent' => $parent],
                 ], 200);
             } else {
-                if ($user->user_phone_emei != $request->header('phone-emei')) {
+             /*   if ($user->user_phone_emei != $request->header('phone-emei')) {
               //      Auth::guard('api')->logout();
                     return response()->json([
                         'status' => false,
@@ -73,7 +73,7 @@ class UserController extends Controller
                         'type' => 'phone-emei',
                         'error' => 'Vous n\'etes pas autorisé a vous connecter sur ce telephone',
                     ], 422);
-                }
+                }*/
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
                 if ($user->profile_image != null) {

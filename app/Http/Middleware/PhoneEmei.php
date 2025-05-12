@@ -23,7 +23,7 @@ class PhoneEmei
                 'status' => false
             ], 422);
         }
-        if ($request->user() != null) {
+       /* if ($request->user() != null) {
             $emeiUser = $request->user()->user_phone_emei;
 		$currentUser=$request->user();
             if ($requestHeaderEmei != $emeiUser && $currentUser->rule_id==2 ) {
@@ -32,7 +32,7 @@ class PhoneEmei
                     'status' => false
                 ], 422);
             }
-        }
+        }*/
         return $next($request);
     }
 }

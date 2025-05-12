@@ -14,7 +14,7 @@ services:
             - php
     php:
         restart: always
-        container_name: monprof-api
+        container_name: monprof-api-preprod
         build: .
         volumes:
             - ./:/www/html/monprof
@@ -27,8 +27,8 @@ services:
             - DB_PASSWORD=Azerty@123
         expose:
             - 9000
-    adminer:
-        image: adminer
-        restart: always
-        ports:
-            - "8082:8080"
+    # adminer:
+    #     image: adminer
+    #     restart: always
+    #     ports:
+    #         - "8082:8080"

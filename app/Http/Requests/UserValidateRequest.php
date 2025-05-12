@@ -23,19 +23,19 @@ class UserValidateRequest extends FormRequest
     {
         return [
             // 'rule_id'=> 'integer|exists:rules,id',
-            'rule_id'=> 'integer',
-            'name'=> 'required|max:50',
-            'last_name'=> 'nullable|max:30',
-            'phone'=> 'required|max:14',                
-            'email'=> 'required|email',                
-            'password'=> 'required|min:4',                
+            'rule_id' => 'integer',
+            'name' => 'required|max:50',
+            'last_name' => 'nullable|max:30',
+            'phone' => 'required|max:14',
+            'email' => 'required|email',
+            'password' => 'required|min:4',
         ];
     }
 
     protected function prepareForValidation()
     {
         $this->merge([
-            'rule_id'=>1
+            'rule_id' => 1
         ]);
     }
 }

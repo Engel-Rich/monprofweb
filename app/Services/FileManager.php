@@ -16,6 +16,7 @@ class FileManager
 
     protected Storage $storage;
     protected $bucket;
+    protected $encryptionKey = base64_decode(env("ENCRYPTION_KEY"));
 
     public function __construct(string $filefolder)
     {
@@ -35,14 +36,20 @@ class FileManager
      * @return string
      */
 
-    public function store(UploadedFile $file): string|null
+    public function store(UploadedFile $file): string | null
     {
         try {
+            // Crypt file 
 
             $fileName =  time() . '_' . $file->getExtension();
             $filePath = $this->filefolder . '/' . $fileName;
+
+            // 🔐 Chiffrer le fichier
+            $encryptedPath = storage_path("app/temp_encrypted_" . $fileName);
+            $this->encryptFile($file->getPathname(), $encryptedPath, $this->encryptionKey);
+
             $this->bucket->upload(
-                fopen($file->getPathname(), 'r'),
+                fopen($encryptedPath, 'r'),
                 [
                     'name' => $filePath,
                     'metadata' => [
@@ -50,12 +57,21 @@ class FileManager
                     ],
                 ]
             );
+            unlink($encryptedPath); // ❌ Nettoye
+
             return $fileName;
         } catch (\Throwable $th) {
             Log::error("Erreur de stockage de fichier : " . $th->getMessage());
         }
     }
 
+    private function encryptFile(string $inputPath, string $outputPath, string $key): void
+    {
+        $iv = random_bytes(16);
+        $data = file_get_contents($inputPath);
+        $encrypted = openssl_encrypt($data, "aes-256-cbc", $key, OPENSSL_RAW_DATA, $iv);
+        file_put_contents($outputPath, $iv . $encrypted); // Préfixer le IV
+    }
 
 
     public function delete(string $filename): bool
@@ -69,7 +85,7 @@ class FileManager
         }
     }
 
-    public function get(string $filename,): string|null
+    public function get(string $filename,): string | null
     {
         try {
             $object = $this->bucket->object($this->filefolder . '/' . $filename);

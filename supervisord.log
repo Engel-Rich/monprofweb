@@ -15753,3 +15753,16 @@
 2025-02-02 13:25:31,788 INFO waiting for laravel-queue, php-fpm to die
 2025-02-02 13:25:31,806 INFO stopped: php-fpm (exit status 0)
 2025-02-02 13:25:32,811 WARN stopped: laravel-queue (terminated by SIGTERM)
+2025-05-12 10:12:55,990 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-05-12 10:12:55,996 INFO supervisord started with pid 1
+2025-05-12 10:12:56,999 INFO spawned: 'laravel-migrations' with pid 7
+2025-05-12 10:12:57,004 INFO spawned: 'laravel-queue' with pid 8
+2025-05-12 10:12:57,007 INFO spawned: 'php-fpm' with pid 9
+2025-05-12 10:12:58,110 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-05-12 10:12:58,111 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-05-12 10:12:58,111 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-05-12 10:13:07,626 INFO exited: laravel-migrations (exit status 0; expected)
+2025-05-12 10:17:37,200 WARN received SIGQUIT indicating exit request
+2025-05-12 10:17:37,201 INFO waiting for laravel-queue, php-fpm to die
+2025-05-12 10:17:37,205 INFO stopped: php-fpm (exit status 0)
+2025-05-12 10:17:38,208 WARN stopped: laravel-queue (terminated by SIGTERM)

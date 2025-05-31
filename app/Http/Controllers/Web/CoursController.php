@@ -65,6 +65,7 @@ class CoursController extends Controller
         }
 
         // $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(10);
+	//dd($cours);
         $result = $cours->getCollection()->transform(function ($value) {
             // dd($value->video_url);
             $matiere = $value->matiere->libelle;

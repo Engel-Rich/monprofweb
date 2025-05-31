@@ -16,11 +16,12 @@ class FileManager
 
     protected Storage $storage;
     protected $bucket;
-    protected $encryptionKey = base64_decode(env("ENCRYPTION_KEY"));
+    protected $encryptionKey; // = base64_decode(env("ENCRYPTION_KEY"));
 
     public function __construct(string $filefolder)
     {
         try {
+	    $this->encryptionKey = base64_decode(env("ENCRYPTION_KEY"));
             $this->filefolder = $filefolder;
             $this->storage = Firebase::storage();
             $this->bucket = $this->storage->getBucket();

@@ -14,7 +14,7 @@ services:
             - php
     php:
         restart: always
-        container_name: monprof-api-preprod
+        container_name: monprof-api
         build: .
         volumes:
             - ./:/www/html/monprof

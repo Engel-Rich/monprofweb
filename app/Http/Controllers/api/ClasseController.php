@@ -11,7 +11,7 @@ class ClasseController extends Controller
 
     public function __construct()
     {
-//        $this->middleware('auth:sanctum');
+        //        $this->middleware('auth:sanctum');
     }
     /**
      * Display a listing of the resource.
@@ -19,7 +19,7 @@ class ClasseController extends Controller
     public function index()
     {
         try {
-            $classe = Classe::all();
+            $classe = Classe::where("is_active", "=", "1");
             return response()->json(['status' => true, 'data' => $classe,], 200);
         } catch (\Throwable $th) {
 

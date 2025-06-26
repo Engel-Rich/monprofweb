@@ -16,7 +16,7 @@ class FileManager
 
     protected Storage $storage;
     protected $bucket;
-    protected $encryptionKey;
+    protected $encryptionKey; // = base64_decode(env("ENCRYPTION_KEY"));
 
     public function __construct(string $filefolder)
     {
@@ -42,7 +42,7 @@ class FileManager
         try {
             // Crypt file 
 
-            $fileName =  time() . '_' . $file->getExtension();
+            $fileName =  time() . '.' . $file->getExtension();
             $filePath = $this->filefolder . '/' . $fileName;
 
             // 🔐 Chiffrer le fichier
@@ -59,7 +59,6 @@ class FileManager
                 ]
             );
             unlink($encryptedPath); // ❌ Nettoye
-
             return $fileName;
         } catch (\Throwable $th) {
             Log::error("Erreur de stockage de fichier : " . $th->getMessage());

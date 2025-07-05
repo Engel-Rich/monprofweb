@@ -19,7 +19,7 @@ class ClasseController extends Controller
     public function index()
     {
         try {
-            $classe = Classe::where("is_active", "=", "1");
+            $classe = Classe::all();
             return response()->json(['status' => true, 'data' => $classe,], 200);
         } catch (\Throwable $th) {
 

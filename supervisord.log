@@ -19131,3 +19131,709 @@
 2025-06-26 16:14:45,428 INFO exited: laravel-queue (exit status 0; expected)
 2025-06-26 16:14:46,453 INFO spawned: 'laravel-queue' with pid 240
 2025-06-26 16:14:47,457 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 17:40:36,916 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-06-26 17:40:36,943 INFO supervisord started with pid 1
+2025-06-26 17:40:37,957 INFO spawned: 'laravel-migrations' with pid 7
+2025-06-26 17:40:37,979 INFO spawned: 'laravel-queue' with pid 8
+2025-06-26 17:40:38,037 INFO spawned: 'php-fpm' with pid 9
+2025-06-26 17:40:39,044 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 17:40:39,044 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 17:40:39,044 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 17:40:42,009 WARN exited: laravel-migrations (exit status 1; not expected)
+2025-06-26 18:40:41,905 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 18:40:42,948 INFO spawned: 'laravel-queue' with pid 17
+2025-06-26 18:40:43,955 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 19:40:48,496 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 19:40:49,526 INFO spawned: 'laravel-queue' with pid 21
+2025-06-26 19:40:50,528 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 20:40:53,202 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 20:40:54,238 INFO spawned: 'laravel-queue' with pid 25
+2025-06-26 20:40:55,253 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 21:40:58,217 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 21:40:59,248 INFO spawned: 'laravel-queue' with pid 29
+2025-06-26 21:41:00,257 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 22:41:05,113 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 22:41:06,129 INFO spawned: 'laravel-queue' with pid 33
+2025-06-26 22:41:07,133 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-26 23:41:11,248 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-26 23:41:12,365 INFO spawned: 'laravel-queue' with pid 37
+2025-06-26 23:41:13,368 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 00:41:17,925 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 00:41:17,994 INFO spawned: 'laravel-queue' with pid 41
+2025-06-27 00:41:19,003 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 01:41:22,123 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 01:41:23,173 INFO spawned: 'laravel-queue' with pid 45
+2025-06-27 01:41:24,177 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 02:41:27,436 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 02:41:28,453 INFO spawned: 'laravel-queue' with pid 49
+2025-06-27 02:41:29,464 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 03:41:32,914 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 03:41:33,950 INFO spawned: 'laravel-queue' with pid 53
+2025-06-27 03:41:34,964 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 04:41:38,429 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 04:41:39,449 INFO spawned: 'laravel-queue' with pid 57
+2025-06-27 04:41:40,451 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 05:41:44,535 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 05:41:45,565 INFO spawned: 'laravel-queue' with pid 61
+2025-06-27 05:41:46,568 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 06:41:51,389 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 06:41:52,434 INFO spawned: 'laravel-queue' with pid 65
+2025-06-27 06:41:53,438 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 07:41:57,524 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 07:41:58,570 INFO spawned: 'laravel-queue' with pid 69
+2025-06-27 07:41:59,579 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 08:42:04,832 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 08:42:05,988 INFO spawned: 'laravel-queue' with pid 73
+2025-06-27 08:42:07,002 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 09:42:10,967 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 09:42:11,987 INFO spawned: 'laravel-queue' with pid 77
+2025-06-27 09:42:12,990 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 10:42:20,189 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 10:42:21,230 INFO spawned: 'laravel-queue' with pid 81
+2025-06-27 10:42:22,232 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 11:42:26,792 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 11:42:27,810 INFO spawned: 'laravel-queue' with pid 85
+2025-06-27 11:42:28,812 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 12:42:32,519 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 12:42:33,596 INFO spawned: 'laravel-queue' with pid 89
+2025-06-27 12:42:34,612 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 13:42:39,268 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 13:42:40,284 INFO spawned: 'laravel-queue' with pid 93
+2025-06-27 13:42:41,287 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 14:42:44,734 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 14:42:45,765 INFO spawned: 'laravel-queue' with pid 97
+2025-06-27 14:42:46,773 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 15:42:49,575 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 15:42:50,589 INFO spawned: 'laravel-queue' with pid 101
+2025-06-27 15:42:51,591 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 16:42:56,684 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 16:42:57,721 INFO spawned: 'laravel-queue' with pid 105
+2025-06-27 16:42:58,730 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 17:43:02,699 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 17:43:03,739 INFO spawned: 'laravel-queue' with pid 109
+2025-06-27 17:43:04,741 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 18:43:10,742 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 18:43:11,764 INFO spawned: 'laravel-queue' with pid 113
+2025-06-27 18:43:12,770 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 19:43:15,710 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 19:43:16,723 INFO spawned: 'laravel-queue' with pid 117
+2025-06-27 19:43:17,729 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 20:43:21,890 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 20:43:22,987 INFO spawned: 'laravel-queue' with pid 121
+2025-06-27 20:43:24,000 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 21:43:28,346 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 21:43:29,383 INFO spawned: 'laravel-queue' with pid 125
+2025-06-27 21:43:30,386 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 22:43:33,031 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 22:43:34,083 INFO spawned: 'laravel-queue' with pid 129
+2025-06-27 22:43:35,100 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-27 23:43:40,151 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-27 23:43:41,178 INFO spawned: 'laravel-queue' with pid 133
+2025-06-27 23:43:42,193 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 00:43:45,957 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 00:43:46,978 INFO spawned: 'laravel-queue' with pid 137
+2025-06-28 00:43:47,982 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 01:43:53,243 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 01:43:54,258 INFO spawned: 'laravel-queue' with pid 141
+2025-06-28 01:43:55,262 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 02:43:57,625 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 02:43:58,690 INFO spawned: 'laravel-queue' with pid 145
+2025-06-28 02:43:59,697 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 03:44:04,918 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 03:44:05,934 INFO spawned: 'laravel-queue' with pid 149
+2025-06-28 03:44:06,957 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 04:44:11,632 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 04:44:12,658 INFO spawned: 'laravel-queue' with pid 153
+2025-06-28 04:44:13,665 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 05:44:18,310 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 05:44:19,337 INFO spawned: 'laravel-queue' with pid 157
+2025-06-28 05:44:20,342 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 06:44:24,882 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 06:44:25,909 INFO spawned: 'laravel-queue' with pid 161
+2025-06-28 06:44:26,917 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 07:44:30,403 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 07:44:31,432 INFO spawned: 'laravel-queue' with pid 166
+2025-06-28 07:44:32,437 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 08:44:39,523 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 08:44:40,557 INFO spawned: 'laravel-queue' with pid 170
+2025-06-28 08:44:41,560 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 09:44:46,273 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 09:44:46,284 INFO spawned: 'laravel-queue' with pid 174
+2025-06-28 09:44:47,296 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 10:44:49,289 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 10:44:50,305 INFO spawned: 'laravel-queue' with pid 178
+2025-06-28 10:44:51,308 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 11:44:54,279 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 11:44:55,293 INFO spawned: 'laravel-queue' with pid 182
+2025-06-28 11:44:56,296 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 12:44:59,984 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 12:45:01,038 INFO spawned: 'laravel-queue' with pid 186
+2025-06-28 12:45:02,054 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 13:16:40,174 WARN received SIGQUIT indicating exit request
+2025-06-28 13:16:40,182 INFO waiting for laravel-queue, php-fpm to die
+2025-06-28 13:16:40,381 INFO stopped: php-fpm (exit status 0)
+2025-06-28 13:16:40,391 WARN stopped: laravel-queue (terminated by SIGTERM)
+2025-06-28 13:23:37,537 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-06-28 13:23:37,554 INFO supervisord started with pid 1
+2025-06-28 13:23:38,560 INFO spawned: 'laravel-migrations' with pid 8
+2025-06-28 13:23:38,574 INFO spawned: 'laravel-queue' with pid 9
+2025-06-28 13:23:38,610 INFO spawned: 'php-fpm' with pid 10
+2025-06-28 13:23:40,418 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 13:23:40,418 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 13:23:40,418 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 13:23:43,918 WARN exited: laravel-migrations (exit status 1; not expected)
+2025-06-28 14:23:43,718 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 14:23:44,859 INFO spawned: 'laravel-queue' with pid 18
+2025-06-28 14:23:45,870 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 15:23:51,385 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 15:23:52,433 INFO spawned: 'laravel-queue' with pid 22
+2025-06-28 15:23:53,444 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 16:23:59,569 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 16:24:00,584 INFO spawned: 'laravel-queue' with pid 26
+2025-06-28 16:24:01,605 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 17:24:07,576 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 17:24:08,596 INFO spawned: 'laravel-queue' with pid 30
+2025-06-28 17:24:09,599 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 18:24:12,904 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 18:24:13,962 INFO spawned: 'laravel-queue' with pid 34
+2025-06-28 18:24:14,967 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 19:24:17,795 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 19:24:18,832 INFO spawned: 'laravel-queue' with pid 38
+2025-06-28 19:24:19,835 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 20:24:23,753 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 20:24:24,831 INFO spawned: 'laravel-queue' with pid 42
+2025-06-28 20:24:25,839 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 21:24:33,397 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 21:24:33,602 INFO spawned: 'laravel-queue' with pid 46
+2025-06-28 21:24:34,622 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 22:24:41,432 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 22:24:42,528 INFO spawned: 'laravel-queue' with pid 50
+2025-06-28 22:24:43,533 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-28 23:24:51,635 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-28 23:24:52,661 INFO spawned: 'laravel-queue' with pid 54
+2025-06-28 23:24:53,665 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 00:24:59,694 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 00:25:00,960 INFO spawned: 'laravel-queue' with pid 58
+2025-06-29 00:25:01,975 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 01:25:08,881 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 01:25:09,945 INFO spawned: 'laravel-queue' with pid 62
+2025-06-29 01:25:10,979 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 02:25:15,795 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 02:25:16,836 INFO spawned: 'laravel-queue' with pid 66
+2025-06-29 02:25:17,840 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 03:25:22,567 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 03:25:23,583 INFO spawned: 'laravel-queue' with pid 70
+2025-06-29 03:25:24,586 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 04:25:29,925 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 04:25:30,969 INFO spawned: 'laravel-queue' with pid 75
+2025-06-29 04:25:31,972 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 05:25:35,882 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 05:25:36,899 INFO spawned: 'laravel-queue' with pid 79
+2025-06-29 05:25:37,902 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 06:25:43,621 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 06:25:44,711 INFO spawned: 'laravel-queue' with pid 83
+2025-06-29 06:25:45,736 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 07:25:49,526 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 07:25:50,647 INFO spawned: 'laravel-queue' with pid 87
+2025-06-29 07:25:51,651 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 08:25:55,467 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 08:25:56,501 INFO spawned: 'laravel-queue' with pid 91
+2025-06-29 08:25:57,511 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 09:26:00,832 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 09:26:00,863 INFO spawned: 'laravel-queue' with pid 95
+2025-06-29 09:26:01,868 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 10:26:06,113 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 10:26:07,144 INFO spawned: 'laravel-queue' with pid 99
+2025-06-29 10:26:08,147 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 11:26:13,940 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 11:26:14,985 INFO spawned: 'laravel-queue' with pid 103
+2025-06-29 11:26:15,989 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 12:26:18,922 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 12:26:19,939 INFO spawned: 'laravel-queue' with pid 107
+2025-06-29 12:26:20,941 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 13:26:24,129 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 13:26:25,164 INFO spawned: 'laravel-queue' with pid 111
+2025-06-29 13:26:26,167 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 14:26:29,390 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 14:26:30,401 INFO spawned: 'laravel-queue' with pid 115
+2025-06-29 14:26:31,405 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 15:26:34,182 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 15:26:34,406 INFO spawned: 'laravel-queue' with pid 119
+2025-06-29 15:26:35,417 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 16:26:38,520 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 16:26:39,550 INFO spawned: 'laravel-queue' with pid 123
+2025-06-29 16:26:40,553 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 17:26:42,215 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 17:26:43,226 INFO spawned: 'laravel-queue' with pid 127
+2025-06-29 17:26:44,235 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 18:26:49,022 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 18:26:50,060 INFO spawned: 'laravel-queue' with pid 131
+2025-06-29 18:26:51,064 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 19:26:52,950 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 19:26:53,964 INFO spawned: 'laravel-queue' with pid 135
+2025-06-29 19:26:54,967 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 20:27:01,131 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 20:27:02,175 INFO spawned: 'laravel-queue' with pid 139
+2025-06-29 20:27:03,180 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 21:27:08,020 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 21:27:09,054 INFO spawned: 'laravel-queue' with pid 143
+2025-06-29 21:27:10,126 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 22:27:13,758 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 22:27:14,773 INFO spawned: 'laravel-queue' with pid 147
+2025-06-29 22:27:15,776 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-29 23:27:18,970 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-29 23:27:19,990 INFO spawned: 'laravel-queue' with pid 151
+2025-06-29 23:27:20,998 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 00:27:23,669 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 00:27:24,691 INFO spawned: 'laravel-queue' with pid 155
+2025-06-30 00:27:25,708 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 01:27:28,448 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 01:27:29,474 INFO spawned: 'laravel-queue' with pid 159
+2025-06-30 01:27:30,478 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 02:27:34,580 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 02:27:35,593 INFO spawned: 'laravel-queue' with pid 163
+2025-06-30 02:27:36,603 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 03:27:39,628 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 03:27:40,650 INFO spawned: 'laravel-queue' with pid 167
+2025-06-30 03:27:41,653 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 04:27:44,924 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 04:27:45,937 INFO spawned: 'laravel-queue' with pid 171
+2025-06-30 04:27:46,939 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 05:27:50,219 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 05:27:51,241 INFO spawned: 'laravel-queue' with pid 175
+2025-06-30 05:27:52,248 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 06:27:54,432 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 06:27:55,449 INFO spawned: 'laravel-queue' with pid 179
+2025-06-30 06:27:56,452 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 07:28:01,061 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 07:28:02,108 INFO spawned: 'laravel-queue' with pid 183
+2025-06-30 07:28:03,113 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 08:28:08,680 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 08:28:09,745 INFO spawned: 'laravel-queue' with pid 187
+2025-06-30 08:28:10,757 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 09:28:17,516 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 09:28:18,592 INFO spawned: 'laravel-queue' with pid 191
+2025-06-30 09:28:19,596 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 10:28:24,487 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 10:28:25,535 INFO spawned: 'laravel-queue' with pid 195
+2025-06-30 10:28:26,538 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 11:28:33,608 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 11:28:34,676 INFO spawned: 'laravel-queue' with pid 199
+2025-06-30 11:28:35,680 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 12:28:41,481 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 12:28:42,540 INFO spawned: 'laravel-queue' with pid 203
+2025-06-30 12:28:43,548 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 13:28:46,132 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 13:28:47,154 INFO spawned: 'laravel-queue' with pid 207
+2025-06-30 13:28:48,157 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 14:28:51,636 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 14:28:52,661 INFO spawned: 'laravel-queue' with pid 211
+2025-06-30 14:28:53,666 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 15:28:57,854 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 15:28:58,887 INFO spawned: 'laravel-queue' with pid 215
+2025-06-30 15:28:59,889 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 16:29:03,091 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 16:29:04,119 INFO spawned: 'laravel-queue' with pid 219
+2025-06-30 16:29:05,125 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 17:29:08,902 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 17:29:09,960 INFO spawned: 'laravel-queue' with pid 223
+2025-06-30 17:29:10,972 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 18:29:15,855 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 18:29:16,937 INFO spawned: 'laravel-queue' with pid 227
+2025-06-30 18:29:17,966 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 19:29:21,856 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 19:29:22,914 INFO spawned: 'laravel-queue' with pid 231
+2025-06-30 19:29:23,932 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 20:29:29,450 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 20:29:30,799 INFO spawned: 'laravel-queue' with pid 235
+2025-06-30 20:29:31,884 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 21:29:39,758 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 21:29:39,870 INFO spawned: 'laravel-queue' with pid 239
+2025-06-30 21:29:40,876 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 22:29:47,944 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 22:29:49,010 INFO spawned: 'laravel-queue' with pid 243
+2025-06-30 22:29:50,020 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-06-30 23:29:55,412 INFO exited: laravel-queue (exit status 0; expected)
+2025-06-30 23:29:56,477 INFO spawned: 'laravel-queue' with pid 247
+2025-06-30 23:29:57,480 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 00:30:03,057 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 00:30:04,095 INFO spawned: 'laravel-queue' with pid 251
+2025-07-01 00:30:05,165 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 01:30:10,303 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 01:30:11,404 INFO spawned: 'laravel-queue' with pid 255
+2025-07-01 01:30:12,452 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 02:30:17,368 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 02:30:18,395 INFO spawned: 'laravel-queue' with pid 259
+2025-07-01 02:30:19,399 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 03:30:24,218 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 03:30:25,256 INFO spawned: 'laravel-queue' with pid 263
+2025-07-01 03:30:26,259 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 04:30:31,653 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 04:30:32,677 INFO spawned: 'laravel-queue' with pid 267
+2025-07-01 04:30:33,691 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 05:30:37,407 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 05:30:38,459 INFO spawned: 'laravel-queue' with pid 271
+2025-07-01 05:30:39,463 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 06:30:45,023 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 06:30:46,069 INFO spawned: 'laravel-queue' with pid 275
+2025-07-01 06:30:47,077 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 07:30:49,676 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 07:30:50,799 INFO spawned: 'laravel-queue' with pid 279
+2025-07-01 07:30:51,801 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 08:30:54,136 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 08:30:55,162 INFO spawned: 'laravel-queue' with pid 283
+2025-07-01 08:30:56,166 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 09:30:59,499 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 09:31:00,513 INFO spawned: 'laravel-queue' with pid 287
+2025-07-01 09:31:01,516 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 10:31:04,828 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 10:31:05,858 INFO spawned: 'laravel-queue' with pid 291
+2025-07-01 10:31:06,861 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 11:31:11,421 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 11:31:12,480 INFO spawned: 'laravel-queue' with pid 295
+2025-07-01 11:31:13,488 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 12:16:53,637 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 12:16:54,683 INFO spawned: 'laravel-queue' with pid 299
+2025-07-01 12:16:55,746 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 12:17:04,521 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 12:17:05,564 INFO spawned: 'laravel-queue' with pid 303
+2025-07-01 12:17:06,583 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 12:17:11,093 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 12:17:12,104 INFO spawned: 'laravel-queue' with pid 307
+2025-07-01 12:17:13,112 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 13:17:13,957 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 13:17:14,984 INFO spawned: 'laravel-queue' with pid 311
+2025-07-01 13:17:15,991 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 14:17:20,726 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 14:17:21,760 INFO spawned: 'laravel-queue' with pid 315
+2025-07-01 14:17:22,764 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 15:17:26,808 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 15:17:27,861 INFO spawned: 'laravel-queue' with pid 319
+2025-07-01 15:17:28,881 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 16:17:31,922 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 16:17:33,110 INFO spawned: 'laravel-queue' with pid 323
+2025-07-01 16:17:34,125 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 16:55:16,136 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-07-01 16:55:16,192 INFO supervisord started with pid 1
+2025-07-01 16:55:17,226 INFO spawned: 'laravel-migrations' with pid 7
+2025-07-01 16:55:17,275 INFO spawned: 'laravel-queue' with pid 8
+2025-07-01 16:55:17,281 INFO spawned: 'php-fpm' with pid 9
+2025-07-01 16:55:18,997 INFO success: laravel-migrations entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 16:55:18,997 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 16:55:18,997 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 16:55:23,051 WARN exited: laravel-migrations (exit status 1; not expected)
+2025-07-01 17:55:23,673 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 17:55:24,745 INFO spawned: 'laravel-queue' with pid 17
+2025-07-01 17:55:25,748 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 18:55:34,800 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 18:55:35,814 INFO spawned: 'laravel-queue' with pid 21
+2025-07-01 18:55:36,817 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 19:55:49,434 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 19:55:50,494 INFO spawned: 'laravel-queue' with pid 25
+2025-07-01 19:55:51,507 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 20:55:56,603 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 20:55:57,631 INFO spawned: 'laravel-queue' with pid 29
+2025-07-01 20:55:58,634 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 21:56:02,237 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 21:56:03,323 INFO spawned: 'laravel-queue' with pid 33
+2025-07-01 21:56:04,338 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 22:56:16,033 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 22:56:17,062 INFO spawned: 'laravel-queue' with pid 37
+2025-07-01 22:56:18,135 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-01 23:56:28,632 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-01 23:56:29,714 INFO spawned: 'laravel-queue' with pid 41
+2025-07-01 23:56:30,717 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 00:56:41,017 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 00:56:42,033 INFO spawned: 'laravel-queue' with pid 45
+2025-07-02 00:56:43,036 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 01:56:53,940 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 01:56:54,957 INFO spawned: 'laravel-queue' with pid 49
+2025-07-02 01:56:55,961 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 02:57:00,801 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 02:57:01,826 INFO spawned: 'laravel-queue' with pid 53
+2025-07-02 02:57:02,828 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 03:57:06,572 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 03:57:07,599 INFO spawned: 'laravel-queue' with pid 57
+2025-07-02 03:57:08,603 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 04:57:13,150 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 04:57:14,173 INFO spawned: 'laravel-queue' with pid 61
+2025-07-02 04:57:15,179 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 05:57:17,226 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 05:57:18,261 INFO spawned: 'laravel-queue' with pid 65
+2025-07-02 05:57:19,265 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 06:57:23,819 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 06:57:24,880 INFO spawned: 'laravel-queue' with pid 69
+2025-07-02 06:57:25,883 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 07:57:29,874 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 07:57:30,915 INFO spawned: 'laravel-queue' with pid 73
+2025-07-02 07:57:31,926 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 08:57:35,947 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 08:57:36,965 INFO spawned: 'laravel-queue' with pid 77
+2025-07-02 08:57:37,968 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 09:57:40,306 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 09:57:41,341 INFO spawned: 'laravel-queue' with pid 81
+2025-07-02 09:57:42,344 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 10:57:44,568 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 10:57:44,580 INFO spawned: 'laravel-queue' with pid 85
+2025-07-02 10:57:45,583 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 11:57:48,210 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 11:57:49,259 INFO spawned: 'laravel-queue' with pid 89
+2025-07-02 11:57:50,265 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 12:57:54,414 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 12:57:55,425 INFO spawned: 'laravel-queue' with pid 93
+2025-07-02 12:57:56,427 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 13:57:59,147 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 13:58:00,157 INFO spawned: 'laravel-queue' with pid 97
+2025-07-02 13:58:01,178 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 14:58:02,940 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 14:58:04,041 INFO spawned: 'laravel-queue' with pid 101
+2025-07-02 14:58:05,048 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 15:58:06,775 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 15:58:07,791 INFO spawned: 'laravel-queue' with pid 105
+2025-07-02 15:58:08,796 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 16:58:11,314 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 16:58:12,325 INFO spawned: 'laravel-queue' with pid 109
+2025-07-02 16:58:13,329 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 17:58:14,562 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 17:58:15,574 INFO spawned: 'laravel-queue' with pid 113
+2025-07-02 17:58:16,577 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 18:58:17,840 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 18:58:18,851 INFO spawned: 'laravel-queue' with pid 117
+2025-07-02 18:58:19,854 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 19:58:23,198 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 19:58:24,211 INFO spawned: 'laravel-queue' with pid 121
+2025-07-02 19:58:25,214 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 20:58:29,540 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 20:58:30,558 INFO spawned: 'laravel-queue' with pid 125
+2025-07-02 20:58:31,561 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 21:58:34,827 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 21:58:35,840 INFO spawned: 'laravel-queue' with pid 129
+2025-07-02 21:58:36,843 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 22:58:40,762 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 22:58:41,775 INFO spawned: 'laravel-queue' with pid 133
+2025-07-02 22:58:42,777 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-02 23:58:47,178 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-02 23:58:48,191 INFO spawned: 'laravel-queue' with pid 137
+2025-07-02 23:58:49,195 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 00:58:52,811 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 00:58:53,838 INFO spawned: 'laravel-queue' with pid 141
+2025-07-03 00:58:54,839 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 01:58:58,508 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 01:58:59,519 INFO spawned: 'laravel-queue' with pid 145
+2025-07-03 01:59:00,522 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 02:59:02,074 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 02:59:03,090 INFO spawned: 'laravel-queue' with pid 149
+2025-07-03 02:59:04,092 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 03:59:06,284 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 03:59:07,303 INFO spawned: 'laravel-queue' with pid 153
+2025-07-03 03:59:08,306 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 04:59:10,533 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 04:59:11,544 INFO spawned: 'laravel-queue' with pid 157
+2025-07-03 04:59:12,548 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 05:59:14,567 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 05:59:15,590 INFO spawned: 'laravel-queue' with pid 161
+2025-07-03 05:59:16,593 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 06:59:18,961 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 06:59:18,970 INFO spawned: 'laravel-queue' with pid 165
+2025-07-03 06:59:19,973 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 07:24:50,136 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 07:24:51,154 INFO spawned: 'laravel-queue' with pid 169
+2025-07-03 07:24:52,245 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 07:24:56,204 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 07:24:57,212 INFO spawned: 'laravel-queue' with pid 173
+2025-07-03 07:24:58,215 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 07:25:01,785 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 07:25:02,899 INFO spawned: 'laravel-queue' with pid 177
+2025-07-03 07:25:03,901 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 08:25:05,182 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 08:25:06,200 INFO spawned: 'laravel-queue' with pid 181
+2025-07-03 08:25:07,202 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 09:25:11,856 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 09:25:11,920 INFO spawned: 'laravel-queue' with pid 185
+2025-07-03 09:25:12,936 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 10:25:18,607 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 10:25:19,648 INFO spawned: 'laravel-queue' with pid 189
+2025-07-03 10:25:20,655 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 11:25:24,260 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 11:25:25,274 INFO spawned: 'laravel-queue' with pid 193
+2025-07-03 11:25:26,277 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 12:25:30,838 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 12:25:31,865 INFO spawned: 'laravel-queue' with pid 197
+2025-07-03 12:25:32,880 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 13:25:36,579 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 13:25:37,621 INFO spawned: 'laravel-queue' with pid 201
+2025-07-03 13:25:38,625 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 14:25:41,813 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 14:25:42,838 INFO spawned: 'laravel-queue' with pid 205
+2025-07-03 14:25:43,862 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 15:11:14,105 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 15:11:15,140 INFO spawned: 'laravel-queue' with pid 209
+2025-07-03 15:11:16,159 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 16:11:19,521 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 16:11:20,537 INFO spawned: 'laravel-queue' with pid 213
+2025-07-03 16:11:21,539 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 17:11:25,619 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 17:11:26,636 INFO spawned: 'laravel-queue' with pid 217
+2025-07-03 17:11:27,638 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 18:11:30,870 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 18:11:31,892 INFO spawned: 'laravel-queue' with pid 221
+2025-07-03 18:11:32,895 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 19:11:36,563 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 19:11:37,583 INFO spawned: 'laravel-queue' with pid 225
+2025-07-03 19:11:38,588 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 20:11:41,068 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 20:11:42,084 INFO spawned: 'laravel-queue' with pid 229
+2025-07-03 20:11:43,086 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 21:11:46,611 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 21:11:47,635 INFO spawned: 'laravel-queue' with pid 233
+2025-07-03 21:11:48,638 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 22:11:51,888 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 22:11:52,912 INFO spawned: 'laravel-queue' with pid 237
+2025-07-03 22:11:53,914 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-03 23:11:55,620 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-03 23:11:56,630 INFO spawned: 'laravel-queue' with pid 241
+2025-07-03 23:11:57,633 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 00:12:01,299 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 00:12:02,321 INFO spawned: 'laravel-queue' with pid 245
+2025-07-04 00:12:03,325 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 01:12:05,166 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 01:12:06,181 INFO spawned: 'laravel-queue' with pid 249
+2025-07-04 01:12:07,184 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 02:12:09,804 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 02:12:10,819 INFO spawned: 'laravel-queue' with pid 253
+2025-07-04 02:12:11,822 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 03:12:14,717 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 03:12:15,733 INFO spawned: 'laravel-queue' with pid 257
+2025-07-04 03:12:16,742 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 04:12:20,489 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 04:12:21,509 INFO spawned: 'laravel-queue' with pid 261
+2025-07-04 04:12:22,511 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 05:12:26,110 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 05:12:27,130 INFO spawned: 'laravel-queue' with pid 265
+2025-07-04 05:12:28,132 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 06:12:32,276 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 06:12:33,295 INFO spawned: 'laravel-queue' with pid 269
+2025-07-04 06:12:34,298 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 07:12:37,662 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 07:12:38,679 INFO spawned: 'laravel-queue' with pid 273
+2025-07-04 07:12:39,681 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 08:12:43,494 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 08:12:44,525 INFO spawned: 'laravel-queue' with pid 277
+2025-07-04 08:12:45,534 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 09:12:51,029 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 09:12:52,052 INFO spawned: 'laravel-queue' with pid 281
+2025-07-04 09:12:53,056 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 10:12:54,536 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 10:12:55,558 INFO spawned: 'laravel-queue' with pid 285
+2025-07-04 10:12:56,575 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 11:13:00,675 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 11:13:01,695 INFO spawned: 'laravel-queue' with pid 289
+2025-07-04 11:13:02,698 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 12:13:04,852 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 12:13:05,871 INFO spawned: 'laravel-queue' with pid 293
+2025-07-04 12:13:06,876 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 13:13:11,946 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 13:13:12,959 INFO spawned: 'laravel-queue' with pid 297
+2025-07-04 13:13:13,962 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 14:13:17,130 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 14:13:17,143 INFO spawned: 'laravel-queue' with pid 301
+2025-07-04 14:13:18,146 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 15:13:19,908 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 15:13:21,053 INFO spawned: 'laravel-queue' with pid 305
+2025-07-04 15:13:22,063 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 16:13:24,021 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 16:13:25,044 INFO spawned: 'laravel-queue' with pid 309
+2025-07-04 16:13:26,046 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 17:13:30,084 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 17:13:31,099 INFO spawned: 'laravel-queue' with pid 313
+2025-07-04 17:13:32,102 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 18:13:34,624 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 18:13:35,638 INFO spawned: 'laravel-queue' with pid 317
+2025-07-04 18:13:36,642 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 19:13:39,014 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 19:13:40,026 INFO spawned: 'laravel-queue' with pid 321
+2025-07-04 19:13:41,029 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 20:13:44,217 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 20:13:45,251 INFO spawned: 'laravel-queue' with pid 325
+2025-07-04 20:13:46,254 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 21:13:49,761 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 21:13:50,796 INFO spawned: 'laravel-queue' with pid 329
+2025-07-04 21:13:51,799 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 22:13:56,997 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 22:13:58,041 INFO spawned: 'laravel-queue' with pid 333
+2025-07-04 22:13:59,045 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-04 23:14:03,104 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-04 23:14:04,120 INFO spawned: 'laravel-queue' with pid 337
+2025-07-04 23:14:05,130 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 00:14:09,617 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 00:14:10,630 INFO spawned: 'laravel-queue' with pid 341
+2025-07-05 00:14:11,633 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 01:14:15,897 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 01:14:16,928 INFO spawned: 'laravel-queue' with pid 345
+2025-07-05 01:14:17,932 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 02:14:23,990 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 02:14:25,000 INFO spawned: 'laravel-queue' with pid 349
+2025-07-05 02:14:26,003 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 03:14:29,250 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 03:14:30,263 INFO spawned: 'laravel-queue' with pid 353
+2025-07-05 03:14:31,266 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 04:14:33,206 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 04:14:34,226 INFO spawned: 'laravel-queue' with pid 357
+2025-07-05 04:14:35,242 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 05:14:40,018 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 05:14:41,039 INFO spawned: 'laravel-queue' with pid 361
+2025-07-05 05:14:42,044 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 06:14:44,339 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 06:14:45,353 INFO spawned: 'laravel-queue' with pid 365
+2025-07-05 06:14:46,356 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 07:14:48,270 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 07:14:49,282 INFO spawned: 'laravel-queue' with pid 369
+2025-07-05 07:14:50,290 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 08:14:52,031 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 08:14:53,046 INFO spawned: 'laravel-queue' with pid 373
+2025-07-05 08:14:54,049 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 09:15:00,068 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 09:15:01,092 INFO spawned: 'laravel-queue' with pid 377
+2025-07-05 09:15:02,095 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 10:15:05,625 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 10:15:06,686 INFO spawned: 'laravel-queue' with pid 381
+2025-07-05 10:15:07,706 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 11:15:11,376 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 11:15:12,395 INFO spawned: 'laravel-queue' with pid 385
+2025-07-05 11:15:13,398 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 12:15:17,842 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 12:15:18,868 INFO spawned: 'laravel-queue' with pid 389
+2025-07-05 12:15:19,878 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 13:15:23,165 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 13:15:24,193 INFO spawned: 'laravel-queue' with pid 393
+2025-07-05 13:15:25,201 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 14:15:29,849 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 14:15:30,862 INFO spawned: 'laravel-queue' with pid 397
+2025-07-05 14:15:31,865 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 15:15:36,031 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 15:15:37,050 INFO spawned: 'laravel-queue' with pid 401
+2025-07-05 15:15:38,089 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 16:15:42,696 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 16:15:43,712 INFO spawned: 'laravel-queue' with pid 405
+2025-07-05 16:15:44,723 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 17:15:48,594 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 17:15:49,629 INFO spawned: 'laravel-queue' with pid 409
+2025-07-05 17:15:50,630 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 18:15:52,926 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 18:15:53,963 INFO spawned: 'laravel-queue' with pid 413
+2025-07-05 18:15:54,966 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 19:15:58,002 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 19:15:59,031 INFO spawned: 'laravel-queue' with pid 417
+2025-07-05 19:16:00,034 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 20:16:01,918 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 20:16:02,936 INFO spawned: 'laravel-queue' with pid 421
+2025-07-05 20:16:03,939 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 21:16:07,756 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 21:16:08,778 INFO spawned: 'laravel-queue' with pid 425
+2025-07-05 21:16:09,781 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 22:16:13,057 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 22:16:14,107 INFO spawned: 'laravel-queue' with pid 429
+2025-07-05 22:16:15,110 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-07-05 23:16:19,224 INFO exited: laravel-queue (exit status 0; expected)
+2025-07-05 23:16:20,247 INFO spawned: 'laravel-queue' with pid 433
+2025-07-05 23:16:21,250 INFO success: laravel-queue entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

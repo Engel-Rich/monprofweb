@@ -23,7 +23,7 @@ class PaiementsController extends Controller
      */
     public function index()
     {
-        $paiments = Paiements::with('user', 'categorie')->paginate(20);
+        $paiments = Paiements::with('user', 'categorie')->paginate(25);
         return view('screen.paiements.index_paiements', ['paiements' => $paiments]);
     }
 

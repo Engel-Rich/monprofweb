@@ -49,5 +49,7 @@
             @endforeach
         </tbody>
     </table>
+
 </div>
+{{$eleves->links()}}
 @endsection

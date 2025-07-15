@@ -13,12 +13,12 @@ class EleveController extends Controller
      */
     public function index(Request $request)
     {
-        $query = $request->input('search');        
+        $query = $request->input('search');
         $matieres = Eleve::with('classe', 'user')->whereHas('user', function ($queryBuilder) use ($query) {
-            return $queryBuilder->where('email', 'like',"%$query%");
-        })-> paginate(20);
+            return $queryBuilder->where('email', 'like', "%$query%");
+        })->paginate(25);
         // dd($matieres);
-        return view('screen.eleve.index_eleve', ['eleves' =>$matieres],);
+        return view('screen.eleve.index_eleve', ['eleves' => $matieres],);
     }
 
     /**

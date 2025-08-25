@@ -65,13 +65,13 @@ class CoursController extends Controller
         }
 
         // $cours = Cours::with('classe', 'user', "matiere", 'categorie')->paginate(10);
-	//dd($cours);
+        //dd($cours);
         $result = $cours->getCollection()->transform(function ($value) {
             // dd($value->video_url);
             $matiere = $value->matiere->libelle;
-	    $categorie = $value->categorie->libelle;
+            $categorie = $value->categorie->libelle;
             $classe = $value->classe->libelle;
-	    $fileManager = new FileManager("Videos/$categorie/$classe/$matiere");
+            $fileManager = new FileManager("Videos/$categorie/$classe/$matiere");
             $value->video_url = $fileManager->get($value->video_url);
             // dd($value->video_url);
             return $value;
@@ -175,7 +175,17 @@ class CoursController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $cour = Cours::find($id);
+        $matieres = Matieres::all();
+        $categories = Categorie::all();
+        $classes = Classe::all();
+
+        return view('screen.cours.create', [
+            'matieres' => $matieres,
+            'categories' => $categories,
+            'classes' => $classes,
+            'cour' => $cour
+        ]);
     }
 
     /**
@@ -183,14 +193,77 @@ class CoursController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try {
+            $cour = Cours::findOrFail($id);
+
+            // ✅ Validation rules (video optional)
+            $validatortable = [
+                "libelle" => 'string|required',
+                "description" => 'string|required',
+                'video' => 'nullable|file',
+                'classe_id' => 'required|exists:classes,id',
+                'matieres_id' => 'required|exists:matieres,id',
+                'categorie_id' => 'required|exists:categories,id',
+                'open' => "integer|required"
+            ];
+
+            $request->validate($validatortable);
+
+            $classe  = Classe::find($request->classe_id)->libelle;
+            $matiere = Matieres::find($request->matieres_id)->libelle;
+            $categorie  = Categorie::find($request->categorie_id)->libelle;
+
+            $data = $request->except(['video']);
+            $data['user_id'] = $request->user()->id;
+
+            // ✅ Handle video upload
+            if ($request->hasFile('video')) {
+                $video = $request->file('video');
+
+                $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
+
+                // Delete old video if exists
+                if ($cour->video_url) {
+                    $filemanager->delete($cour->video_url);
+                }
+
+                // Upload new video
+                $videoUrl = $filemanager->store($video);
+                $data['video_url'] = $videoUrl;
+            } else {
+                // Keep old video if no new one
+                $data['video_url'] = $cour->video_url;
+            }
+
+            // ✅ Update the course
+            $cour->update($data);
+
+            return redirect()->route('cours.index')->with('success', 'Cours mis à jour avec succès!');
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return back()->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $cour = Cours::with('classe', "matiere", 'categorie')->find($id);
+            // dd($cour);
+            $categorie = $cour->categorie->libelle;
+            $classe = $cour->classe->libelle;
+            $matiere = $cour->matiere->libelle;
+            $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
+            $filemanager->delete($cour->video_url);
+            $cour->delete();
+            return redirect()->route('cours.index');
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return back()->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
+        }
     }
 }

@@ -14,10 +14,10 @@ class MatieresController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index():View
+    public function index(): View
     {
         $matieres = Matieres::paginate(20);
-        return view('screen.matiere.index_matiere', ['matieres' =>$matieres],);
+        return view('screen.matiere.index_matiere', ['matieres' => $matieres],);
     }
 
     /**
@@ -25,7 +25,7 @@ class MatieresController extends Controller
      */
     public function create()
     {
-        return view('screen.matiere.create',['matiere'=>null]);
+        return view('screen.matiere.create', ['matiere' => null]);
     }
 
     /**
@@ -34,11 +34,10 @@ class MatieresController extends Controller
     public function store(MatiereValidateRequest $request)
     {
         // dd($request->all());
-        try{
-            Matieres::create($request->all());            
-           return  redirect()->route('matiere.index');
-        }catch(Exception $th){
-            
+        try {
+            Matieres::create($request->all());
+            return  redirect()->route('matiere.index');
+        } catch (Exception $th) {
         }
     }
 
@@ -55,8 +54,8 @@ class MatieresController extends Controller
      */
     public function edit(string $id)
     {
-        $matiere = Matieres::find($id); 
-        return view('screen.matiere.create',['matiere'=>$matiere]);
+        $matiere = Matieres::find($id);
+        return view('screen.matiere.create', ['matiere' => $matiere]);
     }
 
     /**
@@ -64,13 +63,14 @@ class MatieresController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        try{
-            
-            $matiere = Matieres::find($id);            
+        try {
+
+            $matiere = Matieres::find($id);
             $matiere->fill($request->all());
             $matiere->save();
-           return  redirect()->route('matiere.index');
-        }catch(Exception $th){}
+            return  redirect()->route('matiere.index');
+        } catch (Exception $th) {
+        }
     }
 
     /**
@@ -78,6 +78,8 @@ class MatieresController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $classe = Matieres::find($id);
+        $classe->delete();
+        return redirect()->route('matiere.index');
     }
 }

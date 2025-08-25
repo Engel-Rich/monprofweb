@@ -109,6 +109,8 @@ class CategoriController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $classe = Categorie::find($id);
+        $classe->delete();
+        return redirect()->route('categorie.index');
     }
 }

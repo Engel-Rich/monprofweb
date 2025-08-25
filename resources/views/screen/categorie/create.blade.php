@@ -39,6 +39,18 @@
                 <button type="submit" class="btn btn-outline-primary px-5">Submit</button>
             </form>
 
+            @if(isset($categorie->id))
+            <div class="py-2">
+                <form action="{{ route('categorie.destroy', $categorie) }}" method="POST" style="display:inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger px-5"
+                        onclick="return confirm('Voulez-vous vraiment supprimer cette categorie ?')">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+            @endif
         </div>
         <div class="col-lg col-md">
 

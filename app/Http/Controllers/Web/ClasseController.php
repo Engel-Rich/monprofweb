@@ -45,8 +45,8 @@ class ClasseController extends Controller
             return   redirect()->route('classe.index');
         } catch (Exception $th) {
             return to_route('screen.classe.create')->withErrors([
-                'error' => $th->getMessage(), 
-            ])->onlyInput('libelle','short_name','description');
+                'error' => $th->getMessage(),
+            ])->onlyInput('libelle', 'short_name', 'description');
         }
     }
 
@@ -89,8 +89,8 @@ class ClasseController extends Controller
             return   redirect()->route('classe.index');
         } catch (\Throwable $th) {
             return to_route('screen.classe.create')->withErrors([
-                'error' => $th->getMessage(), 
-            ])->onlyInput('libelle','short_name','description');
+                'error' => $th->getMessage(),
+            ])->onlyInput('libelle', 'short_name', 'description');
         }
     }
 
@@ -98,7 +98,8 @@ class ClasseController extends Controller
     /**
      * Add Matiere to classe
      */
-    public function addMatiereToClasse(Request $request)  {
+    public function addMatiereToClasse(Request $request)
+    {
         try {
             $classe = \App\Models\Classe::findOrFail($request->classe_id);
             $classe->matieres()->attach($request->matiere_id);
@@ -110,12 +111,13 @@ class ClasseController extends Controller
     /**
      * Delete Matiere to classe
      */
-    public function deleteMatiereToClasse(Request $request)  {
+    public function deleteMatiereToClasse(Request $request)
+    {
         try {
             $classe = \App\Models\Classe::findOrFail($request->classe_id);
-            $classe->matieres()->detach($request->matiere_id);  
+            $classe->matieres()->detach($request->matiere_id);
         } catch (\Throwable $th) {
-            return response()->json(['status'=>false, 'error'=>$th->getMessage()]);
+            return response()->json(['status' => false, 'error' => $th->getMessage()]);
         }
     }
 
@@ -124,6 +126,8 @@ class ClasseController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $classe = Classe::find($id);
+        $classe->delete();
+        return redirect()->route('classe.index');
     }
 }

@@ -77,7 +77,7 @@
             <td>{{ $cour->user->name }}</td>
             <td> <video contextmenu="nocontextmenu" style="height:4.5rem;width:4.5rem; border:solide,2px,blue" controls src="{{url($cour->video_url)}}"></video></td>
             {{-- <td>{{ $eleve->sexe }}</td> --}}
-            <td><a href="{{ route('cours.create') }}">modifier</a></td>
+            <td><a href="{{ route('cours.edit', $cour) }}">modifier</a></td>
             {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
         </tr>
         @endforeach

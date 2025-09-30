@@ -151,6 +151,7 @@ class UserController extends Controller
                 'email' => $request->email,
                 'password' =>  Hash::make($request->password),
                 'user_phone_emei' => $request->header('phone-emei'),
+                'sexe' => $request->sexe,
             ];
 
             $eleve_data = [

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\TransactionController;
 use App\Models\AppMessage;
 use App\Models\Categorie;
 use App\Models\Paiements;
@@ -54,7 +55,25 @@ class PaiementsController extends Controller
             $data = $request->all();
             $data['user_id'] = $user->id;
             $data['montant'] = $categorie->prix * $request->nombre_de_code;
+
+            $reference = 'MPP-' . strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
+
+            $transactionPostDto = new \App\DTO\TransactionPostDto([
+                'reference' => $reference,
+                'amount' => $data['montant'],
+                'phone_number' => $data['numero_payeur'],
+                'status' => 'PENDING',
+                'sens' => 'OUT',
+                'user_id' => $user->id,
+                'subscription_id' => $request['subscription_id'],
+            ]);
+
+            $trx = TransactionController::store($transactionPostDto);
+            $data['transaction_id'] = (string)$trx->transaction_id;
+
             $paiment = Paiements::create($data);
+
+            // transaction Post DTO            
             $token = $user->fcm_token;
             if ($request->nombre_de_code == 1) {
                 $notifOneCode = new PushNotifictaionService("Votre nouvelle commande de code chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');

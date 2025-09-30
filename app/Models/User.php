@@ -29,6 +29,7 @@ class User extends Authenticatable //implements JWTSubject
         'unique_token',
         'profile_image',
         'user_phone_emei',
+        'sexe',
         'refresh_token'
     ];
 

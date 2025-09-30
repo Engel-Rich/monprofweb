@@ -20,7 +20,7 @@ class PushNotifictaionService
         $this->title = $title;
     }
 
-    public function sendNotificationToToken(string $token, string $even_type = "APP_MESSAGE"): void
+    public function sendNotificationToToken(string $token, string $even_type = "APP_MESSAGE", array $data = []): void
     {
         Log::info("Token reçu : $token");
         try {
@@ -32,9 +32,10 @@ class PushNotifictaionService
                 ]
             );
 
+            $dataNotification = array_merge(['EVENT_TYPE' => $even_type], $data);
             $message = CloudMessage::new()->toToken($token)
                 ->withNotification($notification)
-                ->withData(['EVENT_TYPE' => $even_type]);
+                ->withData($dataNotification);
             $messaging->send($message);
         } catch (\Throwable $th) {
             Log::error("Erreur de notification : " . $th->getMessage(), [

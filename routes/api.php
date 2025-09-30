@@ -10,7 +10,9 @@ use App\Http\Controllers\api\OTPController;
 use App\Http\Controllers\api\PaiementsController;
 use App\Http\Controllers\api\QuestionController;
 use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\PayementServicesController;
 use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,6 +47,7 @@ Route::middleware('emei-verify')->group(function () {
     Route::resource('matiere', MatiereController::class)->only(['index']);
     Route::middleware('auth:sanctum')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
     Route::middleware('auth:sanctum')->put('/auth/update_profile', [UserController::class, 'updateTocken']);
+    Route::middleware('auth:sanctum')->put('/service-providers', [PayementServicesController::class, 'index']);
     Route::post('/sugestion', [SuggestionController::class, 'store']);
     Route::resource('categorie', CategorieController::class)->only(['index']);
     Route::get('categorie/status', [CategorieController::class, 'status']);
@@ -58,3 +61,4 @@ Route::middleware('emei-verify')->group(function () {
         Route::put('/read', 'readNotification')->name('messages.read');
     });
 });
+Route::post('transaction/status', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');

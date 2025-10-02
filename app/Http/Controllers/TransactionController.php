@@ -102,7 +102,8 @@ class TransactionController extends Controller
                 data: [
                     'amount' => $transaction->amount,
                     'transaction_id' => $transaction->id,
-                    'status' => $transaction->status
+                    'status' => $transaction->status,
+                    'raison_reject' => $request?->raison_reject ?? null,
                 ]
             );
         }

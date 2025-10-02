@@ -60,7 +60,7 @@ class PaiementsController extends Controller
 
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
-                'amount' => $data['montant'],
+                'amount' => $data['montant'] + ($data['montant'] * 2.5 / 100), // montant + 2.5% de frais de transaction
                 'phone_number' => $data['numero_payeur'],
                 'status' => 'PENDING',
                 'sens' => 'OUT',

@@ -18,7 +18,7 @@ class PayementServicesController extends Controller
     public function index()
     {
         try {
-            $services = PayementServices::where('sens', 'IN')->get();
+            $services = PayementServices::where('is_active', 1)->get();
             return response()->json(['status' => true, 'data' => $services, 'error' => null]);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => 'null', 'error' => $th->getMessage(),], 500);

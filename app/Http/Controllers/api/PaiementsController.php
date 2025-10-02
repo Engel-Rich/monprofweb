@@ -49,6 +49,7 @@ class PaiementsController extends Controller
                 'nombre_de_code' => 'integer|required',
                 'numero_payeur' => 'required',
                 'numero_client' => 'required',
+                'subscription_id' => 'string|required|exists:subscriptions,subscription_id',
             ]);
             $user = User::find(auth()->id());
             $categorie = Categorie::find($request->categorie_id);
@@ -63,7 +64,7 @@ class PaiementsController extends Controller
                 'amount' => $data['montant'] + ($data['montant'] * 2.5 / 100), // montant + 2.5% de frais de transaction
                 'phone_number' => $data['numero_payeur'],
                 'status' => 'PENDING',
-                'sens' => 'OUT',
+                'sens' => 'IN',
                 'user_id' => $user->id,
                 'subscription_id' => $request['subscription_id'],
             ]);

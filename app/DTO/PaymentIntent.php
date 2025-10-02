@@ -9,6 +9,8 @@ class PaymentIntent extends DataTransferObject
     public string $paymentToken;
     public string $transactionId;
 
+
+
     static function fromArray(array $data): self
     {
         return new self(

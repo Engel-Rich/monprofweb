@@ -39,7 +39,6 @@ class TransactionController extends Controller
             $mundiPayRequestDTO = new MundiPayRequestDTO([
                 'amount' => $request->amount,
                 'subscription_id' => $request->subscription_id,
-                'payment_token' => $request->payment_token,
                 'country_code' => "237",
                 'phone_number' => $request->phone_number,
             ]);

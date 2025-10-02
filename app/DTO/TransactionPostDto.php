@@ -18,6 +18,21 @@ class TransactionPostDto extends DataTransferObject
     public ?string $subscription_id;
     public ?string $user_id;
 
+    public function __construct(array $data)
+    {
+        $this->transaction_id = $data['transaction_id'] ?? null;
+        $this->payment_token = $data['payment_token'] ?? null;
+        $this->reference = $data['reference'] ?? null;
+        $this->amount = $data['amount'];
+        $this->phone_number = $data['phone_number'];
+        $this->status = $data['status'] ?? null;
+        $this->sens = $data['sens'] ?? null;
+        $this->service_id = $data['service_id'] ?? null;
+        $this->internal_service = $data['internal_service'] ?? null;
+        $this->subscription_id = $data['subscription_id'] ?? null;
+        $this->user_id = $data['user_id'] ?? null;
+    }
+
     public function toArray(): array
     {
         return [
@@ -43,6 +58,14 @@ class TransactionUpdateDto extends DataTransferObject
     public ?string $transaction_id;
     public ?string $payment_token;
     public ?string $raison_reject;
+
+    public function __construct(array $data)
+    {
+        $this->status = $data['status'] ?? null;
+        $this->transaction_id = $data['transaction_id'] ?? null;
+        $this->payment_token = $data['payment_token'] ?? null;
+        $this->raison_reject = $data['raison_reject'] ?? null;
+    }
 
     public function toArray(): array
     {

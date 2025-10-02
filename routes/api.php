@@ -47,7 +47,6 @@ Route::middleware('emei-verify')->group(function () {
     Route::resource('matiere', MatiereController::class)->only(['index']);
     Route::middleware('auth:sanctum')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
     Route::middleware('auth:sanctum')->put('/auth/update_profile', [UserController::class, 'updateTocken']);
-    Route::middleware('auth:sanctum')->put('/service-providers', [PayementServicesController::class, 'index']);
     Route::post('/sugestion', [SuggestionController::class, 'store']);
     Route::resource('categorie', CategorieController::class)->only(['index']);
     Route::get('categorie/status', [CategorieController::class, 'status']);
@@ -60,5 +59,7 @@ Route::middleware('emei-verify')->group(function () {
         Route::get('/unread', 'getNotificationsOnRead')->name('messages.get-unread');
         Route::put('/read', 'readNotification')->name('messages.read');
     });
+
+    Route::resource('payment_services', PayementServicesController::class)->only(['index']);
 });
 Route::post('transaction/status', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');

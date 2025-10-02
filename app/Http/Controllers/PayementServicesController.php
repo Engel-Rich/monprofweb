@@ -17,8 +17,12 @@ class PayementServicesController extends Controller
      */
     public function index()
     {
-        $result =  PayementServices::where("sens", "IN");
-        return json_encode($result, 200);
+        try {
+            $services = PayementServices::where('sens', 'IN')->get();
+            return response()->json(['status' => true, 'data' => $services, 'error' => null]);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'data' => 'null', 'error' => $th->getMessage(),], 500);
+        }
     }
 
     /**

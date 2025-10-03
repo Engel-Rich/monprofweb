@@ -16,8 +16,8 @@ class MundiPayService
 
         $header = [
             "Content-Type" => "application/json",
-            "api_key" => $ApiKey,
-            "api_secret" => $ApiSecret
+            "X-API-KEY" => $ApiKey,
+            "X-API-SECRET" => $ApiSecret
         ];
         $response = Http::withHeaders($header)->post("{$baseUrl}payment/transaction", $data);
 

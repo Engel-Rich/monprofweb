@@ -4,13 +4,14 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\TransactionController;
-use App\Models\AppMessage;
+// use App\Models\AppMessage;
 use App\Models\Categorie;
 use App\Models\Paiements;
 use App\Models\User;
 use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PaiementsController extends Controller
 {
@@ -61,7 +62,7 @@ class PaiementsController extends Controller
 
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
-                'amount' => $data['montant'] + ($data['montant'] * 2.5 / 100), // montant + 2.5% de frais de transaction
+                'amount' => ceil($data['montant'] + ($data['montant'] * 2.5 / 100)), // montant + 2.5% de frais de transaction
                 'phone_number' => $data['numero_payeur'],
                 'status' => 'PENDING',
                 'sens' => 'IN',
@@ -70,9 +71,14 @@ class PaiementsController extends Controller
             ]);
 
             $trx = TransactionController::store($transactionPostDto);
-            $data['transaction_id'] = (string)$trx->transaction_id;
+
+            Log::debug("Trasaction  response " . $trx);
+
+            $data['transaction_id'] = $trx->transaction_id;
 
             $paiment = Paiements::create($data);
+
+            Log::debug("Created Paiement  " . $paiment);
 
             // transaction Post DTO            
             $token = $user->fcm_token;

@@ -17,7 +17,8 @@ class Paiements extends Model
         'montant',
         'numero_payeur',
         'numero_client',
-        'status'
+        'status',
+        'transaction_id'
     ];
 
     protected $table = 'paiements';

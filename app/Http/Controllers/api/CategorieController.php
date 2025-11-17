@@ -42,7 +42,7 @@ class CategorieController extends Controller
     public function status()
     {
         try {
-            $categorie = Categorie::all();
+            $categorie = Categorie::where('status', true)->get();
 
             $user = Auth::user();
             /**

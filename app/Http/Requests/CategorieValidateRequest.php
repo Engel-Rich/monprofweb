@@ -25,6 +25,7 @@ class CategorieValidateRequest extends FormRequest
             'libelle' => 'required',
             'description' => 'nullable|string',
             'prix' => 'required|numeric',
+            'status' => 'nullable|boolean',
         ];
     }
 }

@@ -35,6 +35,20 @@
                     <label class="form-label fw-bold" for="description">Description de la catégorie</label>
                     <input type="text" class="form-control" id="description" name="description" value="{{old('description',$categorie->description)}}">
                 </div>
+                <div class="mb-3 form-check form-switch">
+                    <input type="hidden" name="status" value="0">
+
+                    <input type="checkbox"
+                        class="form-check-input"
+                        role="switch"
+                        id="status"
+                        name="status"
+                        value="1"
+                        {{ ($categorie->status ?? false) ? 'checked' : '' }}>
+
+                    <label class="form-check-label fw-bold" for="status">Activer la categorie</label>
+                </div>
+
 
                 <button type="submit" class="btn btn-outline-primary px-5">Submit</button>
             </form>

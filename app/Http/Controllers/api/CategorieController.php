@@ -24,7 +24,7 @@ class CategorieController extends Controller
     public function index()
     {
         try {
-            $classe = Categorie::all();
+            $classe = Categorie::where('status', true)->get();
             return response()->json(['status' => true, 'data' => $classe,], 200);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()]);
@@ -34,9 +34,7 @@ class CategorieController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-    }
+    public function create() {}
 
     /**
      * get studens status
@@ -82,12 +80,12 @@ class CategorieController extends Controller
 
             $result = array();
 
-            $filter_activeCode = function($code) {
+            $filter_activeCode = function ($code) {
                 // dd($code['actif']);
-                return $code['actif']==1;
+                return $code['actif'] == 1;
             };
-            $filter_unactiveCode = function($code) {
-                return $code['actif']==0;
+            $filter_unactiveCode = function ($code) {
+                return $code['actif'] == 0;
             };
 
             foreach ($categorie as $value) {
@@ -97,8 +95,8 @@ class CategorieController extends Controller
                         $query->where('categorie_id', $value->id)->where('user_id', $user->id);
                     }
                 )->get();
-                $activeCode = array_filter($codes->toArray(),$filter_activeCode);
-                $unactiveCode = array_filter($codes->toArray(),$filter_unactiveCode);
+                $activeCode = array_filter($codes->toArray(), $filter_activeCode);
+                $unactiveCode = array_filter($codes->toArray(), $filter_unactiveCode);
                 $details  = [
                     'total'  => count($codes),
                     'actifs'  => count($activeCode),

@@ -20,4 +20,8 @@ class PayementServices extends Model
         'subscription_id',
         'sens',
     ];
+
+    protected $casts = [
+    'is_active' => 'boolean',
+];
 }

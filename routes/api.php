@@ -64,4 +64,6 @@ Route::middleware('emei-verify')->group(function () {
 
     Route::resource('payment_services', PayementServicesController::class)->only(['index']);
 });
-Route::post('transaction/status', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');
+Route::post('transaction/webhook', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');
+
+Route::apiResource('payment-services', PayementServicesController::class)->middleware('auth:sanctum');

@@ -12,6 +12,7 @@ use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaiementsController extends Controller
 {
@@ -57,8 +58,8 @@ class PaiementsController extends Controller
             $data = $request->all();
             $data['user_id'] = $user->id;
             $data['montant'] = $categorie->prix * $request->nombre_de_code;
-
-            $reference = 'MPP-' . strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
+            $uuid = (string) Str::uuid();
+            $reference = 'MPP-'  .$uuid; // strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
 
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
@@ -95,6 +96,8 @@ class PaiementsController extends Controller
         }
     }
 
+
+   
     /**
      * Display the specified resource.
      */

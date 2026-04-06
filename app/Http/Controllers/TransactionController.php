@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\CreateTransactionDto;
 use App\DTO\TransactionPostDto;
 use App\DTO\TransactionUpdateDto;
 use App\Models\Transaction;
 use App\DTO\MundiPayRequestDTO;
+use App\Enums\TransactionType;
 use App\Http\Requests\PaymentCallbackRequest;
-use App\Models\Paiements;
-use App\Models\User;
+use App\Jobs\ProcessWebhook;
+// use App\Models\Paiements;
+// use App\Models\User;
+use App\Services\Payments\PaymentFactory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TransactionController extends Controller
 {
@@ -42,10 +47,27 @@ class TransactionController extends Controller
                 'country_code' => "237",
                 'phone_number' => $request->phone_number,
             ]);
-            $response =  \App\Services\MundiPayService::requestPaymentIntent($mundiPayRequestDTO);
-            $request->transaction_id = $response->transactionId;
-            $request->payment_token = $response->paymentToken;
-            $transaction = Transaction::create($request->toArray());
+            $transaction = Transaction::create($request->toArray());  
+            $reference = Str::replaceEnd('MPP-', '',$transaction->reference);           
+            $createTransactionRequest =  CreateTransactionDto::fromArray([
+                "userId"=>$request->user_id,
+                'type'=>TransactionType::DEPOSIT, 
+                'sense'=> $request->sens,
+                'amount'  => $request->amount,     
+                'phoneNumber'=> $request->phone_number,      
+                "countryCode"=> '237',
+                'reference'=> $reference, //$transaction->reference,                                 
+            ]);                        
+           try {
+             $strategy = PaymentFactory::make('CAMPAY');
+            $response = $strategy->processPayment($createTransactionRequest);
+            $transaction->update([
+                'transaction_id'=>$response->transactionId                
+            ]);
+           } catch (\Throwable $th) {
+            Log::error($th->getMessage());
+           }
+            $transaction->refresh();        
             return $transaction;
         } catch (\Throwable $th) {
             Log::error("Payment : " . $th->getMessage());
@@ -75,57 +97,15 @@ class TransactionController extends Controller
         return response()->json(['message' => 'Transaction status updated successfully', 'transaction' => $transaction]);
     }
 
-    public function validatePayment(Transaction $transaction, PaymentCallbackRequest $request)
-    {
-
-        if ($transaction->status === "paid" || $transaction->status === "SUCCESS") {
-            // send notification to user
-            $paiement = Paiements::where('transaction_id', $transaction->id)->first();
-            if ($paiement) {
-                $paiementController = new \App\Http\Controllers\Web\PaiementsController();
-                $paiementController->validatePayment($request->merge(['paiement' => $paiement->id]));
-            }
-        }
-        $user = User::find($transaction->user_id);
-        $token = $user->fcm_token;
-        if ($token != null) {
-            $notifPaymentSuccess = new \App\Services\PushNotifictaionService(
-                $transaction->status == "SUCCESS" ?
-                    "Votre paiement de " . $transaction->amount . " a été validé avec succès.\n Monprof vous remercie " :
-                    "Votre paiement de " . $transaction->amount . " a échoué.\n Monprof vous remercie; Motif : " . ($request?->raison_reject ?? "Indéterminé"),
-                $transaction->status == "SUCCESS" ? 'Paiement Validé Monprof' : 'Paiement Échoué Monprof'
-            );
-            $notifPaymentSuccess->sendNotificationToToken(
-                $token,
-                even_type: "PAYMENT_STATUS",
-                data: [
-                    'amount' => $transaction->amount,
-                    'transaction_id' => $transaction->id,
-                    'status' => $transaction->status,
-                    'raison_reject' => $request?->raison_reject ?? null,
-                ]
-            );
-        }
-    }
+   
 
     public function validatePaymentCallback(PaymentCallbackRequest $request)
     {
         try {
-            $transaction = Transaction::where('transaction_id', $request->transaction_id)->first();
-            if (!$transaction) {
-                return response()->json(['status' => false, 'data' => null, "error" => "Transaction not found"], 404);
-            }
-            $updateData = new TransactionUpdateDto([
-                'status' => $request->status == "paid" ? "SUCCESS" : ($request->status === "unpaid" ? "FAILED" : $transaction->status),
-                'raison_reject' => $request?->raison_reject ?? null,
-            ]);
-            if ($request->status === "unpaid" && $request->raison_reject) {
-                $updateData->raison_reject = $request->raison_reject;
-                $updateData->status = "FAILED";
-            }
-            $transaction->update($updateData->toArray());
-            $this->validatePayment($transaction, $request);
-        } catch (\Throwable $th) {
+             ProcessWebhook::dispatch($request->all())->delay(now()->addSecond(1));
+            return response()->json(['message' => 'Processing started'], 200);
+
+         } catch (\Throwable $th) {
             Log::error("Payment Callback : " . $th->getMessage());
         }
     }

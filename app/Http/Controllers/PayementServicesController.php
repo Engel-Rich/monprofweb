@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\API\StorePayementServiceRequest;
+use App\Http\Requests\API\UpdatePayementServiceRequest;
 use App\Models\PayementServices;
 use Illuminate\Http\Request;
 
@@ -25,51 +27,86 @@ class PayementServicesController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+     public function store(StorePayementServiceRequest $request)
     {
-        //
+        try {
+            $service = PayementServices::create($request->validated());
+
+            return response()->json([
+                'status' => true,
+                'data' => $service,
+                'message' => 'Service created successfully'
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show one service
      */
-    public function store(Request $request)
+    public function show($id)
     {
-        //
+        try {
+            $service = PayementServices::findOrFail($id);
+
+            return response()->json([
+                'status' => true,
+                'data' => $service
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'error' => 'Service not found'
+            ], 404);
+        }
     }
 
     /**
-     * Display the specified resource.
+     * Update service
      */
-    public function show(PayementServices $payementServices)
+    public function update(UpdatePayementServiceRequest $request, $id)
     {
-        //
+        try {
+            $service = PayementServices::findOrFail($id);
+
+            $service->update($request->validated());
+
+            return response()->json([
+                'status' => true,
+                'data' => $service,
+                'message' => 'Service updated successfully'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Delete service (soft logique avec is_active recommandé)
      */
-    public function edit(PayementServices $payementServices)
+    public function destroy($id)
     {
-        //
-    }
+        try {
+            $service = PayementServices::findOrFail($id);
+            $service->update(['is_active' => 0]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, PayementServices $payementServices)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PayementServices $payementServices)
-    {
-        //
+            return response()->json([
+                'status' => true,
+                'message' => 'Service deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 }

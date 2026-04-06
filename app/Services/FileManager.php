@@ -111,7 +111,7 @@ class FileManager
             $encryptedPath = storage_path("app/temp_encrypted_" . $filename);
             $object->downloadToFile($encryptedPath);
 
-            // 🔓 Décrypter le fichier localement
+            //  Décrypter le fichier localement
             $decryptedPath = storage_path("app/temp_decrypted_" . $filename);
             $this->decryptFile($encryptedPath, $decryptedPath, $this->encryptionKey);
 

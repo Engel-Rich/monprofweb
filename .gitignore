@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/*.json
 /vendor
 .env
 .env.backup
@@ -17,5 +18,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-.env
+*.env
+.env.*
 nginx.conf

@@ -60,3 +60,4 @@ class CreateTransactionDto
             || $this->sense === TransactionSense::IN;
     }
 }
+

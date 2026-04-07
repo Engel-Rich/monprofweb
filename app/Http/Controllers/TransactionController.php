@@ -6,7 +6,7 @@ use App\DTO\CreateTransactionDto;
 use App\DTO\TransactionPostDto;
 use App\DTO\TransactionUpdateDto;
 use App\Models\Transaction;
-use App\DTO\MundiPayRequestDTO;
+// use App\DTO\MundiPayRequestDTO;
 use App\Enums\TransactionType;
 use App\Http\Requests\PaymentCallbackRequest;
 use App\Jobs\ProcessWebhook;
@@ -41,17 +41,17 @@ class TransactionController extends Controller
     {
 
         try {
-            $mundiPayRequestDTO = new MundiPayRequestDTO([
-                'amount' => $request->amount,
-                'subscription_id' => $request->subscription_id,
-                'country_code' => "237",
-                'phone_number' => $request->phone_number,
-            ]);
+            // $mundiPayRequestDTO = new MundiPayRequestDTO([
+            //     'amount' => $request->amount,
+            //     'subscription_id' => $request->subscription_id,
+            //     'country_code' => "237",
+            //     'phone_number' => $request->phone_number,
+            // ]);
             $transaction = Transaction::create($request->toArray());  
             $reference = Str::replaceEnd('MPP-', '',$transaction->reference);           
             $createTransactionRequest =  CreateTransactionDto::fromArray([
                 "userId"=>$request->user_id,
-                'type'=>TransactionType::DEPOSIT, 
+                'type'=>"DEPOSIT", 
                 'sense'=> $request->sens,
                 'amount'  => $request->amount,     
                 'phoneNumber'=> $request->phone_number,      

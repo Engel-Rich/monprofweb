@@ -37,7 +37,7 @@ class ProcessWebhook implements ShouldQueue
      try {
             $request = $this->paymentCallbackRequest;
             $reference = $request['reference']; 
-            $externalReference = $request['external_reference'];
+            $externalReference = 'MPP-'.$request['external_reference'];
             
             $id = $reference==null? $request['transaction_id']: $reference;
 

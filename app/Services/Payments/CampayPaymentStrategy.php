@@ -49,7 +49,7 @@ class CampayPaymentStrategy implements PaymentStrategy
         $endpoint  = $isDeposit ? 'collect' : 'withdraw';
 
         $phone = $dto->phoneNumber;
-        if(!$dto->phoneNumber.startsWith("237")){
+        if(!str_starts_with($phone, "237")){
             $phone = "237$phone"; 
         }
         $body = [
@@ -139,6 +139,8 @@ class CampayPaymentStrategy implements PaymentStrategy
                 $status === 'PENDING'                        => TransactionStatus::PENDING,
                 default                                      => TransactionStatus::FAILED,
             };
+
+            Log::info("Transactions Response", $paymentResponse);
 
             return new PaymentResult(
                 status: $transactionStatus,

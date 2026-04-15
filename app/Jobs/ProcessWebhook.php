@@ -61,7 +61,7 @@ class ProcessWebhook implements ShouldQueue
 
         if ($transaction->status === $status) {
             Log::info("No status change " . $status);
-            $this->validatePayment($transaction, $this->dto);
+            // $this->validatePayment($transaction, $this->dto);
 
             return;
         }

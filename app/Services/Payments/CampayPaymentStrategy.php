@@ -25,6 +25,12 @@ class CampayPaymentStrategy implements PaymentStrategy
 
     protected function getAuthHeader(): ?array
     {
+        Log::info(
+            [
+                "userName"=> $this->username,
+                "Password"=> $this->password,
+            ]
+        );
         $response = Http::post("{$this->baseUrl}/token/", [
             'username' => $this->username,
             'password' => $this->password,

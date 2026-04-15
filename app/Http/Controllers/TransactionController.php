@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\DTO\CreateTransactionDto;
 use App\DTO\TransactionPostDto;
 use App\DTO\TransactionUpdateDto;
+use App\DTO\WebhookHandlingDTO;
 use App\Models\Transaction;
 // use App\DTO\MundiPayRequestDTO;
 use App\Enums\TransactionType;
@@ -47,27 +48,30 @@ class TransactionController extends Controller
             //     'country_code' => "237",
             //     'phone_number' => $request->phone_number,
             // ]);
-            $transaction = Transaction::create($request->toArray());  
-            $reference = Str::replaceEnd('MPP-', '',$transaction->reference);           
+            $transaction = Transaction::create($request->toArray());
+            $reference = Str::replaceFirst('MPP-', '', $transaction->reference);
             $createTransactionRequest =  CreateTransactionDto::fromArray([
-                "userId"=>$request->user_id,
-                'type'=>"DEPOSIT", 
-                'sense'=> $request->sens,
-                'amount'  => $request->amount,     
-                'phoneNumber'=> $request->phone_number,      
-                "countryCode"=> '237',
-                'reference'=> $reference, //$transaction->reference,                                 
-            ]);                        
-           try {
-             $strategy = PaymentFactory::make('CAMPAY');
-            $response = $strategy->processPayment($createTransactionRequest);
-            $transaction->update([
-                'transaction_id'=>$response->transactionId                
+                "userId" => $request->user_id,
+                'type' => "DEPOSIT",
+                'sense' => $request->sens,
+                'amount'  => $request->amount,
+                'phoneNumber' => $request->phone_number,
+                "countryCode" => '237',
+                'reference' => $reference, //$transaction->reference,                                 
             ]);
-           } catch (\Throwable $th) {
-            Log::error($th->getMessage());
-           }
-            $transaction->refresh();        
+            try {
+                $strategy = PaymentFactory::make('CAMPAY');
+                $response = $strategy->processPayment($createTransactionRequest);
+                
+                $transaction->update([
+                    'transaction_id' => $response->transactionId
+                ]);
+            } catch (\Throwable $th) {
+                Log::error("CamPay payment initiation failed: " . $th->getMessage());
+                $transaction->update(['status' => 'FAILED']);
+                throw $th;
+            }
+            $transaction->refresh();
             return $transaction;
         } catch (\Throwable $th) {
             Log::error("Payment : " . $th->getMessage());
@@ -97,15 +101,17 @@ class TransactionController extends Controller
         return response()->json(['message' => 'Transaction status updated successfully', 'transaction' => $transaction]);
     }
 
-   
+
 
     public function validatePaymentCallback(PaymentCallbackRequest $request)
     {
         try {
-             ProcessWebhook::dispatch($request->all())->delay(now()->addSecond(1));
+            $dto = WebhookHandlingDTO::fromArray($request->all());            
+            ProcessWebhook::dispatchSync($dto);
+            Log::info($dto->toString());
+            Log::info("received Webhook");
             return response()->json(['message' => 'Processing started'], 200);
-
-         } catch (\Throwable $th) {
+        } catch (\Throwable $th) {
             Log::error("Payment Callback : " . $th->getMessage());
         }
     }

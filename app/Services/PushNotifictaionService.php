@@ -22,7 +22,7 @@ class PushNotifictaionService
 
     public function sendNotificationToToken(string $token, string $even_type = "APP_MESSAGE", array $data = []): void
     {
-        Log::info("Token reçu : $token");
+        // Log::info("Token reçu : $token");
         try {
             $messaging = Firebase::messaging();
             $notification = Notification::fromArray(

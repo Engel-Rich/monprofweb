@@ -11,8 +11,6 @@ class PaymentFactory
      */
     protected static array $strategies = [
         'CAMPAY' => CampayPaymentStrategy::class,
-        // 'STRIPE' => StripePaymentStrategy::class,
-        // 'PAYPAL' => PaypalPaymentStrategy::class,
     ];
 
     public static function make(string $provider): PaymentStrategy

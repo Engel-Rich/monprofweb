@@ -3,10 +3,11 @@
 namespace App\Jobs;
 
 use App\DTO\TransactionUpdateDto;
+use App\DTO\WebhookHandlingDTO;
 use App\Models\Paiements;
-use App\Models\PayementServices;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\PaiementService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,75 +15,97 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+
 class ProcessWebhook implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected array $paymentCallbackRequest;
+    protected WebhookHandlingDTO $dto;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(array $paymentCallbackRequest)
+    public function __construct(WebhookHandlingDTO $dto)
     {
-        $this->paymentCallbackRequest = $paymentCallbackRequest;
+        $this->dto = $dto;
     }
 
     /**
      * Execute the job.
      */
+
+
     public function handle(): void
     {
-        
-     try {
-            $request = $this->paymentCallbackRequest;
-            $reference = $request['reference']; 
-            $externalReference = 'MPP-'.$request['external_reference'];
-            
-            $id = $reference==null? $request['transaction_id']: $reference;
+        Log::info("Started Handling webhook");
 
-            $transaction = Transaction::where('transaction_id', $id)
+        $id = $this->dto->id;
+        $externalReference = $this->dto->externalReference;
+
+        // Log::info("transaction_id: $id, external reference: $externalReference");
+
+        $transaction = Transaction::where('transaction_id', $id)
             ->orWhere('reference', $externalReference)
             ->first();
-            if (!$transaction) {
-               Log::error('Transaction not found', ['reference' => $externalReference]);
-            }
-            $status = $request['status'] == "paid" ? "SUCCESS" : ($request['status'] === "unpaid" ? "FAILED" : $transaction->status);
-            
-            if($transaction->status==$status){
-                Log::info(response()->json(['status' => true, 'data' => $transaction, "error" => null], 200));
-            }
-            $updateData = new TransactionUpdateDto([
-                'status' => $status,                
-                'metadatas' => json_encode($request),
-            ]);
-            if ($updateData->status === "FAILED" && $request['raison_reject']) {
-                $updateData->raison_reject = $request['raison_reject'];
-                $updateData->status = "FAILED";
-            }
-            $transaction->update($updateData->toArray());
-            $transaction->refresh();
-            $this->validatePayment($transaction, $request);
-        } catch (\Throwable $th) {
-            Log::error("Payment Callback : " . $th->getMessage());
+
+        if (!$transaction) {
+            Log::error('Transaction not found');
+            return;
         }
+        Log::error('Transaction  found');
+        $status = match ($this->dto->status) {
+            'SUCCESSFUL', 'paid' => 'SUCCESS',
+            'FAILED', 'unpaid' => 'FAILED',
+            default => $transaction->status,
+        };
+
+        if ($transaction->status === $status) {
+            Log::info("No status change " . $status);
+            $this->validatePayment($transaction, $this->dto);
+
+            return;
+        }
+
+        $data = [
+            'status' => $status,
+            'metadatas' => json_encode([
+                "webhook_data" => $this->dto->toString()
+            ]),
+        ];
+
+        if ($status === "FAILED" && $this->dto->raisonReject) {
+            $data['raison_reject'] = $this->dto->raisonReject;
+        }
+
+        $transaction->update($data);
+        $transaction->refresh();
+
+        Log::info("Webhook processed successfully");
+
+        $this->validatePayment($transaction, $this->dto);
     }
 
-
-   private   function validatePayment(Transaction $transaction, array $request)
+    private   function validatePayment(Transaction $transaction, WebhookHandlingDTO $request)
     {
 
         if ($transaction->status === "SUCCESS") {
             // send notification to user
+            Log::info("Success transactions ".$transaction->id);
+
             $paiement = Paiements::where('transaction_id', $transaction->id)->first();
-            if ($paiement) {
-                app(PayementServices::class)->validatePayment(
+            Log::info("Paiement id :".$paiement?->id);
+           if($paiement){
+             if ($paiement) {
+                app(PaiementService::class)->validePayment(
                     [
-                    ...$request,
-                    'paiement' => $paiement->id
-                ]
+                        ...$request->toArray(),
+                        'paiement' => $paiement->id
+                    ]
                 );
             }
+           }else{
+            Log::info("No paiement fund for this tarsanctions ");
+           }
         }
         $user = User::find($transaction->user_id);
         $token = $user->fcm_token;

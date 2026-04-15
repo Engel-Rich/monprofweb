@@ -75,7 +75,7 @@ class PaiementsController extends Controller
 
             Log::debug("Trasaction  response " . $trx);
 
-            $data['transaction_id'] = $trx->transaction_id;
+            $data['transaction_id'] = $trx->id;
 
             $paiment = Paiements::create($data);
 

@@ -140,7 +140,7 @@ class CampayPaymentStrategy implements PaymentStrategy
                 default                                      => TransactionStatus::FAILED,
             };
 
-            Log::info("Transactions Response", $paymentResponse);
+            Log::info(["Transactions Response"=>  $paymentResponse]);
 
             return new PaymentResult(
                 status: $transactionStatus,

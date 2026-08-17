@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Services\MundiPayService;
 use InvalidArgumentException;
 
 class PaymentFactory
@@ -10,7 +11,8 @@ class PaymentFactory
      * Les stratégies enregistrées : 'CAMPAY' => CampayPaymentStrategy::class
      */
     protected static array $strategies = [
-        'CAMPAY' => CampayPaymentStrategy::class,
+        'CAMPAY'   => CampayPaymentStrategy::class,
+        'MUNDIPAY' => MundiPayService::class,
     ];
 
     public static function make(string $provider): PaymentStrategy

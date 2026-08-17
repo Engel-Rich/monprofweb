@@ -41,13 +41,7 @@ class TransactionController extends Controller
     public static function store(TransactionPostDto $request)
     {
 
-        try {
-            // $mundiPayRequestDTO = new MundiPayRequestDTO([
-            //     'amount' => $request->amount,
-            //     'subscription_id' => $request->subscription_id,
-            //     'country_code' => "237",
-            //     'phone_number' => $request->phone_number,
-            // ]);
+        try {      
             $transaction = Transaction::create($request->toArray());
             $reference = Str::replaceFirst('MPP-', '', $transaction->reference);
             $createTransactionRequest =  CreateTransactionDto::fromArray([
@@ -62,12 +56,18 @@ class TransactionController extends Controller
             try {
                 $strategy = PaymentFactory::make('CAMPAY');
                 $response = $strategy->processPayment($createTransactionRequest);
-                
+
+                if ($response->isFailed() || !$response->transactionId) {
+                    throw new \RuntimeException(
+                        $response->error ?? 'Payment initiation failed with provider ' . $strategy->getProviderName()
+                    );
+                }
+
                 $transaction->update([
                     'transaction_id' => $response->transactionId
                 ]);
             } catch (\Throwable $th) {
-                Log::error("CamPay payment initiation failed: " . $th->getMessage());
+                Log::error("Payment initiation failed: " . $th->getMessage());
                 $transaction->update(['status' => 'FAILED']);
                 throw $th;
             }

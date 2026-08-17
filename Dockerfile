@@ -1,45 +1,85 @@
-FROM php:8.2-fpm-alpine
+FROM composer:2 AS vendor
 
-# Installer les extensions PHP nécessaires
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+WORKDIR /app
 
-# Ajouter les groupes et utilisateurs
-RUN apk --no-cache add shadow
+# Cette première installation permet de réutiliser le cache Docker tant que
+# composer.json et composer.lock ne changent pas.
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --no-scripts \
+    --no-autoloader
 
-RUN addgroup -g 1000 monprof && adduser -u 1000 -G monprof -D monprof
+COPY . .
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --optimize-autoloader
 
-RUN addgroup -g 1001 -S www && adduser -u 1001 -S www -G www
 
-# Installer Supervisor
-RUN apk --no-cache add supervisor
+FROM php:8.2-fpm-alpine AS production
 
-# Installer Composer
-RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    RUN_MIGRATIONS=false
 
-# Copier les fichiers du projet dans le conteneur
-COPY --chown=www:www . /www/html/monprof
+RUN apk add --no-cache \
+    curl \
+    icu-libs \
+    libxml2 \
+    libzip \
+    nginx \
+    supervisor \
+    && apk add --no-cache --virtual .build-deps \
+    $PHPIZE_DEPS \
+    curl-dev \
+    icu-dev \
+    libxml2-dev \
+    libzip-dev \
+    oniguruma-dev \
+    && docker-php-ext-install -j"$(nproc)" \
+    curl \
+    intl \
+    mbstring \
+    opcache \
+    pcntl \
+    pdo_mysql \
+    zip \
+    && apk del .build-deps \
+    && rm -rf /tmp/* /var/cache/apk/*
 
-# Copier la configuration PHP personnalisée
-COPY custom-php.ini /usr/local/etc/php/conf.d/
+WORKDIR /var/www/html
 
-# Définir le répertoire de travail avant d'exécuter Composer
-WORKDIR /www/html/monprof
-
-# Installer les dépendances Composer
-RUN composer install --no-dev --optimize-autoloader
-
-# # Exécuter les migrations
-# RUN php artisan migrate
-
-# Configuration de Supervisor
+COPY --from=vendor --chown=www-data:www-data /app /var/www/html
+COPY custom-php.ini /usr/local/etc/php/conf.d/99-monprof.ini
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker-entrypoint.sh /usr/local/bin/monprof-entrypoint
 
-# Exposer le port
-EXPOSE 9000
+RUN chmod +x /usr/local/bin/monprof-entrypoint \
+    && mkdir -p \
+    /run/nginx \
+    /var/log/supervisor \
+    /var/www/html/bootstrap/cache \
+    /var/www/html/storage/app/public \
+    /var/www/html/storage/framework/cache/data \
+    /var/www/html/storage/framework/sessions \
+    /var/www/html/storage/framework/views \
+    /var/www/html/storage/logs \
+    && chown -R www-data:www-data \
+    /var/www/html/bootstrap/cache \
+    /var/www/html/storage
 
-# Ajuster les permissions
-RUN chown -R www:www /www/html/monprof
-RUN chown -R www:www /www/html/monprof/storage /www/html/monprof/bootstrap/cache
-RUN chmod -R 777 /www/html/monprof/storage /www/html/monprof/bootstrap/cache
+EXPOSE 80
 
-CMD ["supervisord", "-n"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl --fail --silent --show-error http://127.0.0.1/health || exit 1
+
+ENTRYPOINT ["monprof-entrypoint"]
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

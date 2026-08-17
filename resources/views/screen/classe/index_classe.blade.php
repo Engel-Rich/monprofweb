@@ -1,38 +1,31 @@
 @extends('nav')
 
+@section('title', 'Classes')
 
 @section('content')
-    <div class="row">
-        <div class="col">
-            <h1 class="display-5"> Classes </h1>
-        </div>
-        <div class="col">
-            <a href="{{ route('classe.create') }}">
-                <button class="btn btn-outline-primary "> Ajouter une nouvelle classe</button>
-            </a>
-        </div>
-    </div>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col" class="display-7 fw-bold">Nom de la classe</th>
-                <th scope="col" class="display-7 fw-bold">Abréviation</th>
-                <th scope="col" class="display-7 fw-bold">Description</th>
-                <th scope="col" class="display-7 fw-bold">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($classes as $classe)
-            <tr>
-                <th scope="row">{{$classe->libelle }}</th>
-                {{-- <td>{{$classe->libelle  }}</td> --}}
-                <td>{{ $classe->short_name }}</td>
-                <td>{{ $classe->description }}</td>
-                <td><a href="{{route('classe.edit',$classe->id)}}">modifier</a></td>
-            </tr>
-            @endforeach                            
-        </tbody>
-    </table>
-    {{$classes->links()}}
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Classe', 'type' => 'identity', 'secondaryKey' => 'shortName'],
+            ['key' => 'description', 'label' => 'Description', 'truncate' => true],
+            ['key' => 'createdAt', 'label' => 'Créée le'],
+        ];
+        $items = $classes->map(fn ($classe) => [
+            'id' => $classe->id,
+            'name' => $classe->libelle,
+            'shortName' => $classe->short_name,
+            'description' => $classe->description,
+            'createdAt' => $classe->created_at?->format('d/m/Y'),
+            'editUrl' => route('classe.edit', $classe),
+            'details' => [[
+                'title' => 'Informations de la classe',
+                'fields' => [
+                    ['label' => 'Nom complet', 'value' => $classe->libelle],
+                    ['label' => 'Abréviation', 'value' => $classe->short_name],
+                    ['label' => 'Description', 'value' => $classe->description],
+                    ['label' => 'Créée le', 'value' => $classe->created_at?->format('d/m/Y à H:i')],
+                ],
+            ]],
+        ])->values();
+    @endphp
+    <x-admin.data-table eyebrow="Scolarité" title="Classes" description="Organisez les niveaux scolaires disponibles sur MonProf." :columns="$columns" :items="$items" :paginator="$classes" :create-url="route('classe.create')" create-label="Nouvelle classe" />
 @endsection

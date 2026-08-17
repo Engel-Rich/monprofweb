@@ -1,48 +1,37 @@
 @extends('nav')
 
+@section('title', 'Enseignants')
 
 @section('content')
-    <form action="" class="form">
-        <div class="row">
-
-            <div class="col-md-3 d-flex align-content-center">
-                <h1 class="display-5">Enseignants </h1>
-            </div>
-            <div class="col-md-3">
-                <input type="text" class="form-control", placeholder="Recherche">
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-            </div>
-            <div class="col-md-3">
-                <a href="{{route('professeur.create')}}"  class="btn btn-outline-primary" >Ajouter un Prof </a>
-            </div>
-        </div>
-    </form>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col" class="display-7 fw-bold">Nom </th>
-                <th scope="col" class="display-7 fw-bold">Prénom</th>
-                <th scope="col" class="display-7 fw-bold">Téléphone</th>
-                <th scope="col" class="display-7 fw-bold">Email</th>
-                <th scope="col" class="display-7 fw-bold">Matieres de base</th>
-                <th scope="col" class="display-7 fw-bold">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($profs as $prof)
-                <tr>
-                    <th scope="row">{{ $prof->user->name }}</th>
-                    <td>{{ $prof->user->last_name }}</td>
-                    <td>{{ $prof->user->phone }}</td>
-                    <td>{{ $prof->user->email }}</td>
-                    <td>{{ $prof->matiere->libelle }}</td>
-                    <td><a href="{{ route('matiere.create') }}">modifier</a></td>
-                    {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Enseignant', 'type' => 'identity', 'secondaryKey' => 'email'],
+            ['key' => 'subject', 'label' => 'Matière principale'],
+            ['key' => 'phone', 'label' => 'Téléphone'],
+            ['key' => 'createdAt', 'label' => 'Ajouté le'],
+        ];
+        $items = $profs->map(function ($teacher) {
+            $name = trim(($teacher->user?->name ?? '').' '.($teacher->user?->last_name ?? '')) ?: 'Compte enseignant';
+            return [
+                'id' => $teacher->id,
+                'name' => $name,
+                'email' => $teacher->user?->email,
+                'phone' => $teacher->user?->phone,
+                'subject' => $teacher->matiere?->libelle,
+                'createdAt' => $teacher->created_at?->format('d/m/Y'),
+                'details' => [
+                    ['title' => 'Coordonnées', 'fields' => [
+                        ['label' => 'Nom complet', 'value' => $name],
+                        ['label' => 'Email', 'value' => $teacher->user?->email, 'type' => 'email'],
+                        ['label' => 'Téléphone', 'value' => $teacher->user?->phone, 'type' => 'phone'],
+                    ]],
+                    ['title' => 'Affectation', 'fields' => [
+                        ['label' => 'Matière principale', 'value' => $teacher->matiere?->libelle],
+                        ['label' => 'Ajouté le', 'value' => $teacher->created_at?->format('d/m/Y à H:i')],
+                    ]],
+                ],
+            ];
+        })->values();
+    @endphp
+    <x-admin.data-table eyebrow="Équipe pédagogique" title="Enseignants" description="Retrouvez les enseignants et leurs matières de référence." :columns="$columns" :items="$items" :paginator="$profs" :create-url="route('professeur.create')" create-label="Nouvel enseignant" />
 @endsection

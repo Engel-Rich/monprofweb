@@ -1,156 +1,39 @@
 @extends('base')
 
+@php
+    $isAdmin = (int) auth()->user()->rule_id === 1;
+    $navigation = collect([
+        ['label' => 'Tableau de bord', 'icon' => 'dashboard', 'section' => 'principal', 'url' => route('index'), 'active' => request()->routeIs('index')],
+        ['label' => 'Statistiques', 'icon' => 'statistics', 'section' => 'principal', 'url' => route('statistiques'), 'active' => request()->routeIs('statistiques')],
+        ['label' => 'Paiements', 'icon' => 'payments', 'section' => 'principal', 'url' => route('paiement.index'), 'active' => request()->routeIs('paiement.*'), 'admin' => true],
+        ['label' => 'Codes', 'icon' => 'codes', 'section' => 'principal', 'url' => route('codes.index', 'all'), 'active' => request()->routeIs('codes.*'), 'admin' => true],
+        ['label' => 'Classes', 'icon' => 'classes', 'section' => 'contenu', 'url' => route('classe.index'), 'active' => request()->routeIs('classe.*'), 'admin' => true],
+        ['label' => 'Matières', 'icon' => 'subjects', 'section' => 'contenu', 'url' => route('matiere.index'), 'active' => request()->routeIs('matiere.*'), 'admin' => true],
+        ['label' => 'Catégories', 'icon' => 'categories', 'section' => 'contenu', 'url' => route('categorie.index'), 'active' => request()->routeIs('categorie.*'), 'admin' => true],
+        ['label' => 'Cours', 'icon' => 'courses', 'section' => 'contenu', 'url' => route('cours.index'), 'active' => request()->routeIs('cours.*'), 'admin' => true],
+        ['label' => 'Élèves', 'icon' => 'students', 'section' => 'contenu', 'url' => route('eleve.index'), 'active' => request()->routeIs('eleve.*'), 'admin' => true],
+        ['label' => 'Enseignants', 'icon' => 'teachers', 'section' => 'contenu', 'url' => route('professeur.index'), 'active' => request()->routeIs('professeur.*'), 'admin' => true],
+        ['label' => 'Partenaires', 'icon' => 'teachers', 'section' => 'contenu', 'url' => route('partner.index'), 'active' => request()->routeIs('partner.*'), 'admin' => true],
+        ['label' => 'Questions', 'icon' => 'questions', 'section' => 'support', 'url' => route('question.index'), 'active' => request()->routeIs('question.*'), 'admin' => true],
+        ['label' => 'Messages', 'icon' => 'messages', 'section' => 'support', 'url' => route('messages.index'), 'active' => request()->routeIs('messages.*'), 'admin' => true],
+        ['label' => 'Suggestions', 'icon' => 'suggestions', 'section' => 'support', 'url' => route('index.suggestion'), 'active' => request()->routeIs('index.suggestion'), 'admin' => true],
+    ])->filter(fn ($item) => !($item['admin'] ?? false) || $isAdmin)->values()->all();
+
+    $adminUser = [
+        'name' => auth()->user()->name,
+        'lastName' => auth()->user()->last_name,
+        'email' => auth()->user()->email,
+    ];
+@endphp
+
 @section('nav')
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
-            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
-                <a href="{{route('index')}}" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                    <span class="fs-5 d-none d-sm-inline">Mon Prof</span>
-                </a>
-                <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
-                    @if(Auth::user()->rule_id == 1)
-                    <li class="nav-item">
-                        <a href="{{route('classe.index')}}" class="nav-link align-middle px-0">
-                            <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Classes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{route('matiere.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Matières</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('categorie.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Catégories</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('eleve.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Elèves</span></a>
-                    </li>
-
-                    <li>
-                        <a href="{{route('partner.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Partenaires</span></a>
-                    </li>
-                    @endif
-
-                    <li>
-                        <a href="{{route('statistiques')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Statistiques</span></a>
-                    </li>
-
-                    @if(Auth::user()->rule_id == 1)
-                    <li>
-                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Enseignants</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('cours.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Cours</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('messages.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Messages</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('index.suggestion')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Sugestion</span></a>
-                    </li>
-                    <li>
-                        <a href="{{route('question.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Questions</span></a>
-                    </li>
-
-                    {{-- Paiments --}}
-                    <li>
-                        <a href="{{route('paiement.index')}}" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Paiements</span></a>
-                    </li>
-
-                    {{-- Codes des élèves --}}
-
-                    <li>
-                        <a href="#submenu3" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-grid"></i> <span class="ms-1 d-none d-sm-inline">Codes</span> </a>
-                        <ul class="collapse nav flex-column ms-1" id="submenu3" data-bs-parent="#menu">
-                            <li class="w-100">
-                                <a href="{{route('codes.index','all')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Tous les Codes</span></a>
-                            </li>
-                            <li class="w-100">
-                                <a href="{{route('codes.index','actif')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Codes activés</span></a>
-                            </li>
-                            <li>
-                                <a href="{{route('codes.index','inactif')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Codes non activés</span></a>
-                            </li>
-                        </ul>
-                    </li>
-                    {{-- <li>
-                        <a href="" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
-                            <i class="fs-4 bi-speedometer2"></i> <span class="ms-1 d-none d-sm-inline">Paiments</span> </a>
-                        <ul class="collapse show nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
-                            <li class="w-100">
-                                <a href="{{route('matiere.index')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">En attente</span> 1 </a>
-                    </li>
-                    <li>
-                        <a href="{{route('classe.index')}}" class="nav-link px-0"> <span class="d-none d-sm-inline">Terminé</span> 2 </a>
-                    </li>
-                </ul>
-                </li> --}}
-                {{-- --}}
-                {{-- <li>
-                        <a href="{{route('professeur.index')}}" class="nav-link px-0 align-middle">
-                <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Enseignants</span></a>
-                </li> --}}
-                </ul>
-                @endif
-                <hr>
-                <div class="dropdown pb-4">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://www.monprof.com/images/france/logo.png" alt="hugenerd" width="30" height="30" class="rounded-circle">
-                        <span class="d-none d-sm-inline mx-1">Autres</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="{{route('auth.logout')}}">Sign out</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="col py-3">
+    <div id="admin-app">
+        <admin-shell
+            :items="{{ Js::from($navigation) }}"
+            :user="{{ Js::from($adminUser) }}"
+            logout-url="{{ route('auth.logout') }}"
+        >
             @yield('content')
-        </div>
+        </admin-shell>
     </div>
-</div>
-@endsection
-
-@section('search-script')
-<script>
-    $(document).ready(function() {
-        $('#searchTextfield').on('input', function() {
-            var searchQuery = $(this).val();
-            $.ajax({
-                url: "{{route('eleve.index')}}",
-                type: 'GET',
-                data: {
-                    search: searchQuery
-                },
-                success: function(data) {
-                    $('#article-list').html($(data).find('#article-list').html());
-                },
-                error: function(xhr) {
-                    console.error("An error occurred: " + xhr.status + " " + xhr.statusText);
-                }
-            });
-        });
-    });
-</script>
-@endsection
-
-@section('save-cours-script')
-
-
-
 @endsection

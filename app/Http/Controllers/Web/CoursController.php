@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CoursValidateRequest;
 use App\Jobs\AddCourseNotificationJob;
 use App\Models\Categorie;
 use App\Models\Classe;
@@ -12,6 +11,8 @@ use App\Models\Matieres;
 use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class CoursController extends Controller
 {
@@ -117,46 +118,56 @@ class CoursController extends Controller
     public function store(Request $request)
     {
         try {
-            $validatortable = [
-                "libelle" => 'string|required',
-                "description" => 'string|required',
-                'video' => 'required|file',
+            $validation = $request->validate([
+                'libelle' => 'string|required|max:255',
+                'description' => 'string|required',
+                'video' => 'required|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm|max:512000',
                 'classe_id' => 'required|exists:classes,id',
                 'matieres_id' => 'required|exists:matieres,id',
                 'categorie_id' => 'required|exists:categories,id',
-                'open' => "integer|required"
-            ];
-            $validation = $request->all();
-            // if ($request->video=) {
-            $validation['open'] = $request->open;
-            Log::info($request->all());
-            $request->validate($validatortable);
-            // $titre = $request->libelle;
-            $classe  = Classe::find($request->classe_id)->libelle;
-            $matiere = Matieres::find($request->matieres_id)->libelle;
-            $categorie  = Categorie::find($request->categorie_id)->libelle;
+                'open' => 'required|boolean',
+            ]);
+
+            $classe = Classe::findOrFail($request->classe_id)->libelle;
+            $matiere = Matieres::findOrFail($request->matieres_id)->libelle;
+            $categorie = Categorie::findOrFail($request->categorie_id)->libelle;
             $video = $request->file('video');
-            $user = $request->user()->id;
             $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
-            $videoUrl = $filemanager->store($video); // $video->store("Videos/$categorie/$classe/$matiere", 'public');            
-            $validation['video_url'] = $videoUrl; //asset("storage/$videoUrl");
-            $validation['user_id'] = $user;
+            $videoUrl = $filemanager->store($video);
+
+            if (! $videoUrl) {
+                throw new RuntimeException('Le stockage de la vidéo a échoué.');
+            }
+
+            $validation['video_url'] = $videoUrl;
+            $validation['user_id'] = $request->user()->id;
+            unset($validation['video']);
+
             try {
-                Log::info($validation);
-                unset($validation['video']);
-                $cour =  Cours::create($validation);
+                $cour = Cours::create($validation);
                 AddCourseNotificationJob::dispatch($cour->id);
-                Log::info($validation);
             } catch (\Throwable $th) {
                 $filemanager->delete($videoUrl);
-                return to_route('cours.create')->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
+                throw $th;
             }
-            return redirect()->route('cours.index');
-            // }
-            // dd($validation);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Le cours a été publié avec succès.',
+                    'redirect' => route('cours.index'),
+                ], 201);
+            }
+
+            return redirect()->route('cours.index')->with('success', 'Cours publié avec succès.');
+        } catch (ValidationException $th) {
+            throw $th;
         } catch (\Throwable $th) {
-            Log::info("Erreur d'ajour du cours");
             Log::error($th);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Impossible de publier le cours : '.$th->getMessage()], 500);
+            }
+
             return to_route('cours.create')->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
         }
     }
@@ -196,51 +207,58 @@ class CoursController extends Controller
         try {
             $cour = Cours::findOrFail($id);
 
-            // ✅ Validation rules (video optional)
-            $validatortable = [
-                "libelle" => 'string|required',
-                "description" => 'string|required',
-                'video' => 'nullable|file',
+            $data = $request->validate([
+                'libelle' => 'string|required|max:255',
+                'description' => 'string|required',
+                'video' => 'nullable|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm|max:512000',
                 'classe_id' => 'required|exists:classes,id',
                 'matieres_id' => 'required|exists:matieres,id',
                 'categorie_id' => 'required|exists:categories,id',
-                'open' => "integer|required"
-            ];
+                'open' => 'required|boolean',
+            ]);
 
-            $request->validate($validatortable);
+            $classe = Classe::findOrFail($request->classe_id)->libelle;
+            $matiere = Matieres::findOrFail($request->matieres_id)->libelle;
+            $categorie = Categorie::findOrFail($request->categorie_id)->libelle;
 
-            $classe  = Classe::find($request->classe_id)->libelle;
-            $matiere = Matieres::find($request->matieres_id)->libelle;
-            $categorie  = Categorie::find($request->categorie_id)->libelle;
-
-            $data = $request->except(['video']);
+            unset($data['video']);
             $data['user_id'] = $request->user()->id;
 
-            // ✅ Handle video upload
             if ($request->hasFile('video')) {
-                $video = $request->file('video');
-
                 $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
-
-                // Delete old video if exists
-                if ($cour->video_url) {
-                    $filemanager->delete($cour->video_url);
+                $videoUrl = $filemanager->store($request->file('video'));
+                if (! $videoUrl) {
+                    throw new RuntimeException('Le stockage de la nouvelle vidéo a échoué.');
                 }
-
-                // Upload new video
-                $videoUrl = $filemanager->store($video);
                 $data['video_url'] = $videoUrl;
-            } else {
-                // Keep old video if no new one
-                $data['video_url'] = $cour->video_url;
             }
 
-            // ✅ Update the course
-            $cour->update($data);
+            try {
+                $cour->update($data);
+            } catch (\Throwable $th) {
+                if (isset($filemanager, $videoUrl)) {
+                    $filemanager->delete($videoUrl);
+                }
+                throw $th;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Le cours a été mis à jour avec succès.',
+                    'redirect' => route('cours.index'),
+                ]);
+            }
 
             return redirect()->route('cours.index')->with('success', 'Cours mis à jour avec succès!');
+        } catch (ValidationException $th) {
+            throw $th;
         } catch (\Throwable $th) {
             Log::error($th);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Impossible de mettre à jour le cours : '.$th->getMessage()], 500);
+            }
+
             return back()->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
         }
     }
@@ -260,9 +278,19 @@ class CoursController extends Controller
             $filemanager = new FileManager("Videos/$categorie/$classe/$matiere");
             $filemanager->delete($cour->video_url);
             $cour->delete();
+
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Cours supprimé avec succès.']);
+            }
+
             return redirect()->route('cours.index');
         } catch (\Throwable $th) {
             Log::error($th);
+
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Impossible de supprimer le cours : '.$th->getMessage()], 500);
+            }
+
             return back()->withErrors(['error' => $th->getMessage()])->onlyInput('libelle', 'description');
         }
     }

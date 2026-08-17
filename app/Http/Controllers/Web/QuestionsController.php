@@ -14,7 +14,7 @@ class QuestionsController extends Controller
      */
     public function index()
     {
-        $questions = \App\Models\Questions::with('classe','matiere',"eleve", 'categorie','reponse')->paginate(20);
+        $questions = \App\Models\Questions::with('classe', 'matiere', 'eleve.user', 'categorie', 'reponse')->paginate(20);
         $result = $questions->getCollection()->transform(function ($value){                            
             if($value->image_url!=null){
                 $fileManager = new FileManager("questions/eleves/");

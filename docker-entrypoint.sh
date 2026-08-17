@@ -56,4 +56,8 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     done
 fi
 
+if [ "${SEED_ADMIN:-false}" = "true" ]; then
+    php artisan db:seed --class=AdminUserSeeder --force
+fi
+
 exec "$@"

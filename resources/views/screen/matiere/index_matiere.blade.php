@@ -1,38 +1,28 @@
 @extends('nav')
 
+@section('title', 'Matières')
 
 @section('content')
-<div class="row">
-    <div class="col">
-        <h1 class="display-5"> Matieres </h1>
-    </div>
-    <div class="col">
-        <a href="{{ route('matiere.create') }}">
-            <button class="btn btn-outline-primary ">Ajouter une matière</button>
-        </a>
-    </div>
-</div>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col" class="display-7 fw-bold">Nom de la Matière</th>
-            <th scope="col" class="display-7 fw-bold">Description</th>
-            <th scope="col" class="display-7 fw-bold">Action</th>
-            <!-- <th scope="col" class="display-7 fw-bold">Classe</th> -->
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($matieres as $matiere)
-        <tr>
-            <th scope="row">{{$matiere->libelle }}</th>
-            {{-- <td>{{$matiere->libelle  }}</td> --}}
-            <td>{{ $matiere->description }}</td>
-            <td><a href="{{route('matiere.edit', $matiere->id)}}">modifier</a></td>
-            <!-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> -->
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Matière', 'type' => 'identity', 'secondaryKey' => 'appName'],
+            ['key' => 'description', 'label' => 'Description', 'truncate' => true],
+            ['key' => 'createdAt', 'label' => 'Créée le'],
+        ];
+        $items = $matieres->map(fn ($matiere) => [
+            'id' => $matiere->id,
+            'name' => $matiere->libelle,
+            'appName' => $matiere->app_name ?: 'Nom public non défini',
+            'description' => $matiere->description,
+            'createdAt' => $matiere->created_at?->format('d/m/Y'),
+            'editUrl' => route('matiere.edit', $matiere),
+            'details' => [['title' => 'Informations de la matière', 'fields' => [
+                ['label' => 'Libellé', 'value' => $matiere->libelle],
+                ['label' => 'Nom dans l’application', 'value' => $matiere->app_name],
+                ['label' => 'Description', 'value' => $matiere->description],
+                ['label' => 'Créée le', 'value' => $matiere->created_at?->format('d/m/Y à H:i')],
+            ]]],
+        ])->values();
+    @endphp
+    <x-admin.data-table eyebrow="Contenu" title="Matières" description="Gérez les disciplines utilisées pour classer les contenus pédagogiques." :columns="$columns" :items="$items" :paginator="$matieres" :create-url="route('matiere.create')" create-label="Nouvelle matière" />
 @endsection

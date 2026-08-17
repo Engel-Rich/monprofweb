@@ -1,49 +1,30 @@
 @extends('nav')
 
+@section('title', 'Partenaires')
+
 @section('content')
-<form action="" class="form">
-    <div class="row">
-
-        <div class="col-md-3">
-            <h1 class="display-5">Partenaires </h1>
-        </div>
-        <div class="col-md-6">
-            <input type="text" class="form-control" , placeholder="Email" id="searchTextfield">
-        </div>
-        <!-- <div class="col-md-3">
-            <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-        </div> -->
-
-        <div class="col-md-3">
-            <a href="{{route('partner.add')}}" class="btn btn-outline-primary"> Ajouter </a>
-        </div>
-
-    </div>
-</form>
-
-
-<div id="article-list">
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col" class="display-7 fw-bold">Nom </th>
-                <th scope="col" class="display-7 fw-bold">Prénom</th>
-                <th scope="col" class="display-7 fw-bold">Téléphone</th>
-                <th scope="col" class="display-7 fw-bold">Email</th>
-                <th scope="col" class="display-7 fw-bold">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($partners as $user)
-            <tr>
-                <th scope="row">{{ $user->name }}</th>
-                <td>{{ $user->last_name }}</td>
-                <td>{{ $user->phone }}</td>
-                <td>{{ $user->email }}</td>
-                <td><a href="{{ route('matiere.create') }}">voire</a></td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Partenaire', 'type' => 'identity', 'secondaryKey' => 'email'],
+            ['key' => 'phone', 'label' => 'Téléphone'],
+            ['key' => 'createdAt', 'label' => 'Ajouté le'],
+        ];
+        $items = $partners->map(function ($partner) {
+            $name = trim(($partner->name ?? '').' '.($partner->last_name ?? '')) ?: 'Partenaire';
+            return [
+                'id' => $partner->id,
+                'name' => $name,
+                'email' => $partner->email,
+                'phone' => $partner->phone,
+                'createdAt' => $partner->created_at?->format('d/m/Y'),
+                'details' => [['title' => 'Compte partenaire', 'fields' => [
+                    ['label' => 'Nom complet', 'value' => $name],
+                    ['label' => 'Adresse email', 'value' => $partner->email, 'type' => 'email'],
+                    ['label' => 'Téléphone', 'value' => $partner->phone, 'type' => 'phone'],
+                    ['label' => 'Ajouté le', 'value' => $partner->created_at?->format('d/m/Y à H:i')],
+                ]]],
+            ];
+        })->values();
+    @endphp
+    <x-admin.data-table eyebrow="Réseau" title="Partenaires" description="Gérez les comptes partenaires autorisés à accéder aux statistiques." :columns="$columns" :items="$items" :create-url="route('partner.add')" create-label="Nouveau partenaire" />
 @endsection

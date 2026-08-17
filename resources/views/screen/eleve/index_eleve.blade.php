@@ -1,55 +1,42 @@
 @extends('nav')
 
+@section('title', 'Élèves')
+
 @section('content')
-<form action="" class="form">
-    <div class="row">
-
-        <div class="col-md-3">
-            <h1 class="display-5">Elèves </h1>
-        </div>
-        <div class="col-md-6">
-            <input type="text" class="form-control" , placeholder="Email" id="searchTextfield">
-        </div>
-        <div class="col-md-3">
-            <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-        </div>
-
-    </div>
-</form>
-
-
-<div id="article-list">
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col" class="display-7 fw-bold">Nom </th>
-                <th scope="col" class="display-7 fw-bold">Prénom</th>
-                <th scope="col" class="display-7 fw-bold">Téléphone</th>
-                <th scope="col" class="display-7 fw-bold">Email</th>
-                <th scope="col" class="display-7 fw-bold">Etablissement</th>
-                <th scope="col" class="display-7 fw-bold">Classe</th>
-                <th scope="col" class="display-7 fw-bold">Sexe</th>
-                <th scope="col" class="display-7 fw-bold">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($eleves as $eleve)
-            <tr>
-                <th scope="row">{{ $eleve->user->name }}</th>
-                {{-- <td>{{$matiere->libelle  }}</td> --}}
-                <td>{{ $eleve->user->last_name }}</td>
-                <td>{{ $eleve->user->phone }}</td>
-                <td>{{ $eleve->user->email }}</td>
-                <td>{{ $eleve->etablissement }}</td>
-                <td>{{ $eleve->classe->libelle }}</td>
-                <td>{{ $eleve->sexe }}</td>
-                <td><a href="{{ route('matiere.create') }}">voire</a></td>
-                {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-</div>
-{{$eleves->links()}}
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Élève', 'type' => 'identity', 'secondaryKey' => 'email'],
+            ['key' => 'className', 'label' => 'Classe'],
+            ['key' => 'school', 'label' => 'Établissement', 'truncate' => true],
+            ['key' => 'phone', 'label' => 'Téléphone'],
+            ['key' => 'createdAt', 'label' => 'Inscrit le'],
+        ];
+        $items = $eleves->map(function ($student) {
+            $name = trim(($student->user?->name ?? '').' '.($student->user?->last_name ?? '')) ?: 'Élève sans compte';
+            return [
+                'id' => $student->id,
+                'name' => $name,
+                'email' => $student->user?->email,
+                'phone' => $student->user?->phone,
+                'className' => $student->classe?->libelle,
+                'school' => $student->etablissement,
+                'gender' => $student->sexe,
+                'createdAt' => $student->created_at?->format('d/m/Y'),
+                'details' => [
+                    ['title' => 'Compte', 'fields' => [
+                        ['label' => 'Nom complet', 'value' => $name],
+                        ['label' => 'Adresse email', 'value' => $student->user?->email, 'type' => 'email'],
+                        ['label' => 'Téléphone', 'value' => $student->user?->phone, 'type' => 'phone'],
+                    ]],
+                    ['title' => 'Scolarité', 'fields' => [
+                        ['label' => 'Classe', 'value' => $student->classe?->libelle],
+                        ['label' => 'Établissement', 'value' => $student->etablissement],
+                        ['label' => 'Sexe', 'value' => $student->sexe],
+                        ['label' => 'Inscrit le', 'value' => $student->created_at?->format('d/m/Y à H:i')],
+                    ]],
+                ],
+            ];
+        })->values();
+    @endphp
+    <x-admin.data-table eyebrow="Utilisateurs" title="Élèves" description="Consultez les comptes élèves et leurs informations scolaires." :columns="$columns" :items="$items" :paginator="$eleves" search-placeholder="Nom, email, téléphone ou classe…" />
 @endsection

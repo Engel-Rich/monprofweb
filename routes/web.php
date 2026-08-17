@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\Web\CategoriController;
+use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CodesController;
 use App\Http\Controllers\Web\CoursController;
@@ -30,9 +31,7 @@ use Illuminate\Support\Facades\Route;
 
 /// Secure routes
 Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return view('index');
-    })->name('index');
+    Route::get('/', AdminDashboardController::class)->name('index');
     Route::resource('classe', ClasseController::class)->except(['show']);
 
     Route::post('/classe/add_matiere', [ClasseController::class, 'addMatiereToClasse'])->name('classe.add_matiere');

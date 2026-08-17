@@ -1,50 +1,49 @@
 @extends('nav')
 
+@section('title', 'Questions')
 
 @section('content')
-<div class="row display-flex align-items-center">
-    <div class="col-md-3 d-flex align-content-center">
-        <h1 class="display-5">Questions </h1>
-    </div>
-    <div class="col-md-6">
-        <input type="text" class="form-control" , placeholder="Recherche">
-    </div>
-    <div class="col-md-3">
-        <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-    </div>
-</div>
-
-
-<table class="table">
-    <thead>
-        <tr class="display-flex align-items-center ">
-            <th scope="col" class="display-7 fw-bold border border-solid">Titre</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Question</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Classe</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Matieres</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Categorie</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Elève</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Status</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Date</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($questions as $qestion)
-        <tr>
-            <th scope="row">{{$qestion->titre }}</th>
-            <td>{{ $qestion->description}}</td>
-            <td>{{ $qestion->classe->libelle }} </td>
-            <td>{{ $qestion->matiere->libelle }}</td>
-            <td>{{ $qestion->categorie->libelle }}</td>
-            <td>{{ $qestion->eleve->user->name }}</td>
-            <td>{{ $qestion->reponse?->id==null?'En attente':"Répondue"}}</td>
-            <td>{{ $qestion->created_at->format('D d M Y H:m') }}</td>
-            <td><a href="{{route('question.show',$qestion->id)}}">Voir</a></td>
-            {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-{{$questions->links()}}
+    @php
+        $columns = [
+            ['key' => 'title', 'label' => 'Question', 'type' => 'identity', 'secondaryKey' => 'student'],
+            ['key' => 'subject', 'label' => 'Matière'],
+            ['key' => 'className', 'label' => 'Classe'],
+            ['key' => 'category', 'label' => 'Catégorie'],
+            ['key' => 'status', 'label' => 'Statut', 'type' => 'status'],
+            ['key' => 'createdAt', 'label' => 'Reçue le'],
+        ];
+        $items = $questions->map(function ($question) {
+            $student = trim(($question->eleve?->user?->name ?? '').' '.($question->eleve?->user?->last_name ?? '')) ?: 'Élève inconnu';
+            $status = $question->reponse ? 'Répondue' : 'En attente';
+            return [
+                'id' => $question->id,
+                'title' => $question->titre,
+                'name' => $question->titre,
+                'student' => $student,
+                'description' => $question->description,
+                'subject' => $question->matiere?->libelle,
+                'className' => $question->classe?->libelle,
+                'category' => $question->categorie?->libelle,
+                'status' => $status,
+                'createdAt' => $question->created_at?->format('d/m/Y H:i'),
+                'imageUrl' => $question->image_url,
+                'actionUrl' => route('question.show', $question),
+                'actionLabel' => $question->reponse ? 'Consulter la réponse' : 'Répondre',
+                'details' => [
+                    ['title' => 'Demande', 'fields' => [
+                        ['label' => 'Question', 'value' => $question->description],
+                        ['label' => 'Statut', 'value' => $status, 'type' => 'status'],
+                        ['label' => 'Élève', 'value' => $student],
+                        ['label' => 'Reçue le', 'value' => $question->created_at?->format('d/m/Y à H:i:s')],
+                    ]],
+                    ['title' => 'Contexte pédagogique', 'fields' => [
+                        ['label' => 'Matière', 'value' => $question->matiere?->libelle],
+                        ['label' => 'Classe', 'value' => $question->classe?->libelle],
+                        ['label' => 'Catégorie', 'value' => $question->categorie?->libelle],
+                    ]],
+                ],
+            ];
+        })->values();
+    @endphp
+    <x-admin.data-table eyebrow="Support pédagogique" title="Questions des élèves" description="Priorisez les demandes et ouvrez leur détail avant de répondre." :columns="$columns" :items="$items" :paginator="$questions" search-placeholder="Titre, élève, matière ou classe…" />
 @endsection

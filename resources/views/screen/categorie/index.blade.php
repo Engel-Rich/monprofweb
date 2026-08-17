@@ -1,45 +1,31 @@
 @extends('nav')
 
+@section('title', 'Catégories')
 
 @section('content')
-<div class="row">
-    <div class="col">
-        <h1 class="display-5"> Classes </h1>
-    </div>
-    <div class="col">
-        <a href="{{route('categorie.create')}}">
-            <button class="btn btn-outline-primary "> Ajouter une nouvelle Catégorie</button>
-        </a>
-    </div>
-</div>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col" class="display-7 fw-bold">Nom de la catégorie</th>
-            <th scope="col" class="display-7 fw-bold">Description</th>
-            <th scope="col" class="display-7 fw-bold">Prix</th>
-            <th scope="col" class="display-7 fw-bold">Status</th>
-            <th scope="col" class="display-7 fw-bold">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($categories as $cat)
-        <tr>
-            <th scope="row">{{$cat->libelle }}</th>
-            <td><strong> {{ $cat->prix }} XAF</strong> </td>
-            <td>{{ $cat->description }}</td>
-            <td>
-                @if($cat->status)
-                <span class="badge bg-success">Actif</span>
-                @else
-                <span class="badge bg-danger">Inactif</span>
-                @endif
-            </td>
-            <td><a href="{{route('categorie.edit', $cat->id)}}">Modifier</a></td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-{{$categories->links()}}
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Catégorie', 'type' => 'identity', 'secondaryKey' => 'description'],
+            ['key' => 'price', 'label' => 'Tarif', 'type' => 'currency', 'emphasis' => true],
+            ['key' => 'status', 'label' => 'Statut', 'type' => 'status'],
+            ['key' => 'createdAt', 'label' => 'Créée le'],
+        ];
+        $items = $categories->map(fn ($category) => [
+            'id' => $category->id,
+            'name' => $category->libelle,
+            'description' => $category->description,
+            'price' => (float) $category->prix,
+            'status' => $category->status ? 'Active' : 'Inactive',
+            'createdAt' => $category->created_at?->format('d/m/Y'),
+            'editUrl' => route('categorie.edit', $category),
+            'highlight' => ['label' => 'Prix de l’offre', 'value' => (float) $category->prix, 'type' => 'currency', 'helper' => $category->description],
+            'details' => [['title' => 'Configuration', 'fields' => [
+                ['label' => 'Libellé', 'value' => $category->libelle],
+                ['label' => 'Statut', 'value' => $category->status ? 'Active' : 'Inactive', 'type' => 'status'],
+                ['label' => 'Description', 'value' => $category->description],
+                ['label' => 'Créée le', 'value' => $category->created_at?->format('d/m/Y à H:i')],
+            ]]],
+        ])->values();
+    @endphp
+    <x-admin.data-table eyebrow="Catalogue" title="Catégories" description="Configurez les offres, leurs tarifs et leur visibilité." :columns="$columns" :items="$items" :paginator="$categories" :create-url="route('categorie.create')" create-label="Nouvelle catégorie" />
 @endsection

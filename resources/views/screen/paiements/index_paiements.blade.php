@@ -1,52 +1,53 @@
 @extends('nav')
 
+@section('title', 'Paiements')
 
 @section('content')
-<div class="row display-flex align-items-center">
-    <div class="col-md-3 d-flex align-content-center">
-        <h1 class="display-5">Paiements </h1>
-    </div>
-    <div class="col-md-6">
-        <input type="text" class="form-control" , placeholder="Recherche">
-    </div>
-    <div class="col-md-3">
-        <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-    </div>
-</div>
-
-
-<table class="table">
-    <thead>
-        <tr class="display-flex align-items-center ">
-            <th scope="col" class="display-7 fw-bold border border-solid">Nom du client</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Qte</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Montant</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Categorie</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Num.débiter</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Num.notifier</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Status</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Date de paiments</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Date de validation</th>
-            <th scope="col" class="display-7 fw-bold border border-solid">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($paiements as $paie)
-        <tr>
-            <th scope="row">{{$paie->user->last_name.' '. $paie->user->name }}</th>
-            <td>{{ $paie->nombre_de_code}}</td>
-            <td><strong>{{ $paie->montant }} XAF</strong></td>
-            <td>{{ $paie->categorie->libelle }}</td>
-            <td>{{ $paie->numero_payeur }}</td>
-            <td>{{ $paie->numero_client }}</td>
-            <td>{{ $paie->status==0?'En attente':"Validé"}}</td>
-            <td>{{ $paie->created_at->format('D d M Y H:m') }}</td>
-            <td>{{ $paie->paiement_date !=null? DateTime::createFromFormat('Y-m-d H:i:s',$paie->paiement_date)->format('D d M Y H:m') : '/'}}</td>
-            <td><a href="{{route('paiement.active',$paie->id)}}">Valider</a></td>
-            {{-- <td><a href="{{route('matiere.create')}}">Ajouter à une classe</a></td> --}}
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-{{$paiements->links()}}
+    @php
+        $columns = [
+            ['key' => 'name', 'label' => 'Client', 'type' => 'identity', 'secondaryKey' => 'phone'],
+            ['key' => 'amount', 'label' => 'Montant', 'type' => 'currency', 'emphasis' => true],
+            ['key' => 'category', 'label' => 'Catégorie'],
+            ['key' => 'quantity', 'label' => 'Codes', 'type' => 'number'],
+            ['key' => 'status', 'label' => 'Statut', 'type' => 'status'],
+            ['key' => 'createdAt', 'label' => 'Demandé le'],
+        ];
+        $items = $paiements->map(function ($payment) {
+            $name = trim(($payment->user?->name ?? '').' '.($payment->user?->last_name ?? '')) ?: 'Utilisateur inconnu';
+            $status = $payment->paiement_date ? 'Validé' : 'En attente';
+            return [
+                'id' => $payment->id,
+                'name' => $name,
+                'phone' => $payment->numero_payeur ?: $payment->user?->phone,
+                'amount' => (float) $payment->montant,
+                'category' => $payment->categorie?->libelle,
+                'quantity' => (int) $payment->nombre_de_code,
+                'status' => $status,
+                'createdAt' => $payment->created_at?->format('d/m/Y H:i'),
+                'actionUrl' => route('paiement.active', $payment),
+                'actionLabel' => $payment->paiement_date ? 'Consulter' : 'Examiner le paiement',
+                'highlight' => ['label' => 'Montant demandé', 'value' => (float) $payment->montant, 'type' => 'currency', 'helper' => 'Paiement #'.$payment->id],
+                'details' => [
+                    ['title' => 'Paiement', 'fields' => [
+                        ['label' => 'Montant', 'value' => (float) $payment->montant, 'type' => 'currency'],
+                        ['label' => 'Statut', 'value' => $status, 'type' => 'status'],
+                        ['label' => 'Nombre de codes', 'value' => (int) $payment->nombre_de_code, 'type' => 'number'],
+                        ['label' => 'Catégorie', 'value' => $payment->categorie?->libelle],
+                        ['label' => 'Transaction', 'value' => $payment->transaction_id],
+                    ]],
+                    ['title' => 'Client', 'fields' => [
+                        ['label' => 'Nom complet', 'value' => $name],
+                        ['label' => 'Email', 'value' => $payment->user?->email, 'type' => 'email'],
+                        ['label' => 'Numéro débité', 'value' => $payment->numero_payeur, 'type' => 'phone'],
+                        ['label' => 'Numéro à notifier', 'value' => $payment->numero_client, 'type' => 'phone'],
+                    ]],
+                    ['title' => 'Chronologie', 'fields' => [
+                        ['label' => 'Demande créée', 'value' => $payment->created_at?->format('d/m/Y à H:i:s')],
+                        ['label' => 'Validation', 'value' => $payment->paiement_date ? \Carbon\Carbon::parse($payment->paiement_date)->format('d/m/Y à H:i:s') : 'Non validé'],
+                    ]],
+                ],
+            ];
+        })->values();
+    @endphp
+    <x-admin.data-table eyebrow="Monétisation" title="Paiements" description="Suivez les demandes, les validations et les bénéficiaires des achats." :columns="$columns" :items="$items" :paginator="$paiements" search-placeholder="Client, téléphone, transaction ou catégorie…" />
 @endsection

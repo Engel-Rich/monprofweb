@@ -1,10 +1,22 @@
+FROM node:20-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json vite.config.js ./
+RUN npm ci --no-audit --no-fund
+
+COPY resources ./resources
+COPY public ./public
+RUN npm run build
+
 FROM php:8.2-fpm-alpine
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
     COMPOSER_ALLOW_SUPERUSER=1 \
-    RUN_MIGRATIONS=false
+    RUN_MIGRATIONS=false \
+    SEED_ADMIN=false
 
 RUN apk add --no-cache \
     curl \
@@ -54,6 +66,7 @@ RUN composer install \
     --no-autoloader
 
 COPY . /var/www/html
+COPY --from=frontend /app/public/build /var/www/html/public/build
 RUN composer install \
     --no-dev \
     --no-interaction \

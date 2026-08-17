@@ -12,9 +12,9 @@ use App\Models\User;
 use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 class UserController extends Controller
 {
@@ -41,13 +41,13 @@ class UserController extends Controller
                 'password' => 'required|min:4',
             ]);
 
-            $credential = ["email" => $request->email, 'password' => $request->password];
+            $credential = ['email' => $request->email, 'password' => $request->password];
             $exist = Auth::attempt($credential);
-            if (!$exist) {
+            if (! $exist) {
                 return response()->json([
                     'status' => false,
                     'data' => null,
-                    "error" => 'email ou mot de passe incorrete'
+                    'error' => 'email ou mot de passe incorrete',
                 ], 400);
             }
 
@@ -59,6 +59,7 @@ class UserController extends Controller
 
             if ($isParent) {
                 $parent = \App\Models\Parents::where('user_id', $user->id)->limit(1)->get()[0];
+
                 return response()->json([
                     'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                     'status' => true,
@@ -75,12 +76,13 @@ class UserController extends Controller
                 //         ], 422);
                 //     }
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
-                $classe = Classe::where("id", '=', $eleve->classe_id)->limit(1)->get()[0];
+                $classe = Classe::where('id', '=', $eleve->classe_id)->limit(1)->get()[0];
                 if ($user->profile_image != null) {
                     $storeArboressence = "profile/users/$user->phone";
                     $fileService = new FileManager($storeArboressence);
                     $user->profile_image = $fileService->get($user->profile_image);
                 }
+
                 return response()->json([
                     'auth' => [
                         'type' => 'Bearer',
@@ -92,7 +94,7 @@ class UserController extends Controller
                     'data' => [
                         'user' => $user,
                         'student' => $eleve,
-                        "classe" => $classe,
+                        'classe' => $classe,
                     ],
                 ], 200);
             }
@@ -113,29 +115,29 @@ class UserController extends Controller
             $userapp = User::find($user->id);
             $userapp->fcm_token = $request->fcm_token;
             $userapp->save();
+
             return response()->json([
                 'status' => true,
-                'data' => 'success'
+                'data' => 'success',
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
-                'data' => $th->getMessage()
+                'data' => $th->getMessage(),
             ], 400);
         }
     }
+
     /**
      * Store a newly created resource in storage.
      */
-
-
     public function register(Request $request)
     {
         try {
             $request->validate([
                 'sexe' => 'required',
                 'etablissement' => 'required|max:100',
-                "classe_id" => 'integer|exists:classes,id',
+                'classe_id' => 'integer|exists:classes,id',
                 'rule_id' => 'integer|nullable',
                 'name' => 'required|max:50',
                 'last_name' => 'nullable|max:30',
@@ -149,7 +151,7 @@ class UserController extends Controller
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,
                 'email' => $request->email,
-                'password' =>  Hash::make($request->password),
+                'password' => Hash::make($request->password),
                 'user_phone_emei' => $request->header('phone-emei'),
                 'sexe' => $request->sexe,
             ];
@@ -157,9 +159,9 @@ class UserController extends Controller
             $eleve_data = [
                 'sexe' => $request['sexe'],
                 'etablissement' => $request['etablissement'],
-                "classe_id" => $request['classe_id']
+                'classe_id' => $request['classe_id'],
             ];
-            // $userData['password'] = Hash::make($request->password);            
+            // $userData['password'] = Hash::make($request->password);
             $unique_token = (string) Str::uuid();
             while (true) {
                 $user = User::where('unique_token', '=', $unique_token)->exists();
@@ -175,13 +177,14 @@ class UserController extends Controller
             $token = $user->createToken('MONPROF_WEB')->plainTextToken; //Auth::guard('api')->login($user);
             $eleve_data['user_id'] = $user->id;
             $student = Eleve::create($eleve_data);
+
             return response()->json([
                 'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                 'status' => true,
                 'data' => [
                     'user' => $user,
                     'student' => $student,
-                    "classe" => Classe::where('id', '=', $student['classe_id'])->limit(1)->get()[0],
+                    'classe' => Classe::where('id', '=', $student['classe_id'])->limit(1)->get()[0],
                 ],
             ], 200);
         } catch (\Throwable $th) {
@@ -194,7 +197,6 @@ class UserController extends Controller
         }
     }
 
-
     public function refresh(Request $request)
     {
         try {
@@ -202,7 +204,7 @@ class UserController extends Controller
 
             $user = User::where('refresh_token', $request->refresh_token)->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'error' => 'Invalid refresh token',
@@ -213,6 +215,7 @@ class UserController extends Controller
             // Optionnel : Regénérer le refresh token
             $refreshToken = Str::random(64);
             $user->update(['refresh_token' => $refreshToken]);
+
             return response()->json([
                 'status' => true,
                 'data' => [
@@ -248,6 +251,7 @@ class UserController extends Controller
             $user->currentAccessToken()->delete();
             $user->refresh_token = null;
             $user->save();
+
             return response()->json([
                 'status' => true,
                 'data' => 'success',
@@ -263,7 +267,6 @@ class UserController extends Controller
     /**
      * Reset password with OTP
      */
-
     public function resetPassword(Request $request)
     {
         try {
@@ -284,7 +287,7 @@ class UserController extends Controller
                 ->where('otp', $request->otp)
                 ->where('verification_id', $request->verification_id)
                 ->where('expired_at', '>', now())->first();
-            if (!$otp) {
+            if (! $otp) {
                 return response()->json([
                     'status' => false,
                     'data' => null,
@@ -301,6 +304,7 @@ class UserController extends Controller
                 $user->save();
             }
             $otp->update(['is_used' => true]);
+
             return response()->json([
                 'status' => true,
                 'data' => $user,
@@ -320,7 +324,6 @@ class UserController extends Controller
             ]);
         }
     }
-
 
     public function registerParent(Request $request)
     {
@@ -341,7 +344,7 @@ class UserController extends Controller
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,
                 'email' => $request->email,
-                'password' =>  Hash::make($request->password),
+                'password' => Hash::make($request->password),
                 'user_phone_emei' => $request->header('phone-emei'),
             ];
 
@@ -349,7 +352,7 @@ class UserController extends Controller
                 'sexe' => $request['sexe'],
                 'profession' => $request['profession'],
             ];
-            // $userData['password'] = Hash::make($request->password);            
+            // $userData['password'] = Hash::make($request->password);
             $unique_token = (string) Str::uuid();
             while (true) {
                 $user = User::where('unique_token', '=', $unique_token)->exists();
@@ -362,10 +365,11 @@ class UserController extends Controller
             }
             $user = User::create($userData);
 
-            $token =  $user->createToken('MONPROF_WEB')->plainTextToken;
+            $token = $user->createToken('MONPROF_WEB')->plainTextToken;
             $refreshToken = $this->createRefreshTokem($user);
             $parent_datas['user_id'] = $user->id;
             $student = \App\Models\Parents::create($parent_datas);
+
             return response()->json([
                 'auth' => ['type' => 'Bearer', 'token' => $token, 'refresh_token' => $refreshToken],
                 'status' => true,
@@ -377,26 +381,35 @@ class UserController extends Controller
                 'status' => false,
                 'error' => $th->getMessage(),
                 'data' => null,
-            ], 400,);
+            ], 400, );
         }
     }
-
-
 
     public function updateProfile(Request $request)
     {
         try {
-            $request->validate(['image' => 'file|required|mimetypes:image/*',]);
+            $request->validate(['image' => 'file|required|mimetypes:image/*']);
             $user = Auth::user();
             $image = $request->file('image');
             // $extention = $image->extension();
-            $storeArboressence = "profile/users/" . $user->phone;
+            $storeArboressence = 'profile/users/'.$user->phone;
             $fileService = new FileManager($storeArboressence);
+            $previousImage = $user->profile_image;
             $imageUrl = $fileService->store($image);
-            // \Illuminate\Support\Facades\Log::info($imageUrl);
+
+            if (! $imageUrl) {
+                throw new RuntimeException('Le stockage de la photo de profil a échoué.');
+            }
+
             $user->profile_image = $imageUrl;
-            User::find($user->id)->save();
+            $user->save();
+
+            if ($previousImage && $previousImage !== $imageUrl) {
+                $fileService->delete($previousImage);
+            }
+
             $user->profile_image = $fileService->get($imageUrl);
+
             return response()->json([
                 'status' => true,
                 'error' => null,
@@ -415,6 +428,7 @@ class UserController extends Controller
     {
         $refreshToken = Str::random(64);
         $user->update(['refresh_token' => $refreshToken]);
+
         return $refreshToken;
     }
 

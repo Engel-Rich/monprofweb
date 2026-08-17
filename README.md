@@ -64,3 +64,46 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Stockage des médias avec MinIO
+
+Les photos de profil, images de questions/réponses et vidéos passent toutes par
+`FileManager`. Le service actif est choisi au démarrage par `FileServiceProvider`.
+
+Variables à déclarer dans Dokploy pour utiliser MinIO :
+
+```dotenv
+FILE_STORAGE_DRIVER=minio
+
+# URL privée entre le conteneur MonProf et le service MinIO.
+MINIO_ENDPOINT=http://minio:9000
+MINIO_ACCESS_KEY=monprof
+MINIO_SECRET_KEY=change-me
+MINIO_BUCKET=monprof
+MINIO_REGION=us-east-1
+MINIO_USE_PATH_STYLE_ENDPOINT=true
+
+# Domaine HTTPS accessible depuis les navigateurs et applications mobiles.
+# Ne pas ajouter le nom du bucket à cette URL.
+MINIO_PUBLIC_URL=https://files.example.com
+```
+
+Le compte MinIO doit pouvoir créer le bucket et appliquer une bucket policy.
+L’application applique automatiquement une policy `s3:GetObject` publique ; les
+uploads et suppressions restent authentifiés. Pour revenir temporairement à
+Firebase, utiliser `FILE_STORAGE_DRIVER=firebase` et conserver les variables
+Firebase existantes.
+
+Pour migrer les fichiers déjà présents, conserver d’abord
+`FILE_STORAGE_DRIVER=firebase`, commencer par une simulation, puis lancer la
+copie vers MinIO :
+
+```bash
+php artisan files:migrate-to-minio --dry-run
+php artisan files:migrate-to-minio
+```
+
+La commande conserve les mêmes noms et arborescences : elle ne modifie pas la base
+de données et peut être relancée sans créer de doublons. Une fois la copie validée,
+passer à `FILE_STORAGE_DRIVER=minio` puis redéployer l’application. Les fichiers
+Firebase restent disponibles comme sauvegarde pendant cette transition.

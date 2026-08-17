@@ -25,12 +25,12 @@ class CampayPaymentStrategy implements PaymentStrategy
 
     protected function getAuthHeader(): ?array
     {
-        Log::info(
-            [
-                "userName"=> $this->username,
-                "Password"=> $this->password,
-            ]
-        );
+        // Log::info(
+        //     [
+        //         "userName" => $this->username,
+        //         "Password" => $this->password,
+        //     ]
+        // );
         $response = Http::post("{$this->baseUrl}/token/", [
             'username' => $this->username,
             'password' => $this->password,
@@ -55,15 +55,15 @@ class CampayPaymentStrategy implements PaymentStrategy
         $endpoint  = $isDeposit ? 'collect' : 'withdraw';
 
         $phone = $dto->phoneNumber;
-        if(!str_starts_with($phone, "237")){
-            $phone = "237$phone"; 
+        if (!str_starts_with($phone, "237")) {
+            $phone = "237$phone";
         }
         $body = [
             'amount'             => (string) $dto->amount,
             ($isDeposit ? 'from' : 'to') => $phone, //$dto->phoneNumber,
             'description'        => $dto->description ?? ($isDeposit ? 'Subscription Payment for Monprof' : 'Withdrawal From monprof'),
             'external_reference' => $dto->reference,
-            "currency"=>"XAF",
+            "currency" => "XAF",
         ];
 
         Log::info("CamPay payment body [{$endpoint}]", $body);
@@ -90,7 +90,7 @@ class CampayPaymentStrategy implements PaymentStrategy
                 'status'        => 'PENDING',
                 'reference_id'  => $dto->reference,
                 'order_id'      => $dto->reference,
-                'transaction_id'=> $response->json('reference'),
+                'transaction_id' => $response->json('reference'),
                 'phone_number'  => $dto->phoneNumber,
                 'operator'      => $response->json('operator'),
                 'amount_total'  => $response->json('amount_total'),
@@ -101,7 +101,7 @@ class CampayPaymentStrategy implements PaymentStrategy
             'status'        => 'FAILED',
             'reference_id'  => $dto->reference,
             'order_id'      => $dto->reference,
-            'transaction_id'=> $response->json('reference'),
+            'transaction_id' => $response->json('reference'),
             'phone_number'  => $dto->phoneNumber,
             'operator'      => $response->json('operator'),
             'amount_total'  => $response->json('amount_total'),
@@ -126,7 +126,7 @@ class CampayPaymentStrategy implements PaymentStrategy
             'status'        => $response->json('status'),
             'reference_id'  => $reference,
             'order_id'      => $response->json('reference'),
-            'transaction_id'=> $response->json('reference'),
+            'transaction_id' => $response->json('reference'),
             'phone_number'  => $response->json('phone_number'),
             'operator'      => $response->json('operator'),
             'amount_total'  => $response->json('amount'),
@@ -146,7 +146,7 @@ class CampayPaymentStrategy implements PaymentStrategy
                 default                                      => TransactionStatus::FAILED,
             };
 
-            Log::info(["Transactions Response"=>  $paymentResponse]);
+            // Log::info(["Transactions Response" =>  $paymentResponse,]);
 
             return new PaymentResult(
                 status: $transactionStatus,

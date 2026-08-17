@@ -46,6 +46,7 @@ RUN apk add --no-cache \
     opcache \
     pcntl \
     pdo_mysql \
+    simplexml \
     zip \
     && apk del .build-deps \
     && rm -rf /tmp/* /var/cache/apk/*

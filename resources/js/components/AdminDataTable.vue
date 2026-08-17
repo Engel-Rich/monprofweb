@@ -23,10 +23,13 @@ const props = defineProps({
     createLabel: { type: String, default: 'Ajouter' },
     pagination: { type: Object, default: () => ({}) },
     searchPlaceholder: { type: String, default: 'Rechercher…' },
+    filters: { type: Array, default: () => [] },
 });
 
 const query = ref('');
 const statusFilter = ref('all');
+const extraFilters = ref(Object.fromEntries(props.filters.map((filter) => [filter.key, 'all'])));
+const showFilters = ref(false);
 const selected = ref(null);
 const drawer = ref(null);
 
@@ -40,10 +43,15 @@ const filteredItems = computed(() => {
 
     return props.items.filter((item) => {
         const matchesStatus = statusFilter.value === 'all' || item.status === statusFilter.value;
+        const matchesExtraFilters = props.filters.every((filter) => {
+            const selectedValue = extraFilters.value[filter.key] ?? 'all';
+            return selectedValue === 'all' || String(resolve(item, filter.key) ?? '') === String(selectedValue);
+        });
         const matchesSearch = !needle || searchableKeys.value.some((key) => String(resolve(item, key) ?? '').toLocaleLowerCase('fr').includes(needle));
-        return matchesStatus && matchesSearch;
+        return matchesStatus && matchesExtraFilters && matchesSearch;
     });
 });
+const activeExtraFilterCount = computed(() => Object.values(extraFilters.value).filter((value) => value !== 'all').length);
 
 function resolve(item, key) {
     return key.split('.').reduce((value, part) => value?.[part], item);
@@ -115,7 +123,17 @@ onBeforeUnmount(() => {
                     <button type="button" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">Tous</button>
                     <button v-for="status in statuses" :key="status" type="button" :class="{ active: statusFilter === status }" @click="statusFilter = status">{{ status }}</button>
                 </div>
-                <button class="admin-button secondary compact" type="button"><SlidersHorizontal :size="16" /> Filtres</button>
+                <button v-if="filters.length" class="admin-button secondary compact" :class="{ active: activeExtraFilterCount }" type="button" @click="showFilters = !showFilters"><SlidersHorizontal :size="16" /> Filtres <span v-if="activeExtraFilterCount">{{ activeExtraFilterCount }}</span></button>
+            </div>
+            <div v-if="filters.length && showFilters" class="table-advanced-filters">
+                <label v-for="filter in filters" :key="filter.key">
+                    <span>{{ filter.label }}</span>
+                    <select v-model="extraFilters[filter.key]">
+                        <option value="all">{{ filter.allLabel ?? 'Tous' }}</option>
+                        <option v-for="option in filter.options" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
+                    </select>
+                </label>
+                <button v-if="activeExtraFilterCount" type="button" @click="Object.keys(extraFilters).forEach((key) => extraFilters[key] = 'all')">Réinitialiser</button>
             </div>
 
             <div class="admin-table-wrap">
@@ -127,6 +145,11 @@ onBeforeUnmount(() => {
                                 <span v-if="column.type === 'status'" class="status-pill" :class="badgeClass(resolve(item, column.key))">{{ format(resolve(item, column.key), column.type) }}</span>
                                 <div v-else-if="column.type === 'identity'" class="table-identity">
                                     <span class="admin-user-avatar light">{{ String(resolve(item, column.key) ?? '?').slice(0, 2).toUpperCase() }}</span>
+                                    <div><strong>{{ resolve(item, column.key) }}</strong><small v-if="column.secondaryKey">{{ resolve(item, column.secondaryKey) }}</small></div>
+                                </div>
+                                <div v-else-if="column.type === 'imageIdentity'" class="table-identity">
+                                    <img v-if="resolve(item, column.imageKey ?? 'imageUrl')" class="table-identity-image" :src="resolve(item, column.imageKey ?? 'imageUrl')" alt="">
+                                    <span v-else class="admin-user-avatar light">{{ String(resolve(item, column.key) ?? '?').slice(0, 2).toUpperCase() }}</span>
                                     <div><strong>{{ resolve(item, column.key) }}</strong><small v-if="column.secondaryKey">{{ resolve(item, column.secondaryKey) }}</small></div>
                                 </div>
                                 <strong v-else-if="column.emphasis">{{ format(resolve(item, column.key), column.type) }}</strong>
@@ -177,6 +200,10 @@ onBeforeUnmount(() => {
                                             <span v-if="field.type === 'status'" class="status-pill" :class="badgeClass(field.value)">{{ field.value }}</span>
                                             <a v-else-if="field.type === 'email'" :href="`mailto:${field.value}`">{{ field.value }}</a>
                                             <a v-else-if="field.type === 'phone'" :href="`tel:${field.value}`">{{ field.value }}</a>
+                                            <div v-else-if="field.type === 'tags'" class="drawer-tags">
+                                                <span v-for="tag in (field.value ?? [])" :key="tag">{{ tag }}</span>
+                                                <em v-if="!(field.value ?? []).length">Aucun élément associé</em>
+                                            </div>
                                             <span v-else>{{ format(field.value, field.type) }}</span>
                                         </dd>
                                     </template>

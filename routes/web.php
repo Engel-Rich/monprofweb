@@ -2,15 +2,17 @@
 
 use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\SuggestionController;
-use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminStatisticsController;
+use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CodesController;
 use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
 use App\Http\Controllers\Web\MatieresController;
 use App\Http\Controllers\Web\PaiementsController;
+use App\Http\Controllers\Web\PaymentProvidersController;
+use App\Http\Controllers\Web\PaymentServicesController;
 use App\Http\Controllers\Web\ProfesseursController;
 use App\Http\Controllers\Web\QuestionsController;
 use App\Http\Controllers\Web\ReponsesController;
@@ -27,8 +29,6 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-
 
 /// Secure routes
 Route::middleware('auth')->group(function () {
@@ -52,6 +52,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/paiement', [PaiementsController::class, 'index'])->name('paiement.index');
     Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');
     Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
+    Route::resource('admin/payment-providers', PaymentProvidersController::class, ['as' => 'admin'])->except(['show']);
+    Route::resource('admin/payment-services', PaymentServicesController::class, ['as' => 'admin'])->except(['show']);
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('auth.logout');
     Route::controller(AppMessageController::class)->group(function () {
         Route::get('/messages', 'index')->name('messages.index');
@@ -71,7 +73,7 @@ Route::middleware('auth')->group(function () {
     // });
 });
 
-/// Lgin and Register routes 
+/// Lgin and Register routes
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [Usercontroller::class, 'login'])->name('auth.login');

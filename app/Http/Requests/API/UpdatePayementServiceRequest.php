@@ -11,7 +11,7 @@ class UpdatePayementServiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,9 +21,11 @@ class UpdatePayementServiceRequest extends FormRequest
      */
     public function rules(): array
     {
-       return [
+        return [
+            'payment_provider_id' => 'sometimes|nullable|integer|exists:payment_providers,id',
             'title' => 'sometimes|required|string',
             'img' => 'nullable|string',
+            'image' => 'nullable|image|max:5120',
             'description' => 'nullable|string',
             'status' => 'sometimes|required|integer',
             'subtitle' => 'sometimes|required|string',
@@ -31,6 +33,6 @@ class UpdatePayementServiceRequest extends FormRequest
             'reg_exp' => 'nullable|string',
             'subscription_id' => 'nullable|integer',
             'sens' => 'nullable|in:IN,OUT',
-        ];  //        
+        ];  //
     }
 }

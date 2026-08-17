@@ -10,7 +10,6 @@ use Exception;
 // use App\Models\Classe;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ClasseController extends Controller
@@ -20,8 +19,9 @@ class ClasseController extends Controller
      */
     public function index(): View
     {
-        $classes = Classe::paginate(20);
-        return view('screen.classe.index_classe', ['classes' => $classes],);
+        $classes = Classe::with('matieres')->withCount('matieres')->paginate(20);
+
+        return view('screen.classe.index_classe', ['classes' => $classes]);
     }
 
     /**
@@ -29,20 +29,20 @@ class ClasseController extends Controller
      */
     public function create()
     {
-        return view('screen.classe.create', ['classe' => new Classe(),]);
+        return view('screen.classe.create', ['classe' => new Classe]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(ClasseValidateRequest $request)
-
     {
         // dd($request->all());
         try {
             Classe::create($request->all());
+
             // route('classe.index')
-            return   redirect()->route('classe.index');
+            return redirect()->route('classe.index');
         } catch (Exception $th) {
             return to_route('screen.classe.create')->withErrors([
                 'error' => $th->getMessage(),
@@ -64,8 +64,9 @@ class ClasseController extends Controller
      */
     public function edit(string $id)
     {
-        $classe  = Classe::with('matieres')->find($id);
+        $classe = Classe::with('matieres')->find($id);
         $matieres = Matieres::all();
+
         // dd($classe);
         return view('screen.classe.update_classe', ['classe' => $classe, 'matieres' => $matieres]);
     }
@@ -78,22 +79,22 @@ class ClasseController extends Controller
 
         try {
             $validateTable = [
-                'libelle' => ["string", "required"],
-                'short_name' => "string|required",
-                'description' => "nullable",
+                'libelle' => ['string', 'required'],
+                'short_name' => 'string|required',
+                'description' => 'nullable',
             ];
             $request->validate($validateTable);
             $classe = Classe::find($id);
             $classe->fill($request->all());
             $classe->save();
-            return   redirect()->route('classe.index');
+
+            return redirect()->route('classe.index');
         } catch (\Throwable $th) {
             return to_route('screen.classe.create')->withErrors([
                 'error' => $th->getMessage(),
             ])->onlyInput('libelle', 'short_name', 'description');
         }
     }
-
 
     /**
      * Add Matiere to classe
@@ -128,6 +129,7 @@ class ClasseController extends Controller
     {
         $classe = Classe::find($id);
         $classe->delete();
+
         return redirect()->route('classe.index');
     }
 }

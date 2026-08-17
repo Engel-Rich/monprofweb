@@ -6,6 +6,8 @@
         ['label' => 'Tableau de bord', 'icon' => 'dashboard', 'section' => 'principal', 'url' => route('index'), 'active' => request()->routeIs('index')],
         ['label' => 'Statistiques', 'icon' => 'statistics', 'section' => 'principal', 'url' => route('statistiques'), 'active' => request()->routeIs('statistiques')],
         ['label' => 'Paiements', 'icon' => 'payments', 'section' => 'principal', 'url' => route('paiement.index'), 'active' => request()->routeIs('paiement.*'), 'admin' => true],
+        ['label' => 'Services de paiement', 'icon' => 'payments', 'section' => 'principal', 'url' => route('admin.payment-services.index'), 'active' => request()->routeIs('admin.payment-services.*'), 'admin' => true],
+        ['label' => 'Fournisseurs', 'icon' => 'payments', 'section' => 'principal', 'url' => route('admin.payment-providers.index'), 'active' => request()->routeIs('admin.payment-providers.*'), 'admin' => true],
         ['label' => 'Codes', 'icon' => 'codes', 'section' => 'principal', 'url' => route('codes.index', 'all'), 'active' => request()->routeIs('codes.*'), 'admin' => true],
         ['label' => 'Classes', 'icon' => 'classes', 'section' => 'contenu', 'url' => route('classe.index'), 'active' => request()->routeIs('classe.*'), 'admin' => true],
         ['label' => 'Matières', 'icon' => 'subjects', 'section' => 'contenu', 'url' => route('matiere.index'), 'active' => request()->routeIs('matiere.*'), 'admin' => true],

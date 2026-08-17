@@ -19,11 +19,13 @@ class StorePayementServiceRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
+    public function rules(): array
     {
         return [
+            'payment_provider_id' => 'nullable|integer|exists:payment_providers,id',
             'title' => 'required|string',
             'img' => 'nullable|string',
+            'image' => 'nullable|image|max:5120',
             'description' => 'nullable|string',
             'status' => 'required|integer',
             'subtitle' => 'required|string',

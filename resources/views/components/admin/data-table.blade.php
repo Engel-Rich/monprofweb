@@ -8,6 +8,7 @@
     'createLabel' => 'Ajouter',
     'paginator' => null,
     'searchPlaceholder' => 'Rechercher…',
+    'filters' => [],
 ])
 
 @php
@@ -32,4 +33,5 @@
     create-label="{{ $createLabel }}"
     :pagination="{{ Js::from($pagination) }}"
     search-placeholder="{{ $searchPlaceholder }}"
+    :filters="{{ Js::from($filters) }}"
 ></admin-data-table>

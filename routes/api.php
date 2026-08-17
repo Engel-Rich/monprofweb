@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\api\CategorieController;
 use App\Http\Controllers\api\ClasseController;
 use App\Http\Controllers\api\CodeController;
@@ -11,7 +10,9 @@ use App\Http\Controllers\api\PaiementsController;
 use App\Http\Controllers\api\QuestionController;
 use App\Http\Controllers\api\TransactionController as ApiTransactionController;
 use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\PayementServicesController;
+use App\Http\Controllers\PaymentProviderController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -28,22 +29,22 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('emei-verify')->group(function () {
-    Route::post("auth/refresh-token", [UserController::class, 'refresh'])->name('api.user.refresh_token');
-    Route::post("eleve/register", [UserController::class, 'register'])->name('api.student.register');
-    Route::post("user/login", [UserController::class, 'login'])->name('api.student.register');
-    Route::post("parent/register", [UserController::class, 'registerParent'])->name('api.parent.register');
-    Route::post("user/logout", [UserController::class, 'logout'])->name('api.user.logout');
-    Route::post("user/update_profile", [UserController::class, 'updateProfile'])->name('api.user.update_profile');
+    Route::post('auth/refresh-token', [UserController::class, 'refresh'])->name('api.user.refresh_token');
+    Route::post('eleve/register', [UserController::class, 'register'])->name('api.student.register');
+    Route::post('user/login', [UserController::class, 'login'])->name('api.student.register');
+    Route::post('parent/register', [UserController::class, 'registerParent'])->name('api.parent.register');
+    Route::post('user/logout', [UserController::class, 'logout'])->name('api.user.logout');
+    Route::post('user/update_profile', [UserController::class, 'updateProfile'])->name('api.user.update_profile');
     Route::resource('classe', ClasseController::class);
 
     // Gestion des mots de passe
 
-    Route::post("user/reset_password", [UserController::class, 'resetPassword'])->name('api.user.reset_password');
-    Route::post("user/request_otp", [OTPController::class, 'store'])->name('api.otp.request');
-    Route::post("user/verify_otp", [OTPController::class, 'verifyOtp'])->name('api.otp.verify');
+    Route::post('user/reset_password', [UserController::class, 'resetPassword'])->name('api.user.reset_password');
+    Route::post('user/request_otp', [OTPController::class, 'store'])->name('api.otp.request');
+    Route::post('user/verify_otp', [OTPController::class, 'verifyOtp'])->name('api.otp.verify');
 
     Route::prefix('/code')->group(function () {
-        Route::put('/active', [CodeController::class, "activeCode"]);
+        Route::put('/active', [CodeController::class, 'activeCode']);
     });
     Route::resource('matiere', MatiereController::class)->only(['index']);
     Route::middleware('auth:sanctum')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
@@ -67,3 +68,4 @@ Route::middleware('emei-verify')->group(function () {
 Route::post('transaction/webhook', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');
 
 Route::apiResource('payment-services', PayementServicesController::class)->middleware('auth:sanctum');
+Route::apiResource('payment-providers', PaymentProviderController::class)->middleware('auth:sanctum');

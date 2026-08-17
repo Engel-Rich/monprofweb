@@ -68,7 +68,7 @@ class AppMessageController extends Controller
     }
     public function create()
     {
-        return view('screen.message.message_creation');
+        return view('screen.message.message_creation', ['message' => new AppMessage()]);
     }
 
     /**
@@ -140,14 +140,24 @@ class AppMessageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AppMessage $appMessage) {}
+    public function edit(AppMessage $appMessage)
+    {
+        return view('screen.message.message_creation', ['message' => $appMessage]);
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, AppMessage $appMessage)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'body' => 'required|string',
+        ]);
+
+        $appMessage->update($validated);
+
+        return redirect()->route('messages.index');
     }
 
     /**

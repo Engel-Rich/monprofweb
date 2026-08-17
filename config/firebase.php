@@ -2,17 +2,32 @@
 
 declare(strict_types=1);
 
-return [
+$credentials = env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS'));
+$encodedCredentials = env('FIREBASE_CREDENTIALS_BASE64');
 
+if (! $credentials && $encodedCredentials) {
+    $decodedCredentials = base64_decode($encodedCredentials, true);
+    $credentials = $decodedCredentials !== false ? $decodedCredentials : null;
+}
+
+// Dokploy peut fournir le JSON directement ou encodé en base64. Dans les deux
+// cas, le SDK reçoit le contenu des credentials et ne dépend d'aucun fichier.
+if ($credentials && ! str_starts_with(ltrim($credentials), '{')) {
+    $decodedCredentials = base64_decode($credentials, true);
+
+    if ($decodedCredentials !== false && str_starts_with(ltrim($decodedCredentials), '{')) {
+        $credentials = $decodedCredentials;
+    }
+}
+
+return [
 
     'default' => env('FIREBASE_PROJECT', 'app'),
 
 
     'projects' => [
         'app' => [
-            'credentials' => env('APP_ENV') === 'local' ?
-                base_path(env('FIREBASE_CREDENTIALS_LOCAL')) :
-                env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
+            'credentials' => $credentials,
 
             'auth' => [
                 'tenant_id' => env('FIREBASE_AUTH_TENANT_ID'),

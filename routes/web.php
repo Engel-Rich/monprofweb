@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', 'index')->name('messages.index');
         Route::post('/messages', 'store')->name('messages.store');
         Route::get('/messages/new', 'create')->name('messages.create');
+        Route::get('/messages/{appMessage}/edit', 'edit')->name('messages.edit');
+        Route::put('/messages/{appMessage}', 'update')->name('messages.update');
     })->middleware('auth');
     Route::get('/suggestion', [SuggestionController::class, 'index'])->name('index.suggestion');
     Route::get('/partenaires', [Usercontroller::class, 'partnerIndex'])->name('partner.index');

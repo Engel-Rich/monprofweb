@@ -18,15 +18,18 @@ mkdir -p \
 
 chown -R www-data:www-data bootstrap/cache storage
 
-# Permet de fournir le compte de service Firebase comme variable secrète
-# base64 dans Dokploy, sans l'inclure dans l'image Docker.
-if [ -n "${FIREBASE_CREDENTIALS_BASE64:-}" ]; then
-    mkdir -p /run/secrets
-    printf '%s' "$FIREBASE_CREDENTIALS_BASE64" | base64 -d > /run/secrets/firebase.json
-    chmod 600 /run/secrets/firebase.json
-    chown www-data:www-data /run/secrets/firebase.json
-    export FIREBASE_CREDENTIALS=/run/secrets/firebase.json
-    export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/firebase.json
+# Les credentials restent en mémoire dans les variables du conteneur : aucun
+# fichier JSON de compte de service n'est créé sur le serveur.
+if [ -n "${FIREBASE_CREDENTIALS_BASE64:-}" ] && [ -z "${FIREBASE_CREDENTIALS:-}" ]; then
+    if ! FIREBASE_CREDENTIALS="$(printf '%s' "$FIREBASE_CREDENTIALS_BASE64" | base64 -d)"; then
+        echo "ERREUR: FIREBASE_CREDENTIALS_BASE64 n'est pas une valeur base64 valide." >&2
+        exit 1
+    fi
+    export FIREBASE_CREDENTIALS
+fi
+
+if [ -n "${FIREBASE_CREDENTIALS:-}" ] && [ -z "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
+    export GOOGLE_APPLICATION_CREDENTIALS="$FIREBASE_CREDENTIALS"
 fi
 
 if [ ! -L public/storage ]; then

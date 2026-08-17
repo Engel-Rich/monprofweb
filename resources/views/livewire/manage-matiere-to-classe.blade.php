@@ -1,39 +1,22 @@
-<div>
-    @if ($matieresclasse == null || $matieresclasse->isEmpty())
-        <div class="container p-5">
-            <h5 class="display-8">Aucune matière disponible dans la classe</h5>
+<div class="subject-manager">
+    <div class="subject-manager-column">
+        <div class="subject-manager-head"><div><strong>Matières associées</strong><small>Actuellement disponibles dans la classe</small></div><span>{{ $matieresclasse?->count() ?? 0 }}</span></div>
+        <div class="subject-manager-list">
+            @forelse ($matieresclasse ?? [] as $matiere)
+                <div class="subject-manager-item"><span>{{ strtoupper(substr($matiere->libelle, 0, 2)) }}</span><strong>{{ $matiere->libelle }}</strong><button type="button" wire:click="deleteMatiereToClasse({{ $matiere->id }})" wire:loading.attr="disabled">Retirer</button></div>
+            @empty
+                <div class="subject-manager-empty">Aucune matière n’est encore associée.</div>
+            @endforelse
         </div>
-    @else
-        <div class="container p-3">
-            <table class="table" id="table_classe_matiere">
-                @foreach ($matieresclasse as $matiere)
-                    <tr class="mb-3">
-                        <td> {{ $matiere->libelle }} </td>
-                        <td>
-                            <button class="btn btn-outline-danger px-5 py-0"
-                                wire:click='deleteMatiereToClasse({{ $matiere->id }})'>
-                                retier
-                            </button>
-                        </td>
-                    </tr>
-                @endforeach
-            </table>
+    </div>
+    <div class="subject-manager-column available">
+        <div class="subject-manager-head"><div><strong>Matières disponibles</strong><small>Ajoutez une matière à cette classe</small></div><span>{{ $matieres?->count() ?? 0 }}</span></div>
+        <div class="subject-manager-list">
+            @forelse ($matieres ?? [] as $matiere)
+                <div class="subject-manager-item"><span>{{ strtoupper(substr($matiere->libelle, 0, 2)) }}</span><strong>{{ $matiere->libelle }}</strong><button type="button" wire:click="addMatiereToClasse('{{ $matiere->id }}')" wire:loading.attr="disabled">Ajouter</button></div>
+            @empty
+                <div class="subject-manager-empty">Toutes les matières sont déjà associées.</div>
+            @endforelse
         </div>
-    @endif
-    <hr class="divider py-1 bg-secondary" />
-    <div class="container p-3">
-        <table class="table" id="table_matiere">
-            @foreach ($matieres as $matiere)
-                <tr class="mb-3">
-                    <td> {{ $matiere->libelle }} </td>
-                    <td>
-                        <button class="btn btn-outline-primary px-5 py-0"
-                            wire:click="addMatiereToClasse('{{ $matiere->id }}')">
-                            Ajouter
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
-        </table>
     </div>
 </div>

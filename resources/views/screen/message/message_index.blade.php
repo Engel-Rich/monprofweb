@@ -14,6 +14,7 @@
             'name' => $message->title,
             'excerpt' => \Illuminate\Support\Str::limit($message->body, 90),
             'createdAt' => $message->created_at?->format('d/m/Y H:i'),
+            'editUrl' => route('messages.edit', $message),
             'details' => [['title' => 'Contenu du message', 'fields' => [
                 ['label' => 'Titre', 'value' => $message->title],
                 ['label' => 'Message', 'value' => $message->body],

@@ -9,12 +9,16 @@ COPY resources ./resources
 COPY public ./public
 RUN npm run build
 
+FROM composer:2.8.12 AS composer
+
 FROM php:8.2-fpm-alpine
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
     COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_PROCESS_TIMEOUT=900 \
+    COMPOSER_MAX_PARALLEL_HTTP=4 \
     RUN_MIGRATIONS=false \
     SEED_ADMIN=false
 
@@ -45,25 +49,32 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www/html
 
-# Installation vérifiée de Composer sans dépendre d'une deuxième image Docker.
-RUN set -eu; \
-    expected_checksum="$(curl -fsSL https://composer.github.io/installer.sig)"; \
-    curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php; \
-    actual_checksum="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"; \
-    test "$expected_checksum" = "$actual_checksum"; \
-    php /tmp/composer-setup.php --2 --quiet --install-dir=/usr/local/bin --filename=composer; \
-    rm /tmp/composer-setup.php
+# Version figée pour que les builds Dokploy restent reproductibles.
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 # Cette première installation permet de réutiliser le cache Docker tant que
 # composer.json et composer.lock ne changent pas.
 COPY composer.json composer.lock ./
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-progress \
-    --prefer-dist \
-    --no-scripts \
-    --no-autoloader
+RUN set -eu; \
+    apk add --no-cache --virtual .composer-deps git; \
+    export COMPOSER_MAX_PARALLEL_HTTP=2; \
+    attempt=1; \
+    until composer install \
+        --no-dev \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --no-scripts \
+        --no-autoloader; do \
+        if [ "$attempt" -ge 3 ]; then \
+            echo "ERREUR: installation Composer impossible après 3 tentatives." >&2; \
+            exit 1; \
+        fi; \
+        echo "Téléchargement Composer interrompu, nouvelle tentative dans 5 secondes ($attempt/3)..." >&2; \
+        attempt=$((attempt + 1)); \
+        sleep 5; \
+    done; \
+    composer clear-cache || true
 
 COPY . /var/www/html
 COPY --from=frontend /app/public/build /var/www/html/public/build
@@ -72,7 +83,8 @@ RUN composer install \
     --no-interaction \
     --no-progress \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    && apk del .composer-deps
 
 COPY custom-php.ini /usr/local/etc/php/conf.d/99-monprof.ini
 COPY nginx.conf /etc/nginx/nginx.conf

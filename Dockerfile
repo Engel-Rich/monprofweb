@@ -1,32 +1,9 @@
-FROM composer:2 AS vendor
-
-WORKDIR /app
-
-# Cette première installation permet de réutiliser le cache Docker tant que
-# composer.json et composer.lock ne changent pas.
-COPY composer.json composer.lock ./
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-progress \
-    --prefer-dist \
-    --no-scripts \
-    --no-autoloader
-
-COPY . .
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-progress \
-    --prefer-dist \
-    --optimize-autoloader
-
-
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.2-fpm-alpine
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
+    COMPOSER_ALLOW_SUPERUSER=1 \
     RUN_MIGRATIONS=false
 
 RUN apk add --no-cache \
@@ -56,7 +33,34 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www/html
 
-COPY --from=vendor --chown=www-data:www-data /app /var/www/html
+# Installation vérifiée de Composer sans dépendre d'une deuxième image Docker.
+RUN set -eu; \
+    expected_checksum="$(curl -fsSL https://composer.github.io/installer.sig)"; \
+    curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php; \
+    actual_checksum="$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")"; \
+    test "$expected_checksum" = "$actual_checksum"; \
+    php /tmp/composer-setup.php --2 --quiet --install-dir=/usr/local/bin --filename=composer; \
+    rm /tmp/composer-setup.php
+
+# Cette première installation permet de réutiliser le cache Docker tant que
+# composer.json et composer.lock ne changent pas.
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --no-scripts \
+    --no-autoloader
+
+COPY . /var/www/html
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --optimize-autoloader
+
 COPY custom-php.ini /usr/local/etc/php/conf.d/99-monprof.ini
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf

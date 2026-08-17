@@ -4,6 +4,7 @@ use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\AdminDashboardController;
+use App\Http\Controllers\Web\AdminStatisticsController;
 use App\Http\Controllers\Web\ClasseController;
 use App\Http\Controllers\Web\CodesController;
 use App\Http\Controllers\Web\CoursController;
@@ -61,7 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/partenaires', [Usercontroller::class, 'partnerIndex'])->name('partner.index');
     Route::get('/partenaires/add', [Usercontroller::class, 'add_partner'])->name('partner.add');
     Route::post('/partenaires/add', [Usercontroller::class, 'storePartner'])->name('partner.store');
-    Route::get('/statistiques', [CategoriController::class, 'statistiques'])->name('statistiques');
+    Route::get('/statistiques', AdminStatisticsController::class)->name('statistiques');
 
     // Route::get('/test-firebase', function () {
     //     dd(app('firebase.storage'));

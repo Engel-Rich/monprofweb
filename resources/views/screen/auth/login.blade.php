@@ -62,7 +62,7 @@
     .register-photo .image-holder {
         display: table-cell;
         width: auto;
-        background: url("https://i.pinimg.com/564x/5b/ea/78/5bea78b35d3f48cfaa4ea2212e15a4e8.jpg");
+        background-image: url("{{ asset('images/mp2.png') }}");
         background-size: contain;
         background-repeat: no-repeat;
         background-color: #ffffff;

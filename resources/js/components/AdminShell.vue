@@ -102,9 +102,9 @@ onBeforeUnmount(() => {
 
         <aside class="admin-sidebar" :class="{ 'is-open': sidebarOpen }">
             <div class="admin-brand">
-                <div class="admin-brand-mark">M</div>
-                <div>
-                    <strong>MONPROF</strong>
+                <img class="admin-brand-mark" :src="'/images/logo.png'" alt="" width="42" height="42">
+                <div class="admin-brand-identity">
+                    <img class="admin-brand-wordmark" :src="'/images/mp2.png'" alt="MonProf" width="92" height="32">
                     <span>Console administrateur</span>
                 </div>
                 <button class="admin-icon-button admin-sidebar-close" type="button" aria-label="Fermer le menu" @click="sidebarOpen = false">

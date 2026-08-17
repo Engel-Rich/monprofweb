@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:20-alpine AS frontend
 
 WORKDIR /app
@@ -17,6 +19,7 @@ ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
     COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache \
     COMPOSER_PROCESS_TIMEOUT=900 \
     COMPOSER_MAX_PARALLEL_HTTP=4 \
     RUN_MIGRATIONS=false \
@@ -55,15 +58,17 @@ COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 # Cette première installation permet de réutiliser le cache Docker tant que
 # composer.json et composer.lock ne changent pas.
 COPY composer.json composer.lock ./
-RUN set -eu; \
+RUN --mount=type=cache,target=/tmp/composer-cache \
+    set -eu; \
     apk add --no-cache --virtual .composer-deps git; \
+    git config --global http.version HTTP/1.1; \
     export COMPOSER_MAX_PARALLEL_HTTP=2; \
     attempt=1; \
     until composer install \
         --no-dev \
         --no-interaction \
         --no-progress \
-        --prefer-dist \
+        --prefer-source \
         --no-scripts \
         --no-autoloader; do \
         if [ "$attempt" -ge 3 ]; then \
@@ -73,8 +78,7 @@ RUN set -eu; \
         echo "Téléchargement Composer interrompu, nouvelle tentative dans 5 secondes ($attempt/3)..." >&2; \
         attempt=$((attempt + 1)); \
         sleep 5; \
-    done; \
-    composer clear-cache || true
+    done
 
 COPY . /var/www/html
 COPY --from=frontend /app/public/build /var/www/html/public/build

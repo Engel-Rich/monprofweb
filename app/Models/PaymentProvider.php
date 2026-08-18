@@ -28,6 +28,11 @@ class PaymentProvider extends Model
         return $this->hasMany(PayementServices::class, 'payment_provider_id');
     }
 
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'payment_provider_id');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

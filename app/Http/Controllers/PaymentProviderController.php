@@ -121,6 +121,12 @@ class PaymentProviderController extends Controller
             ]);
         }
 
+        if ($payment_provider->transactions()->whereIn('status', ['PENDING', 'PROCESSING'])->exists()) {
+            throw ValidationException::withMessages([
+                'provider' => 'Ce fournisseur possède encore des transactions en attente et ne peut pas être supprimé.',
+            ]);
+        }
+
         $image = $payment_provider->image;
         $payment_provider->delete();
 

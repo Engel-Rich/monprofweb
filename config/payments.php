@@ -10,4 +10,10 @@ return [
         'CAMPAY' => CampayPaymentStrategy::class,
         'MUNDIPAY' => MundiPayService::class,
     ],
+
+    'polling' => [
+        'duration' => (int) env('PAYMENT_POLLING_DURATION', 55),
+        'interval' => (int) env('PAYMENT_POLLING_INTERVAL', 5),
+        'chunk' => (int) env('PAYMENT_POLLING_CHUNK', 100),
+    ],
 ];

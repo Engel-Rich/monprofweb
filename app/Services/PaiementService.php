@@ -1,117 +1,164 @@
 <?php
+
 namespace App\Services;
 
-use App\Services\SendMessageService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use App\Jobs\SendMailJob;
 use App\Models\Codes;
 use App\Models\Paiements;
 use App\Models\User;
-use App\Services\PushNotifictaionService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
+use RuntimeException;
 
-class PaiementService{
-
-public  function validePayment(array $request)
+class PaiementService
+{
+    /**
+     * Finalise un paiement une seule fois, même si le webhook et le polling
+     * reçoivent le succès simultanément.
+     */
+    public function validePayment(array $request): bool
     {
-        Log::info("Starts validate payment");
-        $id = $request['paiement'];
-        $paie = Paiements::find($request['paiement']);
-        $user = User::find($paie->user_id);
-        $qte = $paie->nombre_de_code;
-        $paie->paiement_date = Carbon::now();
-        $messageService = new SendMessageService($paie, $user);
-        $token = $user->fcm_token;
-        // dd($user->fcm_token);
-        if ($qte == 1) {
-            $code = $this->saveOneCode($id);            
-            $paie->save();
-            $messageService->sendSMS($code);
-            if ($token != null) {
-                $notifOneCode = new PushNotifictaionService("Votre paiement a été validé avec succès et votre code a été activé\n Vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
-                $notifOneCode->sendNotificationToToken($token);
+        $id = (int) ($request['paiement'] ?? 0);
+
+        if ($id <= 0) {
+            throw new InvalidArgumentException('Identifiant de paiement manquant.');
+        }
+
+        $lock = Cache::lock("paiement:finalize:{$id}", 60);
+
+        if (! $lock->get()) {
+            Log::info('Finalisation du paiement déjà en cours.', ['paiement_id' => $id]);
+
+            return false;
+        }
+
+        try {
+            $paiement = Paiements::findOrFail($id);
+
+            if ($paiement->paiement_date !== null) {
+                Log::info('Paiement déjà finalisé.', ['paiement_id' => $id]);
+
+                return false;
             }
-            Log::info("Code activated successfully");
-        } else {
-            $data = $this->saveManyCod($id, $qte);
-            $paie->save();
-            if (count($data) == 0) {
-                Log::alert("Email Hasn't been send because code file has not been created successfully");
-            } else {
-                SendMailJob::dispatch($messageService, $data, $token)->delay(now());
-                if ($token != null) {
-                    $notifManyCode = new PushNotifictaionService("Votre paiement de $qte a été validé avec succès et vos codes ont été activé\n Vous recevrez la liste des codes par Mail.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
-                    $notifManyCode->sendNotificationToToken($token, even_type: "PAYMENT");
+
+            $user = User::findOrFail($paiement->user_id);
+            $quantity = max(1, (int) $paiement->nombre_de_code);
+            $messageService = new SendMessageService($paiement, $user);
+
+            if ($quantity === 1) {
+                $code = $this->saveOneCode($id);
+
+                if (! $code) {
+                    throw new RuntimeException('La génération du code d’activation a échoué.');
                 }
-                Log::info("Email Has been send successfully user can now download file");
+
+                $this->markAsPaid($paiement);
+                $messageService->sendSMS($code);
+
+                if ($user->fcm_token) {
+                    $notification = new PushNotifictaionService(
+                        "Votre paiement a été validé et votre code activé.\nVous recevrez le code par SMS.\nMonProf vous remercie.",
+                        'Validation de compte MonProf',
+                    );
+                    $notification->sendNotificationToToken($user->fcm_token);
+                }
+
+                Log::info('Code activé avec succès.', ['paiement_id' => $id]);
+
+                return true;
             }
+
+            $codes = $this->saveManyCod($id, $quantity);
+
+            if (count($codes) !== $quantity) {
+                throw new RuntimeException('La génération de la liste des codes a échoué.');
+            }
+
+            $this->markAsPaid($paiement);
+            SendMailJob::dispatch($messageService, $codes, $user->fcm_token)->delay(now());
+
+            if ($user->fcm_token) {
+                $notification = new PushNotifictaionService(
+                    "Votre paiement de {$quantity} codes a été validé.\nVous recevrez la liste des codes par e-mail.\nMonProf vous remercie.",
+                    'Validation de compte MonProf',
+                );
+                $notification->sendNotificationToToken($user->fcm_token, even_type: 'PAYMENT');
+            }
+
+            Log::info('Liste des codes générée avec succès.', [
+                'paiement_id' => $id,
+                'quantity' => $quantity,
+            ]);
+
+            return true;
+        } finally {
+            $lock->release();
         }
     }
 
-
-
-public function genererCodeActivation($id_paiement_attente): string
+    public function genererCodeActivation(int $paiementId): string
     {
-        $formatDate = 'd/m/Y';
-        $formatHeure = 'H:i:s';
-        $dateActuelle = date($formatDate);
-        $heureActuelle = date($formatHeure);
+        $seed = now()->format('mdY').$paiementId;
+        $code = '';
 
-        $dateActuelleDetail = explode('/', $dateActuelle);
-        $heureActuelleDetail = explode(':', $heureActuelle);
-        $code = $dateActuelleDetail[1] . $dateActuelleDetail[0] . $dateActuelleDetail[2] . "" . $id_paiement_attente;
-
-        $finalCode = "";
-        for ($i = 0; $i < 10; $i++) {
-            $index = rand(0, strlen($code) - 1);
-            $finalCode .= $code[$index];
+        for ($index = 0; $index < 10; $index++) {
+            $code .= $seed[random_int(0, strlen($seed) - 1)];
         }
-        return "C" . $finalCode;
+
+        return 'C'.$code;
     }
 
-
-public function saveOneCode(int $paiement_id): string|null
+    public function saveOneCode(int $paiementId): ?string
     {
         try {
-            $id = $paiement_id;
-            $code = $this->genererCodeActivation($id);
-            // dd($code);
+            $code = $this->genererCodeActivation($paiementId);
+
             while (Codes::where('code', $code)->exists()) {
-                $code = $this->genererCodeActivation($id);
+                $code = $this->genererCodeActivation($paiementId);
             }
+
             Codes::create([
-                'paiements_id' => $id,
+                'paiements_id' => $paiementId,
                 'code' => $code,
             ]);
+
             return $code;
-        } catch (\Throwable $th) {
-            Codes::where('paiements_id', $paiement_id)->delete();
+        } catch (\Throwable $exception) {
+            Codes::where('paiements_id', $paiementId)->delete();
+            Log::error('Génération du code de paiement impossible.', [
+                'paiement_id' => $paiementId,
+                'exception' => $exception,
+            ]);
+
             return null;
         }
     }
 
- 
-public function saveManyCod(int $paiement_id, int $qte): array
+    public function saveManyCod(int $paiementId, int $quantity): array
     {
-        $count = 1;
-        $codeList = [];
-        do {
-            $code = $this->saveOneCode($paiement_id);
-            if ($code != null) {
-                // $codeList[$count] = $code;
-                array_push($codeList, $code);
-                $count++;
-            } else {
-                Codes::where('paiements_id', $paiement_id)->delete();
-                $error = 'erreur de serveur inconnue';
-                $codeList = [];
-                break;
-            }
-        } while ($count <= $qte);
+        $codes = [];
 
-        // dd($codeList);
-        return $codeList;
+        for ($index = 0; $index < $quantity; $index++) {
+            $code = $this->saveOneCode($paiementId);
+
+            if (! $code) {
+                Codes::where('paiements_id', $paiementId)->delete();
+
+                return [];
+            }
+
+            $codes[] = $code;
+        }
+
+        return $codes;
     }
 
-
+    private function markAsPaid(Paiements $paiement): void
+    {
+        $paiement->forceFill([
+            'paiement_date' => now(),
+            'status' => true,
+        ])->save();
+    }
 }

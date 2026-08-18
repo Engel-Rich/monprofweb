@@ -94,9 +94,11 @@ RUN composer install \
 COPY custom-php.ini /usr/local/etc/php/conf.d/99-monprof.ini
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/laravel-cron /etc/crontabs/www-data
 COPY docker-entrypoint.sh /usr/local/bin/monprof-entrypoint
 
 RUN chmod +x /usr/local/bin/monprof-entrypoint \
+    && chmod 0600 /etc/crontabs/www-data \
     && mkdir -p \
     /run/nginx \
     /var/log/supervisor \

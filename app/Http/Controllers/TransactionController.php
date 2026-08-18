@@ -9,6 +9,7 @@ use App\DTO\WebhookHandlingDTO;
 use App\Http\Requests\PaymentCallbackRequest;
 // use App\DTO\MundiPayRequestDTO;
 use App\Jobs\ProcessWebhook;
+use App\Models\PaymentProvider;
 use App\Models\Transaction;
 // use App\Models\Paiements;
 // use App\Models\User;
@@ -41,7 +42,11 @@ class TransactionController extends Controller
     {
 
         try {
-            $transaction = Transaction::create($request->toArray());
+            $provider = PaymentProvider::active()->firstOrFail();
+            $transaction = Transaction::create([
+                ...$request->toArray(),
+                'payment_provider_id' => $provider->id,
+            ]);
             $reference = Str::replaceFirst('MPP-', '', $transaction->reference);
             $createTransactionRequest = CreateTransactionDto::fromArray([
                 'userId' => $request->user_id,
@@ -53,7 +58,7 @@ class TransactionController extends Controller
                 'reference' => $reference, //$transaction->reference,
             ]);
             try {
-                $strategy = PaymentFactory::make();
+                $strategy = PaymentFactory::make($provider);
                 $response = $strategy->processPayment($createTransactionRequest);
 
                 if ($response->isFailed() || ! $response->transactionId) {

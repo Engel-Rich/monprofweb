@@ -4,13 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Transaction extends Model
 {
     use HasFactory;
 
     protected $table = 'transactions';
+
     protected $fillable = [
+        'payment_provider_id',
         'user_id',
         'amount',
         'phone_number',
@@ -22,6 +26,26 @@ class Transaction extends Model
         'transaction_id',
         'payment_token',
         'reference',
-        "raison_reject"
+        'raison_reject',
+        'metadatas',
     ];
+
+    protected $casts = [
+        'metadatas' => 'array',
+    ];
+
+    public function provider(): BelongsTo
+    {
+        return $this->belongsTo(PaymentProvider::class, 'payment_provider_id');
+    }
+
+    public function paymentService(): BelongsTo
+    {
+        return $this->belongsTo(PayementServices::class, 'service_id');
+    }
+
+    public function paiement(): HasOne
+    {
+        return $this->hasOne(Paiements::class, 'transaction_id');
+    }
 }

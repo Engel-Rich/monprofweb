@@ -12,7 +12,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $duration = max(1, (int) config('payments.polling.duration', 55));
+        $interval = max(1, (int) config('payments.polling.interval', 5));
+
+        $schedule
+            ->command("payments:verify-pending --duration={$duration} --interval={$interval}")
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->name('payments:verify-pending');
     }
 
     /**

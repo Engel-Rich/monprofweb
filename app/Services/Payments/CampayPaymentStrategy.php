@@ -20,9 +20,17 @@ class CampayPaymentStrategy implements PaymentStrategy
     {
         $isProd = app()->environment('production');
 
-        $this->baseUrl = config($isProd ? 'campay.prod_url' : 'campay.url');
-        $this->username = config($isProd ? 'campay.prod_username' : 'campay.username');
-        $this->password = config($isProd ? 'campay.prod_password' : 'campay.password');
+        $this->baseUrl = rtrim((string) config($isProd ? 'campay.prod_url' : 'campay.url'), '/');
+        $this->username = (string) config($isProd ? 'campay.prod_username' : 'campay.username');
+        $this->password = (string) config($isProd ? 'campay.prod_password' : 'campay.password');
+
+        if (blank($this->baseUrl) || blank($this->username) || blank($this->password)) {
+            throw new \RuntimeException(
+                $isProd
+                    ? 'Configuration Campay production incomplète (CAMPAY_PROD_URL, CAMPAY_PROD_USERNAME, CAMPAY_PROD_PASSWORD).'
+                    : 'Configuration Campay sandbox incomplète (CAMPAY_URL, CAMPAY_USERNAME, CAMPAY_PASSWORD).'
+            );
+        }
     }
 
     protected function getAuthHeader(): ?array

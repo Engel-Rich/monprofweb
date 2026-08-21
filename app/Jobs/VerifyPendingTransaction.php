@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\DTO\TransactionVerificationResult;
 use App\Enums\TransactionStatus;
 use App\Models\PayementServices;
 use App\Models\PaymentProvider;
@@ -9,14 +10,15 @@ use App\Models\Transaction;
 use App\Services\Payments\PaymentFactory;
 use App\Services\Payments\TransactionFinalizationService;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
-class VerifyPendingTransaction implements ShouldBeUnique, ShouldQueue
+class VerifyPendingTransaction implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -24,63 +26,118 @@ class VerifyPendingTransaction implements ShouldBeUnique, ShouldQueue
 
     public int $timeout = 30;
 
-    public int $uniqueFor = 45;
-
-    public function __construct(public readonly int $transactionId) {}
-
-    public function uniqueId(): string
-    {
-        return (string) $this->transactionId;
-    }
+    public function __construct(
+        public readonly int $transactionId,
+        public readonly bool $dryRun = false,
+    ) {}
 
     public function backoff(): array
     {
         return [5, 15, 30];
     }
 
-    public function handle(TransactionFinalizationService $finalizer): void
+    public function handle(TransactionFinalizationService $finalizer): TransactionVerificationResult
     {
-        $transaction = Transaction::query()
-            ->with(['provider', 'paymentService.provider'])
-            ->find($this->transactionId);
+        $lock = Cache::lock("transaction:verify:{$this->transactionId}", 45);
 
-        if (! $transaction || ! in_array($transaction->status, [
-            TransactionStatus::PENDING->value,
-            TransactionStatus::PROCESSING->value,
-        ], true)) {
-            return;
+        if (! $lock->get()) {
+            return new TransactionVerificationResult(
+                $this->transactionId,
+                'SKIPPED',
+                message: 'Une vérification de cette transaction est déjà en cours.',
+            );
         }
 
-        if (blank($transaction->transaction_id)) {
-            Log::warning('Transaction en attente sans identifiant fournisseur.', [
-                'transaction_id' => $transaction->id,
+        try {
+            $transaction = Transaction::query()
+                ->with(['provider', 'paymentService.provider'])
+                ->find($this->transactionId);
+
+            if (! $transaction) {
+                return new TransactionVerificationResult($this->transactionId, 'ERROR', message: 'Transaction introuvable.');
+            }
+
+            if (! in_array(strtoupper((string) $transaction->status), [
+                TransactionStatus::PENDING->value,
+                TransactionStatus::PROCESSING->value,
+            ], true)) {
+                return new TransactionVerificationResult(
+                    $transaction->id,
+                    'SKIPPED',
+                    strtoupper((string) $transaction->status),
+                    'La transaction n’est plus en attente.',
+                );
+            }
+
+            if (blank($transaction->transaction_id)) {
+                throw new \RuntimeException('Identifiant de transaction fournisseur manquant.');
+            }
+
+            $provider = $this->resolveProvider($transaction);
+
+            if (! $provider) {
+                throw new \RuntimeException('Aucun fournisseur ne permet de vérifier la transaction.');
+            }
+
+            if (! $transaction->payment_provider_id) {
+                $transaction->update(['payment_provider_id' => $provider->id]);
+            }
+
+            $strategy = PaymentFactory::make($provider);
+            $result = $strategy->verifyPayment((string) $transaction->transaction_id);
+
+            if (! $result->status || $result->status === TransactionStatus::ERROR) {
+                throw new \RuntimeException($result->error ?: 'Le fournisseur n’a retourné aucun statut exploitable.');
+            }
+
+            if ($this->dryRun) {
+                return new TransactionVerificationResult(
+                    $transaction->id,
+                    $result->status->value,
+                    $result->status->value,
+                    "Simulation via {$provider->code} : aucune donnée locale modifiée.",
+                );
+            }
+
+            $applied = $finalizer->applyProviderResult(
+                transaction: $transaction,
+                result: $result,
+                provider: $provider->code,
+            );
+            $localStatus = strtoupper((string) $transaction->fresh()->status);
+
+            if ($result->status === TransactionStatus::SUCCESS
+                && ! $applied
+                && $localStatus !== TransactionStatus::SUCCESS->value) {
+                return new TransactionVerificationResult(
+                    $transaction->id,
+                    'ERROR',
+                    $result->status->value,
+                    'Le provider confirme le succès, mais la finalisation locale du paiement ou des codes est encore incomplète.',
+                );
+            }
+
+            return new TransactionVerificationResult(
+                $transaction->id,
+                $localStatus,
+                $result->status->value,
+                "Vérification effectuée via {$provider->code}.",
+            );
+        } catch (Throwable $exception) {
+            Log::error('Échec de la vérification d’une transaction en attente.', [
+                'transaction_id' => $this->transactionId,
+                'error' => $exception->getMessage(),
+                'exception' => $exception,
             ]);
 
-            return;
+            return new TransactionVerificationResult(
+                $this->transactionId,
+                'ERROR',
+                message: $exception->getMessage(),
+            );
+        } finally {
+            $lock->release();
         }
-
-        $provider = $this->resolveProvider($transaction);
-
-        if (! $provider) {
-            Log::error('Aucun fournisseur ne permet de vérifier la transaction.', [
-                'transaction_id' => $transaction->id,
-            ]);
-
-            return;
-        }
-
-        if (! $transaction->payment_provider_id) {
-            $transaction->update(['payment_provider_id' => $provider->id]);
-        }
-
-        $strategy = PaymentFactory::make($provider);
-        $result = $strategy->verifyPayment($transaction->transaction_id);
-
-        $finalizer->applyProviderResult(
-            transaction: $transaction,
-            result: $result,
-            provider: $provider->code,
-        );
     }
 
     private function resolveProvider(Transaction $transaction): ?PaymentProvider

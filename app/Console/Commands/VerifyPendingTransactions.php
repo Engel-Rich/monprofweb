@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\DTO\TransactionVerificationResult;
 use App\Enums\TransactionStatus;
 use App\Jobs\VerifyPendingTransaction;
 use App\Models\Transaction;
+use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +18,8 @@ class VerifyPendingTransactions extends Command
                             {--duration= : Durée totale de la boucle en secondes}
                             {--interval= : Intervalle entre deux passages en secondes}
                             {--chunk= : Nombre de transactions chargées par lot}
+                            {--transaction= : ID local d’une transaction précise à vérifier}
+                            {--dry-run : Interroger le provider sans modifier les paiements ni les transactions}
                             {--once : Effectuer un seul passage sans attendre}';
 
     protected $description = 'Vérifie les transactions en attente auprès de leur fournisseur de paiement';
@@ -34,17 +38,17 @@ class VerifyPendingTransactions extends Command
             return self::SUCCESS;
         }
 
-        $deadline = microtime(true) + ($once ? 1 : $duration);
+        $deadline = $once ? null : microtime(true) + $duration;
         $passes = 0;
-        $processed = 0;
+        $results = [];
 
         try {
             do {
                 $passStartedAt = microtime(true);
                 $passes++;
-                $processed += $this->verifyPass($chunk, $deadline);
+                array_push($results, ...$this->verifyPass($chunk, $deadline));
 
-                if ($once || microtime(true) >= $deadline) {
+                if ($once || ($deadline !== null && microtime(true) >= $deadline)) {
                     break;
                 }
 
@@ -56,47 +60,99 @@ class VerifyPendingTransactions extends Command
                 if ($sleepFor > 0) {
                     usleep((int) ($sleepFor * 1_000_000));
                 }
-            } while (microtime(true) < $deadline);
+            } while ($deadline !== null && microtime(true) < $deadline);
+        } catch (Throwable $exception) {
+            Log::error('Impossible d’exécuter la vérification des transactions.', [
+                'error' => $exception->getMessage(),
+                'exception' => $exception,
+            ]);
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
         } finally {
             $lock->release();
         }
 
-        $this->components->info("{$processed} vérification(s) exécutée(s) en {$passes} passage(s).");
+        $this->renderResults($results, $passes);
 
-        return self::SUCCESS;
+        if ($this->option('transaction') && $results === []) {
+            $this->components->error('La transaction indiquée est introuvable ou n’est plus en attente.');
+
+            return self::FAILURE;
+        }
+
+        return collect($results)->contains(fn (TransactionVerificationResult $result) => $result->isError())
+            ? self::FAILURE
+            : self::SUCCESS;
     }
 
-    private function verifyPass(int $chunk, float $deadline): int
+    /** @return array<int, TransactionVerificationResult> */
+    private function verifyPass(int $chunk, ?float $deadline): array
     {
-        $processed = 0;
+        $results = [];
 
         Transaction::query()
-            ->whereIn('status', [
+            ->whereRaw('UPPER(status) IN (?, ?)', [
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
             ])
-            ->whereNotNull('transaction_id')
+            ->when($this->option('transaction'), fn ($query, $id) => $query->whereKey((int) $id))
             ->orderBy('id')
-            ->chunkById($chunk, function ($transactions) use (&$processed, $deadline): bool {
+            ->chunkById($chunk, function ($transactions) use (&$results, $deadline): bool {
                 foreach ($transactions as $transaction) {
-                    if (microtime(true) >= $deadline) {
+                    if ($deadline !== null && microtime(true) >= $deadline) {
                         return false;
                     }
 
                     try {
-                        VerifyPendingTransaction::dispatchSync($transaction->id);
+                        $result = app(Dispatcher::class)->dispatchNow(
+                            new VerifyPendingTransaction(
+                                $transaction->id,
+                                (bool) $this->option('dry-run'),
+                            )
+                        );
+                        $results[] = $result instanceof TransactionVerificationResult
+                            ? $result
+                            : new TransactionVerificationResult($transaction->id, 'ERROR', message: 'Résultat de vérification invalide.');
                     } catch (Throwable $exception) {
                         Log::error('Échec inattendu de la vérification d’une transaction.', [
                             'transaction_id' => $transaction->id,
                             'exception' => $exception,
                         ]);
+                        $results[] = new TransactionVerificationResult(
+                            $transaction->id,
+                            'ERROR',
+                            message: $exception->getMessage(),
+                        );
                     }
-                    $processed++;
                 }
 
                 return true;
             });
 
-        return $processed;
+        return $results;
+    }
+
+    /** @param array<int, TransactionVerificationResult> $results */
+    private function renderResults(array $results, int $passes): void
+    {
+        if ($this->output->isVerbose() && $results !== []) {
+            $this->table(
+                ['Transaction', 'Résultat', 'Statut provider', 'Message'],
+                array_map(fn (TransactionVerificationResult $result) => array_values($result->toArray()), $results),
+            );
+        }
+
+        $counts = collect($results)->countBy(fn (TransactionVerificationResult $result) => $result->outcome);
+        $this->components->info(sprintf(
+            '%d vérification(s), %d succès, %d en attente, %d échec(s), %d ignorée(s), %d erreur(s), en %d passage(s).',
+            count($results),
+            (int) $counts->get(TransactionStatus::SUCCESS->value, 0),
+            (int) $counts->get(TransactionStatus::PENDING->value, 0),
+            (int) $counts->get(TransactionStatus::FAILED->value, 0),
+            (int) $counts->get('SKIPPED', 0),
+            (int) $counts->get('ERROR', 0),
+            $passes,
+        ));
     }
 }

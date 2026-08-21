@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Paiements extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'paiement_date',
         'user_id',
@@ -18,14 +20,13 @@ class Paiements extends Model
         'numero_payeur',
         'numero_client',
         'status',
-        'transaction_id'
+        'transaction_id',
     ];
 
     protected $table = 'paiements';
+
     /**
      * Get the user that owns the Paiements
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -34,11 +35,14 @@ class Paiements extends Model
 
     /**
      * Get the categorie that owns the Paiements
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    function categorie(): BelongsTo
+    public function categorie(): BelongsTo
     {
         return $this->belongsTo(Categorie::class, 'categorie_id', 'id');
+    }
+
+    public function codes(): HasMany
+    {
+        return $this->hasMany(Codes::class, 'paiements_id');
     }
 }

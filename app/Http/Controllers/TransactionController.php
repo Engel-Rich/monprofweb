@@ -9,6 +9,7 @@ use App\DTO\WebhookHandlingDTO;
 use App\Http\Requests\PaymentCallbackRequest;
 // use App\DTO\MundiPayRequestDTO;
 use App\Jobs\ProcessWebhook;
+use App\Models\PayementServices;
 use App\Models\PaymentProvider;
 use App\Models\Transaction;
 // use App\Models\Paiements;
@@ -42,7 +43,14 @@ class TransactionController extends Controller
     {
 
         try {
-            $provider = PaymentProvider::active()->firstOrFail();
+            $paymentService = filled($request->service_id)
+                ? PayementServices::query()->with('provider')->findOrFail($request->service_id)
+                : null;
+            $provider = $paymentService?->provider ?? PaymentProvider::active()->firstOrFail();
+
+            if (! $provider->is_active || ($paymentService && ! $paymentService->is_active)) {
+                throw new \RuntimeException('Le service ou le fournisseur de paiement sélectionné est inactif.');
+            }
             $transaction = Transaction::create([
                 ...$request->toArray(),
                 'payment_provider_id' => $provider->id,
@@ -56,6 +64,7 @@ class TransactionController extends Controller
                 'phoneNumber' => $request->phone_number,
                 'countryCode' => '237',
                 'reference' => $reference, //$transaction->reference,
+                'transactionPaymentId' => $request->subscription_id,
             ]);
             try {
                 $strategy = PaymentFactory::make($provider);

@@ -20,9 +20,13 @@ class MundiPayService implements PaymentStrategy
 
     public function __construct()
     {
-        $this->apiKey = env('MUNDY_PAY_API_KEY');
-        $this->apiSecret = env('MUNDY_PAY_API_SECRET');
-        $this->baseUrl = env('MUNDY_PAY_API_URL', 'https://gateway.mundipay.pro/api/smobilpay/');
+        $this->apiKey = (string) config('payments.mundi.key');
+        $this->apiSecret = (string) config('payments.mundi.secret');
+        $this->baseUrl = rtrim((string) config('payments.mundi.url'), '/').'/';
+
+        if (blank($this->apiKey) || blank($this->apiSecret) || blank($this->baseUrl)) {
+            throw new \RuntimeException('Configuration MundiPay incomplète.');
+        }
     }
 
     protected function getHeaders(): array
@@ -81,9 +85,10 @@ class MundiPayService implements PaymentStrategy
         }
 
         $result = $response->json('result') ?? [];
+        $status = data_get($result, 'status') ?? $response->json('status') ?? 'PENDING';
 
         return new PaymentResponseModel([
-            'status' => $result['status'] ?? 'PENDING',
+            'status' => $status,
             'reference_id' => $reference,
             'transaction_id' => $result['id'] ?? null,
             'amount_total' => $result['amount'] ?? null,

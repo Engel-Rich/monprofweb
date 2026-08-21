@@ -7,6 +7,7 @@ use App\Http\Controllers\TransactionController;
 // use App\Models\AppMessage;
 use App\Models\Categorie;
 use App\Models\Paiements;
+use App\Models\PayementServices;
 use App\Models\User;
 use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
@@ -16,8 +17,6 @@ use Illuminate\Support\Str;
 
 class PaiementsController extends Controller
 {
-
-
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -55,11 +54,16 @@ class PaiementsController extends Controller
             ]);
             $user = User::find(auth()->id());
             $categorie = Categorie::find($request->categorie_id);
+            $paymentService = PayementServices::query()
+                ->where('subscription_id', $request->subscription_id)
+                ->where('is_active', true)
+                ->whereHas('provider', fn ($query) => $query->where('is_active', true))
+                ->firstOrFail();
             $data = $request->all();
             $data['user_id'] = $user->id;
             $data['montant'] = $categorie->prix * $request->nombre_de_code;
             $uuid = (string) Str::uuid();
-            $reference = 'MPP-'  .$uuid; // strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
+            $reference = 'MPP-'.$uuid; // strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
 
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
@@ -68,20 +72,21 @@ class PaiementsController extends Controller
                 'status' => 'PENDING',
                 'sens' => 'IN',
                 'user_id' => $user->id,
+                'service_id' => (string) $paymentService->id,
                 'subscription_id' => $request['subscription_id'],
             ]);
 
             $trx = TransactionController::store($transactionPostDto);
 
-            Log::debug("Trasaction  response " . $trx);
+            Log::debug('Trasaction  response '.$trx);
 
             $data['transaction_id'] = $trx->id;
 
             $paiment = Paiements::create($data);
 
-            Log::debug("Created Paiement  " . $paiment);
+            Log::debug('Created Paiement  '.$paiment);
 
-            // transaction Post DTO            
+            // transaction Post DTO
             $token = $user->fcm_token;
             if ($request->nombre_de_code == 1) {
                 $notifOneCode = new PushNotifictaionService("Votre nouvelle commande de code chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');
@@ -90,14 +95,13 @@ class PaiementsController extends Controller
                 $notifManyCode = new PushNotifictaionService("Votre nouvelle commande de $request->nombre_de_code codes chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez la liste des codes par Mail à l'adresse $user->email.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');
                 $notifManyCode->sendNotificationToToken($token);
             }
+
             return response()->json(['status' => true, 'data' => $paiment], 200);
         } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'data' => null, "error" => $th->getMessage()], 400);
+            return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);
         }
     }
 
-
-   
     /**
      * Display the specified resource.
      */

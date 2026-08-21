@@ -4,53 +4,45 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Categorie;
-use App\Models\Codes;
 use App\Models\Cours;
 use App\Models\Eleve;
+use App\Services\CourseAccessService;
+use App\Services\FileManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\FileManager;
 
 class CoursController extends Controller
 {
-
-
     public function __construct()
     {
         $this->middleware('auth:sanctum');
     }
 
-
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, CourseAccessService $courseAccess)
     {
 
         try {
             // dd($request->all());
             $request->validate([
-                'matiere_id' => "integer|required|exists:matieres,id",
-                'categorie_id' => "integer|required|:categories,id",
+                'matiere_id' => 'integer|required|exists:matieres,id',
+                'categorie_id' => 'integer|required|exists:categories,id',
             ]);
 
             // Ouvrire les cours si l'élève possède un abonnemnet
 
             $user = Auth::user();
-            $eleve = Eleve::where('user_id', $user->id)->with('classe')->get()[0];
-            $cours  = Cours::where('matieres_id', $request['matiere_id'])
+            $eleve = Eleve::where('user_id', $user->id)->with('classe')->firstOrFail();
+            $cours = Cours::where('matieres_id', $request['matiere_id'])
                 ->where('classe_id', $eleve->classe_id)
                 ->where('categorie_id', $request->categorie_id)
                 ->with('matiere')
                 ->paginate(20);
             $categorie = Categorie::find($request->categorie_id);
             //CHECK IF USER HAVE ACTIVE CODE
-            $exist = Codes::with('paiement')->whereHas(
-                'paiement',
-                function ($query) use ($request) {
-                    $query->where('categorie_id', $request->categorie_id);
-                }
-            )->where('actif', 1)->where('eleve_id', $eleve->id)->exists();
+            $exist = $courseAccess->studentHasCategoryAccess($eleve, (int) $request->categorie_id);
             if ($exist) {
                 foreach ($cours as $cour) {
                     $cour->open = true;
@@ -67,10 +59,12 @@ class CoursController extends Controller
 
                 // $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
                 $value->video_url = $fileManager->get($value->video_url);
+
                 // dd($value->video_url);
                 return $value;
             });
             $cours->setCollection($result);
+
             return response()->json([
                 'status' => true,
                 'error' => null,
@@ -81,8 +75,7 @@ class CoursController extends Controller
                 'status' => false,
                 'data' => null,
                 'error' => $th->getMessage(),
-                400,
-            ]);
+            ], 400);
         }
     }
 

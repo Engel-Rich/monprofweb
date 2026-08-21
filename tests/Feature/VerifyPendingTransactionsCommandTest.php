@@ -15,6 +15,7 @@ use App\Services\Payments\TransactionFinalizationService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Mockery;
 use Tests\TestCase;
@@ -61,13 +62,37 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('users', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('last_name')->nullable();
+            $table->string('email')->nullable();
+            $table->string('password')->nullable();
+            $table->string('fcm_token')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('paiements', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('transaction_id')->nullable();
             $table->dateTime('paiement_date')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('categorie_id')->nullable();
             $table->integer('nombre_de_code')->default(1);
+            $table->decimal('montant', 12, 2)->default(0);
+            $table->string('numero_payeur')->nullable();
+            $table->string('numero_client')->nullable();
             $table->boolean('status')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('codes', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('paiements_id');
+            $table->unsignedBigInteger('eleve_id')->nullable();
+            $table->string('code')->unique();
+            $table->dateTime('active_date')->nullable();
+            $table->boolean('actif')->default(false);
             $table->timestamps();
         });
     }
@@ -149,11 +174,146 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        DB::table('codes')->insert([
+            'paiements_id' => $paymentId,
+            'code' => 'C-ALREADY-CREATED',
+            'actif' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $finalized = app(PaiementService::class)->validePayment(['paiement' => $paymentId]);
 
         $this->assertFalse($finalized);
         $this->assertDatabaseCount('paiements', 1);
+        $this->assertDatabaseCount('codes', 1);
+    }
+
+    public function test_success_creates_the_activation_code_before_marking_the_transaction_successful(): void
+    {
+        Http::fake();
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
+        PaymentFactory::extend('TEST_ACTIVATION', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Test activation',
+            'code' => 'TEST_ACTIVATION',
+            'is_active' => true,
+        ]);
+        $userId = DB::table('users')->insertGetId([
+            'name' => 'Élève',
+            'email' => 'student@example.test',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => 'provider-course-access',
+            'reference' => 'MPP-course-access',
+            'amount' => '1000',
+            'phone_number' => '690000003',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'MONPROF_PURCHASE',
+            'user_id' => $userId,
+        ]);
+        $paymentId = DB::table('paiements')->insertGetId([
+            'transaction_id' => $transaction->id,
+            'user_id' => $userId,
+            'categorie_id' => 10,
+            'nombre_de_code' => 1,
+            'montant' => 1000,
+            'numero_payeur' => '690000003',
+            'numero_client' => '690000003',
+            'status' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => $transaction->id,
+        ]);
+
+        $this->assertSame(0, $exitCode, Artisan::output());
+        $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+        $this->assertDatabaseHas('paiements', ['id' => $paymentId, 'status' => true]);
+        $this->assertNotNull(DB::table('paiements')->where('id', $paymentId)->value('paiement_date'));
+        $this->assertDatabaseCount('codes', 1);
+        $this->assertFalse((bool) DB::table('codes')->where('paiements_id', $paymentId)->value('actif'));
+    }
+
+    public function test_provider_success_without_a_linked_payment_is_reported_as_an_error(): void
+    {
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
+        PaymentFactory::extend('TEST_INCOMPLETE', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Test incomplete',
+            'code' => 'TEST_INCOMPLETE',
+            'is_active' => true,
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => 'provider-without-payment',
+            'reference' => 'MPP-without-payment',
+            'amount' => '1000',
+            'phone_number' => '690000004',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'MONPROF_PURCHASE',
+        ]);
+
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => $transaction->id,
+            '-v' => true,
+        ]);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertSame(TransactionStatus::PENDING->value, $transaction->fresh()->status);
+        $this->assertStringContainsString('finalisation locale', Artisan::output());
+    }
+
+    public function test_dry_run_checks_the_provider_without_updating_the_transaction(): void
+    {
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
+        PaymentFactory::extend('TEST_DRY_RUN', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Test dry run',
+            'code' => 'TEST_DRY_RUN',
+            'is_active' => true,
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => 'provider-dry-run',
+            'reference' => 'MPP-dry-run',
+            'amount' => '1000',
+            'phone_number' => '690000005',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'TEST',
+        ]);
+
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => $transaction->id,
+            '--dry-run' => true,
+            '-v' => true,
+        ]);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertSame(TransactionStatus::PENDING->value, $transaction->fresh()->status);
+        $this->assertStringContainsString('aucune donnée locale modifiée', Artisan::output());
+    }
+
+    public function test_a_missing_target_transaction_returns_a_failure(): void
+    {
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => 999,
+        ]);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('introuvable', Artisan::output());
     }
 
     public function test_a_late_pending_status_cannot_downgrade_a_successful_transaction(): void

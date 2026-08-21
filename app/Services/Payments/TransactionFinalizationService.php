@@ -116,6 +116,21 @@ class TransactionFinalizationService
                     ...$context,
                     'paiement' => $paiement->id,
                 ]);
+
+                $paiement->refresh();
+                $expectedCodes = max(1, (int) $paiement->nombre_de_code);
+
+                if (! $paiement->status
+                    || blank($paiement->paiement_date)
+                    || $paiement->codes()->count() < $expectedCodes) {
+                    Log::warning('Le paiement n’est pas complètement finalisé, la transaction reste en attente.', [
+                        'transaction_id' => $transaction->id,
+                        'paiement_id' => $paiement->id,
+                    ]);
+                    $transaction->update(['metadatas' => $metadata]);
+
+                    return false;
+                }
             }
 
             $previousStatus = $transaction->status;

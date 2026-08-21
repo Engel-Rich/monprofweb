@@ -12,6 +12,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        if (! config('payments.polling.scheduler_enabled', true)) {
+            return;
+        }
+
         $duration = max(1, (int) config('payments.polling.duration', 55));
         $interval = max(1, (int) config('payments.polling.interval', 5));
 

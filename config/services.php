@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'sms' => [
+        'url' => env('SMS_API_URL', 'https://sms.lmtgroup.com/api/v1/pushes'),
+        'sender_id' => env('SMS_SENDER_ID'),
+        'key' => env('SMS_API_KEY'),
+        'secret' => env('SMS_API_SECRET'),
+    ],
+
 ];

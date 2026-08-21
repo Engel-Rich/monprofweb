@@ -7,6 +7,7 @@ use App\Models\Codes;
 use App\Models\Paiements;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use RuntimeException;
@@ -34,31 +35,62 @@ class PaiementService
         }
 
         try {
-            $paiement = Paiements::findOrFail($id);
+            $finalization = DB::transaction(function () use ($id): ?array {
+                $paiement = Paiements::query()->lockForUpdate()->findOrFail($id);
+                $quantity = max(1, (int) $paiement->nombre_de_code);
+                $existingCodes = Codes::query()
+                    ->where('paiements_id', $id)
+                    ->pluck('code')
+                    ->all();
+                $missingCodes = max(0, $quantity - count($existingCodes));
 
-            if ($paiement->paiement_date !== null) {
-                Log::info('Paiement déjà finalisé.', ['paiement_id' => $id]);
+                if ($paiement->paiement_date !== null && $missingCodes === 0) {
+                    Log::info('Paiement déjà finalisé.', ['paiement_id' => $id]);
 
-                return false;
-            }
+                    return null;
+                }
 
-            $user = User::findOrFail($paiement->user_id);
-            $quantity = max(1, (int) $paiement->nombre_de_code);
-            $messageService = new SendMessageService($paiement, $user);
+                $user = User::findOrFail($paiement->user_id);
 
-            if ($quantity === 1) {
-                $code = $this->saveOneCode($id);
+                if ($missingCodes > 0) {
+                    $generatedCodes = $this->saveManyCod($id, $missingCodes);
 
-                if (! $code) {
-                    throw new RuntimeException('La génération du code d’activation a échoué.');
+                    if (count($generatedCodes) !== $missingCodes) {
+                        throw new RuntimeException('La génération des codes d’activation a échoué.');
+                    }
+                }
+
+                $codes = Codes::query()
+                    ->where('paiements_id', $id)
+                    ->orderBy('id')
+                    ->pluck('code')
+                    ->all();
+
+                if (count($codes) < $quantity) {
+                    throw new RuntimeException('Le paiement ne possède pas tous ses codes d’activation.');
                 }
 
                 $this->markAsPaid($paiement);
+
+                return [$paiement->fresh(), $user, $codes];
+            }, 3);
+
+            if ($finalization === null) {
+                return false;
+            }
+
+            [$paiement, $user, $codes] = $finalization;
+            $quantity = max(1, (int) $paiement->nombre_de_code);
+            $codes = array_slice($codes, 0, $quantity);
+            $messageService = new SendMessageService($paiement, $user);
+
+            if ($quantity === 1) {
+                $code = $codes[0];
                 $messageService->sendSMS($code);
 
                 if ($user->fcm_token) {
                     $notification = new PushNotifictaionService(
-                        "Votre paiement a été validé et votre code activé.\nVous recevrez le code par SMS.\nMonProf vous remercie.",
+                        "Votre paiement a été validé et votre code généré.\nVous recevrez le code par SMS.\nMonProf vous remercie.",
                         'Validation de compte MonProf',
                     );
                     $notification->sendNotificationToToken($user->fcm_token);
@@ -69,14 +101,7 @@ class PaiementService
                 return true;
             }
 
-            $codes = $this->saveManyCod($id, $quantity);
-
-            if (count($codes) !== $quantity) {
-                throw new RuntimeException('La génération de la liste des codes a échoué.');
-            }
-
-            $this->markAsPaid($paiement);
-            SendMailJob::dispatch($messageService, $codes, $user->fcm_token)->delay(now());
+            SendMailJob::dispatch($messageService, $codes)->delay(now());
 
             if ($user->fcm_token) {
                 $notification = new PushNotifictaionService(
@@ -125,7 +150,6 @@ class PaiementService
 
             return $code;
         } catch (\Throwable $exception) {
-            Codes::where('paiements_id', $paiementId)->delete();
             Log::error('Génération du code de paiement impossible.', [
                 'paiement_id' => $paiementId,
                 'exception' => $exception,
@@ -143,8 +167,6 @@ class PaiementService
             $code = $this->saveOneCode($paiementId);
 
             if (! $code) {
-                Codes::where('paiements_id', $paiementId)->delete();
-
                 return [];
             }
 

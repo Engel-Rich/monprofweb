@@ -73,9 +73,9 @@ class VerifyPendingTransaction implements ShouldQueue
                 );
             }
 
-            if (blank($transaction->service_id)) {
-                throw new \RuntimeException('Identifiant de transaction fournisseur manquant.');
-            }
+            // if (blank($transaction->service_id)) {
+            //     throw new \RuntimeException('Identifiant de transaction fournisseur manquant.');
+            // }
 
             $provider = $this->resolveProvider($transaction);
 

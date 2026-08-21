@@ -56,6 +56,10 @@ class VerifyPendingTransaction implements ShouldQueue
             if (! $transaction) {
                 return new TransactionVerificationResult($this->transactionId, 'ERROR', message: 'Transaction introuvable.');
             }
+            Log::info(
+                "Response transaction ",
+                $transaction->toArray()
+            );
 
             if (! in_array(strtoupper((string) $transaction->status), [
                 TransactionStatus::PENDING->value,
@@ -69,7 +73,7 @@ class VerifyPendingTransaction implements ShouldQueue
                 );
             }
 
-            if (blank($transaction->transaction_id)) {
+            if (blank($transaction->service_id)) {
                 throw new \RuntimeException('Identifiant de transaction fournisseur manquant.');
             }
 
@@ -106,9 +110,11 @@ class VerifyPendingTransaction implements ShouldQueue
             );
             $localStatus = strtoupper((string) $transaction->fresh()->status);
 
-            if ($result->status === TransactionStatus::SUCCESS
+            if (
+                $result->status === TransactionStatus::SUCCESS
                 && ! $applied
-                && $localStatus !== TransactionStatus::SUCCESS->value) {
+                && $localStatus !== TransactionStatus::SUCCESS->value
+            ) {
                 return new TransactionVerificationResult(
                     $transaction->id,
                     'ERROR',
@@ -154,7 +160,7 @@ class VerifyPendingTransaction implements ShouldQueue
             $service = PayementServices::query()
                 ->with('provider')
                 ->where('subscription_id', $transaction->subscription_id)
-                ->when($transaction->sens, fn ($query, $sens) => $query->where('sens', $sens))
+                ->when($transaction->sens, fn($query, $sens) => $query->where('sens', $sens))
                 ->first();
 
             if ($service?->provider) {

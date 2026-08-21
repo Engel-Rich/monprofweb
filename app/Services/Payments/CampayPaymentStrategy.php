@@ -55,7 +55,7 @@ class CampayPaymentStrategy implements PaymentStrategy
         Log::info('CamPay authentication response', $response->json());
 
         return [
-            'Authorization' => 'Token '.$response->json('token'),
+            'Authorization' => 'Token ' . $response->json('token'),
             'Content-Type' => 'application/json',
         ];
     }

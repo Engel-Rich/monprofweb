@@ -43,7 +43,7 @@ class CampayPaymentStrategy implements PaymentStrategy
     protected function getToken(): ?string
     {
         $ttl = max(1, (int) config('campay.token_ttl', 10));
-        $cacheKey = 'campay:token:'.md5($this->baseUrl.'|'.$this->username);
+        $cacheKey = 'campay:token:' . md5($this->baseUrl . '|' . $this->username);
 
         $token = Cache::get($cacheKey);
 
@@ -81,7 +81,7 @@ class CampayPaymentStrategy implements PaymentStrategy
 
     protected function forgetToken(): void
     {
-        Cache::forget('campay:token:'.md5($this->baseUrl.'|'.$this->username));
+        Cache::forget('campay:token:' . md5($this->baseUrl . '|' . $this->username));
     }
 
     protected function getAuthHeader(): ?array
@@ -93,7 +93,7 @@ class CampayPaymentStrategy implements PaymentStrategy
         }
 
         return [
-            'Authorization' => 'Token '.$token,
+            'Authorization' => 'Token ' . $token,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
@@ -187,9 +187,12 @@ class CampayPaymentStrategy implements PaymentStrategy
         if (! $headers) {
             throw new \RuntimeException('CamPay authentication header not found');
         }
+        Log::info("Url de verify", ["{$this->baseUrl}/transaction/{$reference}/"]);
 
         $response = Http::withHeaders($headers)
             ->get("{$this->baseUrl}/transaction/{$reference}/");
+
+        Log::info("result verify", [$response]);
 
         // Un token mis en cache peut avoir été révoqué côté CamPay : on le jette
         // et on retente une fois avec un token frais avant de déclarer l'échec.

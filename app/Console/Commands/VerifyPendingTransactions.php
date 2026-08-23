@@ -85,7 +85,7 @@ class VerifyPendingTransactions extends Command
             return self::FAILURE;
         }
 
-        return collect($results)->contains(fn (TransactionVerificationResult $result) => $result->isError())
+        return collect($results)->contains(fn(TransactionVerificationResult $result) => $result->isError())
             ? self::FAILURE
             : self::SUCCESS;
     }
@@ -103,11 +103,11 @@ class VerifyPendingTransactions extends Command
             ->when(
                 $this->option('transaction'),
                 // Vérification manuelle ciblée : on court-circuite les filtres.
-                fn ($query, $id) => $query->whereKey((int) $id),
+                fn($query, $id) => $query->whereKey((int) $id),
                 // Sans référence fournisseur il n'y a rien à interroger, et au-delà
                 // de max_age la transaction est expirée : la repoller indéfiniment
                 // saturait le quota du fournisseur.
-                fn ($query) => $query
+                fn($query) => $query
                     ->whereNotNull('transaction_id')
                     ->where('transaction_id', '!=', '')
                     ->where('created_at', '>=', now()->subMinutes($this->maxAge())),
@@ -163,10 +163,12 @@ class VerifyPendingTransactions extends Command
      */
     private function expireStaleTransactions(int $chunk): array
     {
-        if ($this->option('dry-run')
+        if (
+            $this->option('dry-run')
             || $this->option('no-expire')
             || $this->option('transaction')
-            || ! config('payments.polling.expire_stale', true)) {
+            || ! config('payments.polling.expire_stale', true)
+        ) {
             return [];
         }
 
@@ -196,7 +198,7 @@ class VerifyPendingTransactions extends Command
                             $transaction->id,
                             TransactionStatus::FAILED->value,
                             null,
-                            'Transaction expirée après '.$this->maxAge().' minutes sans confirmation.',
+                            'Transaction expirée après ' . $this->maxAge() . ' minutes sans confirmation.',
                         );
                     } catch (Throwable $exception) {
                         Log::error('Échec de l’expiration d’une transaction en attente.', [
@@ -208,7 +210,7 @@ class VerifyPendingTransactions extends Command
             });
 
         if ($results !== []) {
-            $this->components->info(count($results).' transaction(s) expirée(s).');
+            $this->components->info(count($results) . ' transaction(s) expirée(s).');
         }
 
         return $results;
@@ -220,11 +222,11 @@ class VerifyPendingTransactions extends Command
         if ($this->output->isVerbose() && $results !== []) {
             $this->table(
                 ['Transaction', 'Résultat', 'Statut provider', 'Message'],
-                array_map(fn (TransactionVerificationResult $result) => array_values($result->toArray()), $results),
+                array_map(fn(TransactionVerificationResult $result) => array_values($result->toArray()), $results),
             );
         }
 
-        $counts = collect($results)->countBy(fn (TransactionVerificationResult $result) => $result->outcome);
+        $counts = collect($results)->countBy(fn(TransactionVerificationResult $result) => $result->outcome);
         $this->components->info(sprintf(
             '%d vérification(s), %d succès, %d en attente, %d échec(s), %d ignorée(s), %d erreur(s), en %d passage(s).',
             count($results),

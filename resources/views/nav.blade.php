@@ -35,6 +35,12 @@
             :user="{{ Js::from($adminUser) }}"
             logout-url="{{ route('auth.logout') }}"
         >
+            @if (session('success'))
+                <div class="admin-flash success" role="status">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="admin-flash danger" role="alert">{{ session('error') }}</div>
+            @endif
             @yield('content')
         </admin-shell>
     </div>

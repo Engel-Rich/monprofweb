@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\DTO\CreateTransactionDto;
 use App\DTO\PaymentResult;
 use App\Enums\TransactionStatus;
+use App\Jobs\VerifyPendingTransaction;
 use App\Models\PaymentProvider;
 use App\Models\Transaction;
 use App\Services\PaiementService;
@@ -341,6 +342,36 @@ class VerifyPendingTransactionsCommandTest extends TestCase
 
         $this->assertFalse($applied);
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+    }
+
+    public function test_an_admin_retry_can_reconcile_a_failed_transaction(): void
+    {
+        PollingPaymentStrategy::$verificationCount = 0;
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
+        PaymentFactory::extend('TEST_ADMIN_RETRY', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Retry provider',
+            'code' => 'TEST_ADMIN_RETRY',
+            'is_active' => true,
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => 'provider-late-success',
+            'reference' => 'MPP-late-success',
+            'amount' => '1500',
+            'phone_number' => '690000008',
+            'status' => TransactionStatus::FAILED->value,
+            'sens' => 'IN',
+            'internal_service' => 'TEST',
+        ]);
+
+        $result = (new VerifyPendingTransaction($transaction->id, force: true))
+            ->handle(app(TransactionFinalizationService::class));
+
+        $this->assertFalse($result->isError());
+        $this->assertSame(TransactionStatus::SUCCESS->value, $result->providerStatus);
+        $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+        $this->assertSame(1, PollingPaymentStrategy::$verificationCount);
     }
 
     public function test_a_transaction_without_a_provider_reference_is_never_sent_to_the_provider(): void

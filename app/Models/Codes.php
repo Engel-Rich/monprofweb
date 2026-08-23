@@ -9,12 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Codes extends Model
 {
     use HasFactory;
+
     protected $fillable = ['code', 'paiements_id', 'eleve_id', 'active_date', 'actif'];
+
+    protected $casts = [
+        'active_date' => 'datetime',
+        'actif' => 'boolean',
+    ];
 
     /**
      * Get the eleve that owns the Codes
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function eleve(): BelongsTo
     {
@@ -23,8 +27,6 @@ class Codes extends Model
 
     /**
      * Get the eleve that owns the Codes
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function paiement(): BelongsTo
     {

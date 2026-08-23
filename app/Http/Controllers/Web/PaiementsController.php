@@ -2,149 +2,165 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\DTO\TransactionVerificationResult;
+use App\Enums\TransactionStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendMailJob;
-use App\Models\User;
-use App\Services\PushNotifictaionService;
-use App\Services\SendMessageService;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+use App\Jobs\VerifyPendingTransaction;
 use App\Models\Paiements;
+use App\Services\Admin\PaymentAdminPresenter;
 use App\Services\PaiementService;
+use App\Services\Payments\TransactionFinalizationService;
+use App\Services\SendMessageService;
+use Illuminate\Bus\Dispatcher;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Throwable;
 
 class PaiementsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(PaymentAdminPresenter $presenter): View
     {
-        $paiments = Paiements::with('user', 'categorie')->paginate(25);
-        return view('screen.paiements.index_paiements', ['paiements' => $paiments]);
+        $this->ensureAdmin();
+
+        $payments = Paiements::query()
+            ->with(PaymentAdminPresenter::RELATIONS)
+            ->latest('id')
+            ->paginate(25);
+        $items = $payments->getCollection()
+            ->map(fn (Paiements $payment) => $presenter->item($payment))
+            ->values();
+
+        return view('screen.paiements.index_paiements', compact('payments', 'items'));
+    }
+
+    public function active(Paiements $paiement, PaymentAdminPresenter $presenter): View
+    {
+        $this->ensureAdmin();
+        $paiement->load(PaymentAdminPresenter::RELATIONS);
+
+        return view('screen.paiements.active_paiement', [
+            'paie' => $paiement,
+            'status' => $presenter->status($paiement),
+            'actions' => $presenter->actions($paiement),
+        ]);
+    }
+
+    public function reverify(Paiements $paiement, Dispatcher $dispatcher): RedirectResponse
+    {
+        $this->ensureAdmin();
+        $paiement->load('transaction');
+
+        if (! $paiement->transaction) {
+            return back()->with('error', 'Aucune transaction n’est associée à ce paiement.');
+        }
+
+        if (blank($paiement->transaction->transaction_id)) {
+            return back()->with('error', 'La référence fournisseur est absente : la transaction ne peut pas être revérifiée.');
+        }
+
+        $result = $dispatcher->dispatchNow(
+            new VerifyPendingTransaction($paiement->transaction->id, dryRun: false, force: true)
+        );
+
+        if (! $result instanceof TransactionVerificationResult || $result->isError()) {
+            $message = $result instanceof TransactionVerificationResult ? $result->message : null;
+
+            return back()->with('error', $message ?: 'La revérification du paiement a échoué.');
+        }
+
+        return back()->with(
+            'success',
+            "Transaction revérifiée. Statut fournisseur : {$result->providerStatus}; statut local : {$result->outcome}.",
+        );
+    }
+
+    public function activate(
+        Paiements $paiement,
+        PaiementService $paiementService,
+        TransactionFinalizationService $finalizer,
+    ): RedirectResponse {
+        $this->ensureAdmin();
+        $paiement->load(['transaction', 'codes']);
+
+        try {
+            if ($paiement->transaction) {
+                $finalizer->applyStatus(
+                    transaction: $paiement->transaction,
+                    status: TransactionStatus::SUCCESS,
+                    context: [
+                        'admin_id' => auth()->id(),
+                        'manual_activation' => true,
+                    ],
+                    source: 'admin_manual',
+                );
+            } else {
+                $paiementService->validePayment(['paiement' => $paiement->id]);
+            }
+
+            $paiement->refresh();
+
+            if (! $paiement->status || ! $paiement->paiement_date) {
+                return back()->with('error', 'Le paiement n’a pas pu être finalisé. Consultez les logs avant de réessayer.');
+            }
+
+            return back()->with('success', 'Paiement activé et codes contrôlés avec succès.');
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'Activation impossible : '.$exception->getMessage());
+        }
+    }
+
+    public function resendNotification(Paiements $paiement): RedirectResponse
+    {
+        $this->ensureAdmin();
+        $paiement->load(['user', 'codes']);
+
+        if (! $paiement->status || ! $paiement->paiement_date) {
+            return back()->with('error', 'Le paiement doit être validé avant de renvoyer ses codes.');
+        }
+
+        if ($paiement->codes->isEmpty()) {
+            return back()->with('error', 'Aucun code n’a encore été généré pour ce paiement.');
+        }
+
+        if (! $paiement->user) {
+            return back()->with('error', 'L’utilisateur associé au paiement est introuvable.');
+        }
+
+        $messageService = new SendMessageService($paiement, $paiement->user);
+        $codes = $paiement->codes->pluck('code')->all();
+
+        if (count($codes) === 1) {
+            if (! $messageService->sendSMS($codes[0])) {
+                return back()->with('error', 'Le fournisseur SMS a refusé ou interrompu l’envoi.');
+            }
+
+            return back()->with('success', 'Le code a été renvoyé par SMS au bénéficiaire.');
+        }
+
+        SendMailJob::dispatch($messageService, $codes);
+
+        return back()->with('success', 'Le renvoi de la liste des codes par e-mail a été programmé.');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Route historique conservée pour ne pas casser les anciens formulaires.
      */
-    public function create()
+    public function valide(Request $request, PaiementService $paiementService): RedirectResponse
     {
-        //
+        $this->ensureAdmin();
+        $validated = $request->validate(['paiement' => ['required', 'integer', 'exists:paiements,id']]);
+        $paiementService->validePayment($validated);
+
+        return to_route('paiement.active', $validated['paiement'])
+            ->with('success', 'Paiement activé et codes contrôlés avec succès.');
     }
 
-
-    /**
-     * Active ai paiment
-     */
-
-    public function active(int $paiements)
+    private function ensureAdmin(): void
     {
-        $data = Paiements::with('user', 'categorie')->findOrFail($paiements);
-        // dd($data);
-        return view('screen.paiements.active_paiement', ['paie' => $data]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Function permettant d'envoiyer le sms
-     */
-
-
-    /**
-     * 
-     * Function permettant d'envoyer les mails
-     * 
-     */
-
-
-
-
-    /**
-     * Function permettant de générer les fichier 
-     */
-
-
-
-
-    /**
-     * Function permettant de valider un code
-     */
-
-    public function valide(Request $request)
-    {
-        app(PaiementService::class)->validePayment($request->all());
-        return redirect()->route('paiement.index');
-        
-        // $id = $request->paiement;
-        // $paie = Paiements::find($request->paiement);
-        // $user = User::find($paie->user_id);
-        // $qte = $paie->nombre_de_code;
-
-
-        // $messageService = new SendMessageService($paie, $user);
-        // $paie->paiement_date = Carbon::now();
-        // $token = $user->fcm_token;
-        // // dd($user->fcm_token);
-        // if ($qte == 1) {
-        //     $code = app(PaiementService::class)->saveOneCode($id) ; //$this->saveOneCode($id);
-        //     // SendMessageJob::dispatch($messageService, $code, $token)->delay(now());
-        //     $paie->save();
-        //     $messageService->sendSMS($code);
-        //     if ($token != null) {
-        //         $notifOneCode = new PushNotifictaionService("Votre paiement a été validé avec succès et votre code a été activé\n Vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
-        //         $notifOneCode->sendNotificationToToken($token);
-        //     }
-        //     return redirect()->route('paiement.index');
-        // } else {
-        //     $data = app(PaiementService::class)->saveManyCod($id, $qte) ;//$this->saveManyCod($id, $qte);
-        //     $paie->save();
-        //     if (count($data) == 0) {
-        //         return redirect()->route('paiement.index');
-        //     } else {
-        //         SendMailJob::dispatch($messageService, $data, $token)->delay(now());
-        //         if ($token != null) {
-        //             $notifManyCode = new PushNotifictaionService("Votre paiement de $qte a été validé avec succès et vos codes ont été activé\n Vous recevrez la liste des codes par Mail.\n Monprof vous remercie 🤗🤗🤗🤗", 'Validation de compte Monprof');
-        //             $notifManyCode->sendNotificationToToken($token, even_type: "PAYMENT");
-        //         }
-        //         return redirect()->route('paiement.index');
-        //     }
-        // }
-    }
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //        
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        abort_unless((int) auth()->user()?->rule_id === 1, 403);
     }
 }

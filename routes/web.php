@@ -51,6 +51,9 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('/paiement', [PaiementsController::class, 'index'])->name('paiement.index');
     Route::get('/paiement/{paiement}', [PaiementsController::class, 'active'])->name('paiement.active');
+    Route::post('/paiement/{paiement}/reverify', [PaiementsController::class, 'reverify'])->name('paiement.reverify');
+    Route::post('/paiement/{paiement}/activate', [PaiementsController::class, 'activate'])->name('paiement.activate');
+    Route::post('/paiement/{paiement}/resend-notification', [PaiementsController::class, 'resendNotification'])->name('paiement.resend-notification');
     Route::post('/paiement/activate', [PaiementsController::class, 'valide'])->name('paiement.valide');
     Route::resource('admin/payment-providers', PaymentProvidersController::class, ['as' => 'admin'])->except(['show']);
     Route::resource('admin/payment-services', PaymentServicesController::class, ['as' => 'admin'])->except(['show']);

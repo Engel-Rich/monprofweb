@@ -25,6 +25,11 @@ class Paiements extends Model
 
     protected $table = 'paiements';
 
+    protected $casts = [
+        'paiement_date' => 'datetime',
+        'status' => 'boolean',
+    ];
+
     /**
      * Get the user that owns the Paiements
      */
@@ -44,5 +49,10 @@ class Paiements extends Model
     public function codes(): HasMany
     {
         return $this->hasMany(Codes::class, 'paiements_id');
+    }
+
+    public function transaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
     }
 }

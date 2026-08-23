@@ -12,6 +12,7 @@ import {
     SlidersHorizontal,
     X,
 } from '@lucide/vue';
+import AdminActionButtons from './AdminActionButtons.vue';
 
 const props = defineProps({
     eyebrow: { type: String, default: 'Gestion' },
@@ -47,7 +48,11 @@ const filteredItems = computed(() => {
             const selectedValue = extraFilters.value[filter.key] ?? 'all';
             return selectedValue === 'all' || String(resolve(item, filter.key) ?? '') === String(selectedValue);
         });
-        const matchesSearch = !needle || searchableKeys.value.some((key) => String(resolve(item, key) ?? '').toLocaleLowerCase('fr').includes(needle));
+        const searchableValues = [
+            ...searchableKeys.value.map((key) => resolve(item, key)),
+            item.searchText,
+        ];
+        const matchesSearch = !needle || searchableValues.some((value) => String(value ?? '').toLocaleLowerCase('fr').includes(needle));
         return matchesStatus && matchesExtraFilters && matchesSearch;
     });
 });
@@ -189,7 +194,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <video v-if="selected.videoUrl" class="drawer-video" controls :src="selected.videoUrl" />
-                            <img v-if="selected.imageUrl" class="drawer-image" :src="selected.imageUrl" alt="Pièce jointe">
+                            <img v-if="selected.imageUrl" class="drawer-image" :src="selected.imageUrl" :alt="selected.imageAlt ?? 'Illustration'">
 
                             <section v-for="group in selected.details ?? []" :key="group.title" class="drawer-section">
                                 <div class="drawer-section-title"><h3>{{ group.title }}</h3><span v-if="group.note">{{ group.note }}</span></div>
@@ -204,6 +209,8 @@ onBeforeUnmount(() => {
                                                 <span v-for="tag in (field.value ?? [])" :key="tag">{{ tag }}</span>
                                                 <em v-if="!(field.value ?? []).length">Aucun élément associé</em>
                                             </div>
+                                            <code v-else-if="field.type === 'code'" class="drawer-code">{{ format(field.value, field.type) }}</code>
+                                            <pre v-else-if="field.type === 'json'" class="drawer-json">{{ field.value ? JSON.stringify(field.value, null, 2) : '—' }}</pre>
                                             <span v-else>{{ format(field.value, field.type) }}</span>
                                         </dd>
                                     </template>
@@ -213,6 +220,7 @@ onBeforeUnmount(() => {
 
                         <footer class="drawer-footer">
                             <button class="admin-button secondary" type="button" @click="closeDrawer"><ArrowLeft :size="17" /> Fermer</button>
+                            <AdminActionButtons v-if="selected.actions?.length" :actions="selected.actions" compact />
                             <a v-if="selected.editUrl" :href="selected.editUrl" class="admin-button primary"><Pencil :size="17" /> Modifier</a>
                             <a v-else-if="selected.actionUrl" :href="selected.actionUrl" class="admin-button primary"><Eye :size="17" /> {{ selected.actionLabel ?? 'Ouvrir' }}</a>
                         </footer>

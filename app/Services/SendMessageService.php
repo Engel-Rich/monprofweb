@@ -22,7 +22,7 @@ class SendMessageService
         $this->user = $user;
     }
 
-    public function sendSMS(?string $code = null, ?string $message = null)
+    public function sendSMS(?string $code = null, ?string $message = null): bool
     {
 
         $body = [
@@ -43,11 +43,23 @@ class SendMessageService
         try {
             Log::info('started send Message');
             $data = Http::withHeaders($headers)->post($url, $body);
-            Log::notice($data->json());
+
+            if ($data->failed()) {
+                Log::error('Échec de l’envoi du SMS.', [
+                    'status' => $data->status(),
+                    'response' => $data->json(),
+                ]);
+
+                return false;
+            }
+
             Log::info('Message has been sent successfully');
+
+            return true;
         } catch (\Throwable $th) {
-            Log::info('Message has not been sent successfully');
-            Log::info($th->getMessage());
+            Log::error('Message has not been sent successfully', ['error' => $th->getMessage()]);
+
+            return false;
         }
     }
 

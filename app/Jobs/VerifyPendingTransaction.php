@@ -29,6 +29,7 @@ class VerifyPendingTransaction implements ShouldQueue
     public function __construct(
         public readonly int $transactionId,
         public readonly bool $dryRun = false,
+        public readonly bool $force = false,
     ) {}
 
     public function backoff(): array
@@ -56,7 +57,13 @@ class VerifyPendingTransaction implements ShouldQueue
             if (! $transaction) {
                 return new TransactionVerificationResult($this->transactionId, 'ERROR', message: 'Transaction introuvable.');
             }
-            if (! in_array(strtoupper((string) $transaction->status), [
+            $currentStatus = strtoupper((string) $transaction->status);
+            $canForceRetry = $this->force && in_array($currentStatus, [
+                TransactionStatus::FAILED->value,
+                TransactionStatus::SUCCESS->value,
+            ], true);
+
+            if (! $canForceRetry && ! in_array($currentStatus, [
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
             ], true)) {

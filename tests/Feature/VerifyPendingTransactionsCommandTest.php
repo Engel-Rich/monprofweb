@@ -342,6 +342,77 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertFalse($applied);
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
     }
+
+    public function test_a_transaction_without_a_provider_reference_is_never_sent_to_the_provider(): void
+    {
+        PollingPaymentStrategy::$verificationCount = 0;
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::PENDING->value;
+        PaymentFactory::extend('TEST_NO_REFERENCE', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Test sans référence',
+            'code' => 'TEST_NO_REFERENCE',
+            'is_active' => true,
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => null,
+            'reference' => 'MPP-no-reference',
+            'amount' => '1000',
+            'phone_number' => '690000006',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'TEST',
+        ]);
+
+        // Ciblée : la garde du job doit s'appliquer même sans le filtre SQL.
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => $transaction->id,
+            '-v' => true,
+        ]);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertSame(0, PollingPaymentStrategy::$verificationCount);
+        $this->assertSame(TransactionStatus::PENDING->value, $transaction->fresh()->status);
+        $this->assertStringContainsString('Référence fournisseur pas encore disponible', Artisan::output());
+
+        // Balayage global : le filtre SQL doit l'écarter aussi.
+        Artisan::call('payments:verify-pending', ['--once' => true, '--no-expire' => true]);
+
+        $this->assertSame(0, PollingPaymentStrategy::$verificationCount);
+    }
+
+    public function test_a_stale_transaction_is_expired_instead_of_being_polled_forever(): void
+    {
+        PollingPaymentStrategy::$verificationCount = 0;
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::PENDING->value;
+        PaymentFactory::extend('TEST_STALE', PollingPaymentStrategy::class);
+        config(['payments.polling.max_age' => 180]);
+
+        $provider = PaymentProvider::create([
+            'name' => 'Test expiration',
+            'code' => 'TEST_STALE',
+            'is_active' => true,
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'transaction_id' => 'provider-stale',
+            'reference' => 'MPP-stale',
+            'amount' => '1000',
+            'phone_number' => '690000007',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'TEST',
+        ]);
+        $transaction->forceFill(['created_at' => now()->subHours(4)])->save();
+
+        $exitCode = Artisan::call('payments:verify-pending', ['--once' => true]);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertSame(0, PollingPaymentStrategy::$verificationCount);
+        $this->assertSame(TransactionStatus::FAILED->value, $transaction->fresh()->status);
+        $this->assertStringContainsString('Délai de paiement dépassé', (string) $transaction->fresh()->raison_reject);
+    }
 }
 
 class PollingPaymentStrategy implements PaymentStrategy

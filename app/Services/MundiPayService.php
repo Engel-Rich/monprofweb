@@ -77,11 +77,27 @@ class MundiPayService implements PaymentStrategy
 
     public function checkStatus(string $reference): PaymentResponseModel
     {
+        $reference = trim($reference);
+
+        if (blank($reference)) {
+            throw new \RuntimeException('MundiPay status check failed: référence de transaction vide.');
+        }
+
         $response = Http::withHeaders($this->getHeaders())
             ->get("{$this->baseUrl}payment/transaction/{$reference}");
 
         if ($response->failed()) {
-            throw new \RuntimeException("MundiPay status check failed: {$response->status()}");
+            Log::error('MundiPay status check error', [
+                'status' => $response->status(),
+                'reference' => $reference,
+                'body' => $response->json() ?? $response->body(),
+            ]);
+
+            throw new \RuntimeException(sprintf(
+                'MundiPay status check failed: %d %s',
+                $response->status(),
+                json_encode($response->json() ?? $response->body(), JSON_UNESCAPED_UNICODE),
+            ));
         }
 
         $result = $response->json('result') ?? [];

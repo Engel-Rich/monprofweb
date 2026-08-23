@@ -56,11 +56,6 @@ class VerifyPendingTransaction implements ShouldQueue
             if (! $transaction) {
                 return new TransactionVerificationResult($this->transactionId, 'ERROR', message: 'Transaction introuvable.');
             }
-            Log::info(
-                "Response transaction ",
-                $transaction->toArray()
-            );
-
             if (! in_array(strtoupper((string) $transaction->status), [
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
@@ -73,9 +68,17 @@ class VerifyPendingTransaction implements ShouldQueue
                 );
             }
 
-            // if (blank($transaction->service_id)) {
-            //     throw new \RuntimeException('Identifiant de transaction fournisseur manquant.');
-            // }
+            // La référence fournisseur n'est écrite qu'après l'appel d'initiation :
+            // tant qu'elle est vide, interroger le provider produit une URL
+            // «/transaction//» à laquelle CamPay répond 403. On repasse plus tard.
+            if (blank($transaction->transaction_id)) {
+                return new TransactionVerificationResult(
+                    $transaction->id,
+                    'SKIPPED',
+                    strtoupper((string) $transaction->status),
+                    'Référence fournisseur pas encore disponible, vérification reportée.',
+                );
+            }
 
             $provider = $this->resolveProvider($transaction);
 
@@ -160,7 +163,7 @@ class VerifyPendingTransaction implements ShouldQueue
             $service = PayementServices::query()
                 ->with('provider')
                 ->where('subscription_id', $transaction->subscription_id)
-                ->when($transaction->sens, fn($query, $sens) => $query->where('sens', $sens))
+                ->when($transaction->sens, fn ($query, $sens) => $query->where('sens', $sens))
                 ->first();
 
             if ($service?->provider) {

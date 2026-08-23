@@ -14,6 +14,7 @@ use App\Models\PaymentProvider;
 use App\Models\Transaction;
 // use App\Models\Paiements;
 // use App\Models\User;
+use App\Services\Payments\CampayWebhookSignature;
 use App\Services\Payments\PaymentFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -41,7 +42,20 @@ class TransactionController extends Controller
      */
     public static function store(TransactionPostDto $request)
     {
+        $transaction = static::createPendingTransaction($request);
 
+        return static::initiateWithProvider($transaction, $request);
+    }
+
+    /**
+     * Crée la ligne locale sans appeler le fournisseur.
+     *
+     * Séparer cette étape permet à l'appelant d'enregistrer les entités liées
+     * (paiement…) dans la même transaction SQL, avant que le fournisseur ne
+     * puisse notifier le succès.
+     */
+    public static function createPendingTransaction(TransactionPostDto $request): Transaction
+    {
         try {
             $paymentService = filled($request->service_id)
                 ? PayementServices::query()->with('provider')->findOrFail($request->service_id)
@@ -51,46 +65,65 @@ class TransactionController extends Controller
             if (! $provider->is_active || ($paymentService && ! $paymentService->is_active)) {
                 throw new \RuntimeException('Le service ou le fournisseur de paiement sélectionné est inactif.');
             }
-            $transaction = Transaction::create([
+
+            return Transaction::create([
                 ...$request->toArray(),
                 'payment_provider_id' => $provider->id,
             ]);
-            $reference = Str::replaceFirst('MPP-', '', $transaction->reference);
-            $createTransactionRequest = CreateTransactionDto::fromArray([
-                'userId' => $request->user_id,
-                'type' => 'DEPOSIT',
-                'sense' => $request->sens,
-                'amount' => $request->amount,
-                'phoneNumber' => $request->phone_number,
-                'countryCode' => '237',
-                'reference' => $reference, //$transaction->reference,
-                'transactionPaymentId' => $request->subscription_id,
-            ]);
-            try {
-                $strategy = PaymentFactory::make($provider);
-                $response = $strategy->processPayment($createTransactionRequest);
-
-                if ($response->isFailed() || ! $response->transactionId) {
-                    throw new \RuntimeException(
-                        $response->error ?? 'Payment initiation failed with provider '.$strategy->getProviderName()
-                    );
-                }
-
-                $transaction->update([
-                    'transaction_id' => $response->transactionId,
-                ]);
-            } catch (\Throwable $th) {
-                Log::error('Payment initiation failed: '.$th->getMessage());
-                $transaction->update(['status' => 'FAILED']);
-                throw $th;
-            }
-            $transaction->refresh();
-
-            return $transaction;
         } catch (\Throwable $th) {
             Log::error('Payment : '.$th->getMessage());
             throw $th;
         }
+    }
+
+    /**
+     * Déclenche le paiement auprès du fournisseur et stocke sa référence.
+     */
+    public static function initiateWithProvider(Transaction $transaction, TransactionPostDto $request): Transaction
+    {
+        $provider = $transaction->provider ?? PaymentProvider::active()->firstOrFail();
+        $reference = Str::replaceFirst('MPP-', '', (string) $transaction->reference);
+
+        $createTransactionRequest = CreateTransactionDto::fromArray([
+            'userId' => $request->user_id,
+            'type' => 'DEPOSIT',
+            'sense' => $request->sens,
+            'amount' => $request->amount,
+            'phoneNumber' => $request->phone_number,
+            'countryCode' => '237',
+            'reference' => $reference, //$transaction->reference,
+            'transactionPaymentId' => $request->subscription_id,
+        ]);
+
+        try {
+            $strategy = PaymentFactory::make($provider);
+            $response = $strategy->processPayment($createTransactionRequest);
+
+            if ($response->isFailed() || ! $response->transactionId) {
+                throw new \RuntimeException(
+                    $response->error ?? 'Payment initiation failed with provider '.$strategy->getProviderName()
+                );
+            }
+
+            $updates = ['transaction_id' => $response->transactionId];
+
+            // MundiPay renvoie un pay_token distinct de la référence : sans lui
+            // impossible de rejouer ou de tracer le paiement côté fournisseur.
+            if (filled($response->paymentIntent) && $response->paymentIntent !== $response->transactionId) {
+                $updates['payment_token'] = $response->paymentIntent;
+            }
+
+            $transaction->update($updates);
+        } catch (\Throwable $th) {
+            Log::error('Payment initiation failed: '.$th->getMessage());
+            $transaction->update([
+                'status' => 'FAILED',
+                'raison_reject' => Str::limit($th->getMessage(), 250),
+            ]);
+            throw $th;
+        }
+
+        return $transaction->refresh();
     }
 
     /**
@@ -118,16 +151,40 @@ class TransactionController extends Controller
 
     public function validatePaymentCallback(PaymentCallbackRequest $request)
     {
+        $webhookKey = (string) config('campay.webhook_key');
+
+        if (filled($webhookKey)) {
+            if (! CampayWebhookSignature::isValid($request->input('signature'), $webhookKey)) {
+                Log::warning('Webhook de paiement rejeté : signature invalide ou absente.', [
+                    'reference' => $request->input('reference'),
+                    'external_reference' => $request->input('external_reference'),
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json(['message' => 'Invalid signature'], 401);
+            }
+        } else {
+            Log::warning(
+                'CAMPAY_WEBHOOK_KEY absente : notification acceptée sans vérification de signature. '
+                .'Renseignez la clé pour fermer cet endpoint public.'
+            );
+        }
+
         try {
             $dto = WebhookHandlingDTO::fromArray($request->all());
-            ProcessWebhook::dispatchSync($dto);
-            Log::info($dto->toString());
-            Log::info('received Webhook');
 
-            return response()->json(['message' => 'Processing started'], 200);
+            // Traitement asynchrone : le fournisseur ne doit pas attendre les
+            // appels de vérification, sous peine de timeout puis de renvoi.
+            ProcessWebhook::dispatch($dto);
+
+            Log::info('Webhook de paiement reçu.', ['payload' => $dto->toString()]);
         } catch (\Throwable $th) {
-            Log::error('Payment Callback : '.$th->getMessage());
+            Log::error('Payment Callback : '.$th->getMessage(), ['exception' => $th]);
         }
+
+        // Toujours acquitter : un corps vide ou une 500 pousse le fournisseur à
+        // rejouer la notification en boucle.
+        return response()->json(['message' => 'Processing started'], 200);
     }
 
     /**

@@ -28,6 +28,7 @@ class PaymentCallbackRequest extends FormRequest
             "raison_reject" => "nullable|string",
             "reference" => "nullable|string",
             "external_reference" => "nullable|string",
+            "signature" => "nullable|string",
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Paiements;
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ class SendMessageService
         $body = [
             'message' => $message ?: 'Bonjour Mr/Mm Votre code d\'activation est le ssuivant   '.$code.' a utiliser pour se connecter sur mon prof',
             'senderId' => config('services.sms.sender_id'),
-            'msisdn' => ['237'.$this->paie->numero_client],
+            'msisdn' => [PhoneNumber::msisdn($this->paie->numero_client)],
         ];
         $url = config('services.sms.url');
         $headers = [

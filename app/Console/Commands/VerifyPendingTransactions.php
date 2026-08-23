@@ -6,6 +6,7 @@ use App\DTO\TransactionVerificationResult;
 use App\Enums\TransactionStatus;
 use App\Jobs\VerifyPendingTransaction;
 use App\Models\Transaction;
+use App\Services\Payments\TransactionFinalizationService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -20,6 +21,7 @@ class VerifyPendingTransactions extends Command
                             {--chunk= : Nombre de transactions chargées par lot}
                             {--transaction= : ID local d’une transaction précise à vérifier}
                             {--dry-run : Interroger le provider sans modifier les paiements ni les transactions}
+                            {--no-expire : Ne pas expirer les transactions trop anciennes}
                             {--once : Effectuer un seul passage sans attendre}';
 
     protected $description = 'Vérifie les transactions en attente auprès de leur fournisseur de paiement';
@@ -43,6 +45,8 @@ class VerifyPendingTransactions extends Command
         $results = [];
 
         try {
+            $results = $this->expireStaleTransactions($chunk);
+
             do {
                 $passStartedAt = microtime(true);
                 $passes++;
@@ -96,7 +100,18 @@ class VerifyPendingTransactions extends Command
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
             ])
-            ->when($this->option('transaction'), fn ($query, $id) => $query->whereKey((int) $id))
+            ->when(
+                $this->option('transaction'),
+                // Vérification manuelle ciblée : on court-circuite les filtres.
+                fn ($query, $id) => $query->whereKey((int) $id),
+                // Sans référence fournisseur il n'y a rien à interroger, et au-delà
+                // de max_age la transaction est expirée : la repoller indéfiniment
+                // saturait le quota du fournisseur.
+                fn ($query) => $query
+                    ->whereNotNull('transaction_id')
+                    ->where('transaction_id', '!=', '')
+                    ->where('created_at', '>=', now()->subMinutes($this->maxAge())),
+            )
             ->orderBy('id')
             ->chunkById($chunk, function ($transactions) use (&$results, $deadline): bool {
                 foreach ($transactions as $transaction) {
@@ -129,6 +144,72 @@ class VerifyPendingTransactions extends Command
 
                 return true;
             });
+
+        return $results;
+    }
+
+    private function maxAge(): int
+    {
+        return max(1, (int) config('payments.polling.max_age', 180));
+    }
+
+    /**
+     * Ferme les transactions restées en attente au-delà de la fenêtre de polling.
+     * Après plusieurs heures d'interrogations infructueuses, le paiement mobile
+     * n'aboutira plus : on le marque échoué une bonne fois et on cesse d'appeler
+     * le fournisseur pour cette transaction.
+     *
+     * @return array<int, TransactionVerificationResult>
+     */
+    private function expireStaleTransactions(int $chunk): array
+    {
+        if ($this->option('dry-run')
+            || $this->option('no-expire')
+            || $this->option('transaction')
+            || ! config('payments.polling.expire_stale', true)) {
+            return [];
+        }
+
+        $finalizer = app(TransactionFinalizationService::class);
+        $cutoff = now()->subMinutes($this->maxAge());
+        $results = [];
+
+        Transaction::query()
+            ->whereRaw('UPPER(status) IN (?, ?)', [
+                TransactionStatus::PENDING->value,
+                TransactionStatus::PROCESSING->value,
+            ])
+            ->where('created_at', '<', $cutoff)
+            ->orderBy('id')
+            ->chunkById($chunk, function ($transactions) use (&$results, $finalizer): void {
+                foreach ($transactions as $transaction) {
+                    try {
+                        $finalizer->applyStatus(
+                            transaction: $transaction,
+                            status: TransactionStatus::FAILED,
+                            context: ['expired_after_minutes' => $this->maxAge()],
+                            reason: 'Délai de paiement dépassé, aucune confirmation du fournisseur.',
+                            source: 'expiration',
+                        );
+
+                        $results[] = new TransactionVerificationResult(
+                            $transaction->id,
+                            TransactionStatus::FAILED->value,
+                            null,
+                            'Transaction expirée après '.$this->maxAge().' minutes sans confirmation.',
+                        );
+                    } catch (Throwable $exception) {
+                        Log::error('Échec de l’expiration d’une transaction en attente.', [
+                            'transaction_id' => $transaction->id,
+                            'exception' => $exception,
+                        ]);
+                    }
+                }
+            });
+
+        if ($results !== []) {
+            $this->components->info(count($results).' transaction(s) expirée(s).');
+        }
 
         return $results;
     }

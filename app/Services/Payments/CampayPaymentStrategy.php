@@ -5,6 +5,8 @@ namespace App\Services\Payments;
 use App\DTO\CreateTransactionDto;
 use App\DTO\PaymentResult;
 use App\Enums\TransactionStatus;
+use App\Support\PhoneNumber;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -33,31 +35,77 @@ class CampayPaymentStrategy implements PaymentStrategy
         }
     }
 
-    protected function getAuthHeader(): ?array
+    /**
+     * Le token CamPay est valable une quinzaine de minutes : on le met en cache
+     * pour ne pas rappeler /token/ à chaque passage du poller (toutes les 5 s),
+     * ce qui déclenchait le throttling du fournisseur.
+     */
+    protected function getToken(): ?string
     {
-        // Log::info(
-        //     [
-        //         "userName" => $this->username,
-        //         "Password" => $this->password,
-        //     ]
-        // );
-        $response = Http::post("{$this->baseUrl}/token/", [
+        $ttl = max(1, (int) config('campay.token_ttl', 10));
+        $cacheKey = 'campay:token:'.md5($this->baseUrl.'|'.$this->username);
+
+        $token = Cache::get($cacheKey);
+
+        if (filled($token)) {
+            return $token;
+        }
+
+        $response = Http::acceptJson()->post("{$this->baseUrl}/token/", [
             'username' => $this->username,
             'password' => $this->password,
         ]);
 
         if ($response->failed()) {
-            Log::error('CamPay token error', ['body' => $response->json()]);
+            Log::error('CamPay token error', [
+                'status' => $response->status(),
+                'base_url' => $this->baseUrl,
+                'body' => $response->json() ?? $response->body(),
+            ]);
 
             return null;
         }
 
-        Log::info('CamPay authentication response', $response->json());
+        $token = $response->json('token');
+
+        if (blank($token)) {
+            Log::error('CamPay token error : réponse sans token.', ['status' => $response->status()]);
+
+            return null;
+        }
+
+        Cache::put($cacheKey, $token, now()->addMinutes($ttl));
+
+        return $token;
+    }
+
+    protected function forgetToken(): void
+    {
+        Cache::forget('campay:token:'.md5($this->baseUrl.'|'.$this->username));
+    }
+
+    protected function getAuthHeader(): ?array
+    {
+        $token = $this->getToken();
+
+        if (blank($token)) {
+            return null;
+        }
 
         return [
-            'Authorization' => 'Token ' . $response->json('token'),
+            'Authorization' => 'Token '.$token,
             'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
         ];
+    }
+
+    /**
+     * Format attendu par CamPay : 237XXXXXXXXX.
+     * Gère les saisies « +237690000000 », « 00237 690 00 00 00 », « 690-00-00-00 ».
+     */
+    public static function normalizePhoneNumber(?string $phone): string
+    {
+        return PhoneNumber::msisdn($phone);
     }
 
     public function startPayment(CreateTransactionDto $dto): PaymentResponseModel
@@ -65,10 +113,7 @@ class CampayPaymentStrategy implements PaymentStrategy
         $isDeposit = $dto->isDeposit();
         $endpoint = $isDeposit ? 'collect' : 'withdraw';
 
-        $phone = $dto->phoneNumber;
-        if (! str_starts_with($phone, '237')) {
-            $phone = "237$phone";
-        }
+        $phone = static::normalizePhoneNumber($dto->phoneNumber);
         $body = [
             'amount' => (string) $dto->amount,
             ($isDeposit ? 'from' : 'to') => $phone, //$dto->phoneNumber,
@@ -92,8 +137,17 @@ class CampayPaymentStrategy implements PaymentStrategy
         ]);
 
         if ($response->failed()) {
-            Log::error('CamPay payment error', ['body' => $response->json()]);
-            throw new \RuntimeException('Response not found from CamPay');
+            Log::error('CamPay payment error', [
+                'status' => $response->status(),
+                'body' => $response->json() ?? $response->body(),
+            ]);
+
+            throw new \RuntimeException(sprintf(
+                'CamPay %s failed: %d %s',
+                $endpoint,
+                $response->status(),
+                json_encode($response->json() ?? $response->body(), JSON_UNESCAPED_UNICODE),
+            ));
         }
 
         if ($response->successful()) {
@@ -121,6 +175,14 @@ class CampayPaymentStrategy implements PaymentStrategy
 
     public function checkStatus(string $reference): PaymentResponseModel
     {
+        $reference = trim($reference);
+
+        // Sans cette garde, l'URL devient «/api/transaction//», que CamPay
+        // normalise vers l'endpoint de liste et refuse avec un 403 trompeur.
+        if (blank($reference)) {
+            throw new \RuntimeException('CamPay status check failed: référence de transaction vide.');
+        }
+
         $headers = $this->getAuthHeader();
         if (! $headers) {
             throw new \RuntimeException('CamPay authentication header not found');
@@ -129,8 +191,31 @@ class CampayPaymentStrategy implements PaymentStrategy
         $response = Http::withHeaders($headers)
             ->get("{$this->baseUrl}/transaction/{$reference}/");
 
+        // Un token mis en cache peut avoir été révoqué côté CamPay : on le jette
+        // et on retente une fois avec un token frais avant de déclarer l'échec.
+        if (in_array($response->status(), [401, 403], true)) {
+            $this->forgetToken();
+            $headers = $this->getAuthHeader();
+
+            if ($headers) {
+                $response = Http::withHeaders($headers)
+                    ->get("{$this->baseUrl}/transaction/{$reference}/");
+            }
+        }
+
         if ($response->failed()) {
-            throw new \RuntimeException("CamPay status check failed: {$response->status()}");
+            Log::error('CamPay status check error', [
+                'status' => $response->status(),
+                'reference' => $reference,
+                'base_url' => $this->baseUrl,
+                'body' => $response->json() ?? $response->body(),
+            ]);
+
+            throw new \RuntimeException(sprintf(
+                'CamPay status check failed: %d %s',
+                $response->status(),
+                json_encode($response->json() ?? $response->body(), JSON_UNESCAPED_UNICODE),
+            ));
         }
 
         return new PaymentResponseModel([
@@ -142,6 +227,8 @@ class CampayPaymentStrategy implements PaymentStrategy
             'operator' => $response->json('operator'),
             'amount_total' => $response->json('amount'),
             'currency' => $response->json('currency'),
+            // Motif d'échec CamPay, repris dans la notification envoyée au client.
+            'reason' => $response->json('reason'),
         ]);
     }
 

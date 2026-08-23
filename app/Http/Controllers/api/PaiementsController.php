@@ -9,9 +9,11 @@ use App\Models\Categorie;
 use App\Models\Paiements;
 use App\Models\PayementServices;
 use App\Models\User;
+use App\Rules\CameroonMobileNumber;
 use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -48,8 +50,8 @@ class PaiementsController extends Controller
                 // 'user_id' => 'integer|required|exists:users,id',
                 'categorie_id' => 'integer|required|exists:categories,id',
                 'nombre_de_code' => 'integer|required',
-                'numero_payeur' => 'required',
-                'numero_client' => 'required',
+                'numero_payeur' => ['required', 'string', new CameroonMobileNumber],
+                'numero_client' => ['required', 'string', new CameroonMobileNumber],
                 'subscription_id' => 'integer|required|exists:payment_services,subscription_id',
             ]);
             $user = User::find(auth()->id());
@@ -65,9 +67,14 @@ class PaiementsController extends Controller
             $uuid = (string) Str::uuid();
             $reference = 'MPP-'.$uuid; // strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
 
+            // montant + 2,5 % de frais, arrondi au multiple de 5 supérieur :
+            // les opérateurs mobile money camerounais refusent tout autre montant.
+            $montantAvecFrais = $data['montant'] + ($data['montant'] * 2.5 / 100);
+            $montantAPayer = (int) (ceil($montantAvecFrais / 5) * 5);
+
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
-                'amount' => ceil($data['montant'] + ($data['montant'] * 2.5 / 100)), // montant + 2.5% de frais de transaction
+                'amount' => (string) $montantAPayer,
                 'phone_number' => $data['numero_payeur'],
                 'status' => 'PENDING',
                 'sens' => 'IN',
@@ -76,15 +83,19 @@ class PaiementsController extends Controller
                 'subscription_id' => $request['subscription_id'],
             ]);
 
-            $trx = TransactionController::store($transactionPostDto);
+            // Le paiement doit exister avant que le fournisseur ne puisse
+            // notifier le succès : sinon la finalisation ne trouve pas la ligne
+            // et la transaction reste bloquée en PENDING alors qu'elle est payée.
+            [$trx, $paiment] = DB::transaction(function () use ($transactionPostDto, $data) {
+                $trx = TransactionController::createPendingTransaction($transactionPostDto);
+                $data['transaction_id'] = $trx->id;
 
-            Log::debug('Trasaction  response '.$trx);
+                return [$trx, Paiements::create($data)];
+            });
 
-            $data['transaction_id'] = $trx->id;
+            $trx = TransactionController::initiateWithProvider($trx, $transactionPostDto);
 
-            $paiment = Paiements::create($data);
-
-            Log::debug('Created Paiement  '.$paiment);
+            Log::debug('Transaction initiée', ['transaction' => $trx->id, 'paiement' => $paiment->id]);
 
             // transaction Post DTO
             $token = $user->fcm_token;

@@ -7,15 +7,20 @@ use Spatie\DataTransferObject\DataTransferObject;
 class PaymentIntent extends DataTransferObject
 {
     public string $paymentToken;
+
+    public string $providerReference;
+
+    /** @deprecated Utiliser providerReference. */
     public string $transactionId;
 
-
-
-    static function fromArray(array $data): self
+    public static function fromArray(array $data): self
     {
+        $transaction = data_get($data, 'result.transaction', data_get($data, 'result', []));
+
         return new self(
-            paymentToken: $data['result']['pay_token'],
-            transactionId: $data['result']['id']
+            paymentToken: (string) $transaction['pay_token'],
+            providerReference: (string) $transaction['id'],
+            transactionId: (string) $transaction['id'],
         );
     }
 }

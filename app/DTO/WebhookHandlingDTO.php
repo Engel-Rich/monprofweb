@@ -18,15 +18,15 @@ class WebhookHandlingDTO
      */
     public static function fromArray(array $data): self
     {
-        $reference = $data['reference'] ?? null;
+        $reference = $data['provider_reference'] ?? $data['reference'] ?? null;
 
-        $externalReference = isset($data['external_reference'])
-            ? 'MPP-' . $data['external_reference']
-            : null;
+        $externalReference = $data['local_reference'] ?? $data['external_reference'] ?? null;
 
-        $id = $reference === null
-            ? ($data['transaction_id'] ?? null)
-            : $reference;
+        if (filled($externalReference) && ! str_starts_with((string) $externalReference, 'MPP-')) {
+            $externalReference = 'MPP-'.$externalReference;
+        }
+
+        $id = $reference ?? $data['transaction_id'] ?? null;
 
         return new self(
             id: $id,
@@ -56,6 +56,8 @@ class WebhookHandlingDTO
     public function toArray(): array
     {
         return [
+            'provider_reference' => $this->id,
+            // Alias reçu par les anciens callbacks CamPay.
             'transaction_id' => $this->id,
             'reference' => $this->reference,
             'external_reference' => $this->externalReference,

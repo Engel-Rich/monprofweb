@@ -78,7 +78,7 @@ class VerifyPendingTransaction implements ShouldQueue
             // La référence fournisseur n'est écrite qu'après l'appel d'initiation :
             // tant qu'elle est vide, interroger le provider produit une URL
             // «/transaction//» à laquelle CamPay répond 403. On repasse plus tard.
-            if (blank($transaction->transaction_id)) {
+            if (blank($transaction->provider_reference)) {
                 return new TransactionVerificationResult(
                     $transaction->id,
                     'SKIPPED',
@@ -98,7 +98,10 @@ class VerifyPendingTransaction implements ShouldQueue
             }
 
             $strategy = PaymentFactory::make($provider);
-            $result = $strategy->verifyPayment((string) $transaction->transaction_id);
+            $result = $strategy->verifyPayment(
+                (string) $transaction->provider_reference,
+                $transaction->payment_token,
+            );
 
             if (! $result->status || $result->status === TransactionStatus::ERROR) {
                 throw new \RuntimeException($result->error ?: 'Le fournisseur n’a retourné aucun statut exploitable.');
@@ -141,7 +144,7 @@ class VerifyPendingTransaction implements ShouldQueue
             );
         } catch (Throwable $exception) {
             Log::error('Échec de la vérification d’une transaction en attente.', [
-                'transaction_id' => $this->transactionId,
+                'local_transaction_id' => $this->transactionId,
                 'error' => $exception->getMessage(),
                 'exception' => $exception,
             ]);

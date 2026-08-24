@@ -56,7 +56,7 @@
                     ['label' => 'Fournisseur', 'value' => $service->provider?->name ?? 'Non rattaché'],
                     ['label' => 'Code fournisseur', 'value' => $service->provider?->code],
                     ['label' => 'Sens', 'value' => match($service->sens) { 'IN' => 'Encaissement (IN)', 'OUT' => 'Décaissement (OUT)', default => 'Non défini' }],
-                    ['label' => 'ID abonnement', 'value' => $service->subscription_id],
+                    ['label' => 'ID service fournisseur', 'value' => $service->provider_service_id],
                     ['label' => 'Expression régulière', 'value' => $service->reg_exp],
                     ['label' => 'Statut technique', 'value' => $service->status],
                 ],

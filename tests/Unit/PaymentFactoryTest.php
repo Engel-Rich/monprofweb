@@ -43,12 +43,12 @@ class TestPaymentStrategy implements PaymentStrategy
         throw new \LogicException('Not used by this unit test.');
     }
 
-    public function cancelPayment(string $transactionId): PaymentResult
+    public function cancelPayment(string $providerReference): PaymentResult
     {
         throw new \LogicException('Not used by this unit test.');
     }
 
-    public function verifyPayment(string $transactionId): PaymentResult
+    public function verifyPayment(string $providerReference, ?string $paymentToken = null): PaymentResult
     {
         throw new \LogicException('Not used by this unit test.');
     }

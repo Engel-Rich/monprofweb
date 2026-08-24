@@ -23,7 +23,7 @@ class Transaction extends Model
         'internal_service',
         'subscription_id',
         'service_id',
-        'transaction_id',
+        'provider_reference',
         'payment_token',
         'reference',
         'raison_reject',

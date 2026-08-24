@@ -107,3 +107,30 @@ La commande conserve les mêmes noms et arborescences : elle ne modifie pas la b
 de données et peut être relancée sans créer de doublons. Une fois la copie validée,
 passer à `FILE_STORAGE_DRIVER=minio` puis redéployer l’application. Les fichiers
 Firebase restent disponibles comme sauvegarde pendant cette transition.
+
+## Paiements MundiPay
+
+L’identification d’une transaction est séparée en trois valeurs :
+
+- `transactions.id` : identifiant local MonProf ;
+- `transactions.reference` : référence métier locale (`MPP-…`) ;
+- `transactions.provider_reference` : identifiant renvoyé par le fournisseur.
+
+Le `payment_token` MundiPay est stocké séparément et sert à appeler l’endpoint de
+vérification. Après déploiement, exécuter `php artisan migrate --force` pour
+renommer l’ancienne colonne sans perdre les références déjà enregistrées.
+
+Variables à déclarer dans Dokploy :
+
+```dotenv
+MUNDIPAY_API_URL=https://gateway.mundipay.pro/api
+MUNDIPAY_TRANSACTION_PATH=v1/transaction
+MUNDIPAY_API_KEY=
+MUNDIPAY_API_SECRET=
+MUNDIPAY_TIMEOUT=30
+```
+
+Les anciennes variables `MUNDY_PAY_*` restent acceptées pendant la transition.
+Pour une nouvelle version de l’application mobile, envoyer l’ID local dans
+`payment_service_id`. Le champ historique `subscription_id` reste accepté afin
+de ne pas casser les clients déjà publiés.

@@ -22,21 +22,23 @@ class PaymentCallbackRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "pay_token" => "nullable|string",
-            "status" => "required|string",
-            "transaction_id" => "string|nullable",
-            "raison_reject" => "nullable|string",
-            "reference" => "nullable|string",
-            "external_reference" => "nullable|string",
-            "signature" => "nullable|string",
+            'pay_token' => 'nullable|string',
+            'status' => 'required|string',
+            'transaction_id' => 'string|nullable',
+            'provider_reference' => 'string|nullable',
+            'raison_reject' => 'nullable|string',
+            'reference' => 'nullable|string',
+            'external_reference' => 'nullable|string',
+            'local_reference' => 'nullable|string',
+            'signature' => 'nullable|string',
         ];
     }
 
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if (empty($this->transaction_id) && empty($this->reference) && empty($this->external_reference)) {
-                $validator->errors()->add('transaction_id', 'Au moins un identifiant de transaction est requis.');
+            if (empty($this->provider_reference) && empty($this->transaction_id) && empty($this->reference) && empty($this->external_reference) && empty($this->local_reference)) {
+                $validator->errors()->add('provider_reference', 'Au moins un identifiant de transaction est requis.');
             }
         });
     }

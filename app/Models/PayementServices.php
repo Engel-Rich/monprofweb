@@ -34,6 +34,7 @@ class PayementServices extends Model
 
     protected $appends = [
         'image_url',
+        'provider_service_id',
     ];
 
     public function provider(): BelongsTo
@@ -56,5 +57,14 @@ class PayementServices extends Model
         }
 
         return app(FileManager::class, ['filefolder' => 'payment/services'])->get($this->img);
+    }
+
+    /**
+     * Nom explicite exposé aux nouveaux clients. subscription_id reste présent
+     * pour les versions mobiles déjà déployées.
+     */
+    public function getProviderServiceIdAttribute(): ?int
+    {
+        return filled($this->subscription_id) ? (int) $this->subscription_id : null;
     }
 }

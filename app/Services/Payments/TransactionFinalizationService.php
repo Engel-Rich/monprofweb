@@ -22,7 +22,7 @@ class TransactionFinalizationService
     ): bool {
         if (! $result->status || $result->status === TransactionStatus::ERROR) {
             Log::warning('Vérification fournisseur temporairement indisponible.', [
-                'transaction_id' => $transaction->id,
+                'local_transaction_id' => $transaction->id,
                 'provider' => $provider,
                 'error' => $result->error,
             ]);
@@ -57,7 +57,7 @@ class TransactionFinalizationService
         $lock = Cache::lock("transaction:finalize:{$transaction->id}", 30);
 
         if (! $lock->get()) {
-            Log::info('Finalisation déjà en cours pour la transaction.', ['transaction_id' => $transaction->id]);
+            Log::info('Finalisation déjà en cours pour la transaction.', ['local_transaction_id' => $transaction->id]);
 
             return false;
         }
@@ -78,7 +78,7 @@ class TransactionFinalizationService
                 && $targetStatus !== TransactionStatus::SUCCESS->value) {
                 $transaction->update(['metadatas' => $metadata]);
                 Log::warning('Statut fournisseur tardif ignoré après un succès définitif.', [
-                    'transaction_id' => $transaction->id,
+                    'local_transaction_id' => $transaction->id,
                     'received_status' => $targetStatus,
                 ]);
 
@@ -104,7 +104,7 @@ class TransactionFinalizationService
 
                 if (! $paiement) {
                     Log::warning('Paiement associé encore introuvable, la transaction reste en attente.', [
-                        'transaction_id' => $transaction->id,
+                        'local_transaction_id' => $transaction->id,
                     ]);
 
                     $transaction->update(['metadatas' => $metadata]);
@@ -124,7 +124,7 @@ class TransactionFinalizationService
                     || blank($paiement->paiement_date)
                     || $paiement->codes()->count() < $expectedCodes) {
                     Log::warning('Le paiement n’est pas complètement finalisé, la transaction reste en attente.', [
-                        'transaction_id' => $transaction->id,
+                        'local_transaction_id' => $transaction->id,
                         'paiement_id' => $paiement->id,
                     ]);
                     $transaction->update(['metadatas' => $metadata]);
@@ -150,7 +150,7 @@ class TransactionFinalizationService
             }
 
             Log::info('Transaction réconciliée avec le fournisseur.', [
-                'transaction_id' => $transaction->id,
+                'local_transaction_id' => $transaction->id,
                 'source' => $source,
                 'previous_status' => $previousStatus,
                 'status' => $targetStatus,
@@ -214,6 +214,8 @@ class TransactionFinalizationService
             even_type: 'PAYMENT_STATUS',
             data: [
                 'amount' => (string) $transaction->amount,
+                'local_transaction_id' => (string) $transaction->id,
+                // Alias historique conservé pour les applications mobiles.
                 'transaction_id' => (string) $transaction->id,
                 'status' => (string) $transaction->status,
                 'raison_reject' => (string) ($reason ?? ''),

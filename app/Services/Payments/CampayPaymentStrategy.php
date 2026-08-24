@@ -43,7 +43,7 @@ class CampayPaymentStrategy implements PaymentStrategy
     protected function getToken(): ?string
     {
         $ttl = max(1, (int) config('campay.token_ttl', 10));
-        $cacheKey = 'campay:token:' . md5($this->baseUrl . '|' . $this->username);
+        $cacheKey = 'campay:token:'.md5($this->baseUrl.'|'.$this->username);
 
         $token = Cache::get($cacheKey);
 
@@ -81,7 +81,7 @@ class CampayPaymentStrategy implements PaymentStrategy
 
     protected function forgetToken(): void
     {
-        Cache::forget('campay:token:' . md5($this->baseUrl . '|' . $this->username));
+        Cache::forget('campay:token:'.md5($this->baseUrl.'|'.$this->username));
     }
 
     protected function getAuthHeader(): ?array
@@ -93,7 +93,7 @@ class CampayPaymentStrategy implements PaymentStrategy
         }
 
         return [
-            'Authorization' => 'Token ' . $token,
+            'Authorization' => 'Token '.$token,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
@@ -155,7 +155,7 @@ class CampayPaymentStrategy implements PaymentStrategy
                 'status' => 'PENDING',
                 'reference_id' => $dto->reference,
                 'order_id' => $dto->reference,
-                'transaction_id' => $response->json('reference'),
+                'provider_reference' => $response->json('reference'),
                 'phone_number' => $dto->phoneNumber,
                 'operator' => $response->json('operator'),
                 'amount_total' => $response->json('amount_total'),
@@ -166,7 +166,7 @@ class CampayPaymentStrategy implements PaymentStrategy
             'status' => 'FAILED',
             'reference_id' => $dto->reference,
             'order_id' => $dto->reference,
-            'transaction_id' => $response->json('reference'),
+            'provider_reference' => $response->json('reference'),
             'phone_number' => $dto->phoneNumber,
             'operator' => $response->json('operator'),
             'amount_total' => $response->json('amount_total'),
@@ -187,12 +187,12 @@ class CampayPaymentStrategy implements PaymentStrategy
         if (! $headers) {
             throw new \RuntimeException('CamPay authentication header not found');
         }
-        Log::info("Url de verify", ["{$this->baseUrl}/transaction/{$reference}/"]);
+        Log::info('Url de verify', ["{$this->baseUrl}/transaction/{$reference}/"]);
 
         $response = Http::withHeaders($headers)
             ->get("{$this->baseUrl}/transaction/{$reference}/");
 
-        Log::info("result verify", [$response]);
+        Log::info('result verify', [$response]);
 
         // Un token mis en cache peut avoir été révoqué côté CamPay : on le jette
         // et on retente une fois avec un token frais avant de déclarer l'échec.
@@ -225,7 +225,7 @@ class CampayPaymentStrategy implements PaymentStrategy
             'status' => $response->json('status'),
             'reference_id' => $reference,
             'order_id' => $response->json('reference'),
-            'transaction_id' => $response->json('reference'),
+            'provider_reference' => $response->json('reference'),
             'phone_number' => $response->json('phone_number'),
             'operator' => $response->json('operator'),
             'amount_total' => $response->json('amount'),
@@ -251,7 +251,7 @@ class CampayPaymentStrategy implements PaymentStrategy
 
             return new PaymentResult(
                 status: $transactionStatus,
-                transactionId: $paymentResponse->data['transaction_id'] ?? null,
+                providerReference: $paymentResponse->data['provider_reference'] ?? null,
                 externalReference: $paymentResponse->data['reference_id'] ?? null,
                 message: $transactionStatus === TransactionStatus::PENDING
                     ? 'Payment processed successfully with CamPay'
@@ -259,7 +259,7 @@ class CampayPaymentStrategy implements PaymentStrategy
                 paymentResponseModel: $paymentResponse,
                 amount: $paymentResponse->data['amount_total'] ?? null,
                 currency: $dto->currency,
-                paymentIntent: $paymentResponse->data['transaction_id'] ?? null,
+                paymentIntent: $paymentResponse->data['provider_reference'] ?? null,
             );
         } catch (\Throwable $e) {
             Log::error('CamPay processPayment error', ['error' => $e->getMessage()]);
@@ -271,21 +271,21 @@ class CampayPaymentStrategy implements PaymentStrategy
         }
     }
 
-    public function cancelPayment(string $transactionId): PaymentResult
+    public function cancelPayment(string $providerReference): PaymentResult
     {
-        Log::info('Cancelling CamPay payment', ['transactionId' => $transactionId]);
+        Log::info('Cancelling CamPay payment', ['provider_reference' => $providerReference]);
 
         return new PaymentResult(
             status: TransactionStatus::CANCELLED,
-            transactionId: $transactionId,
+            providerReference: $providerReference,
             message: 'Payment cancelled with CamPay',
         );
     }
 
-    public function verifyPayment(string $transactionId): PaymentResult
+    public function verifyPayment(string $providerReference, ?string $paymentToken = null): PaymentResult
     {
         try {
-            $paymentResponse = $this->checkStatus($transactionId);
+            $paymentResponse = $this->checkStatus($providerReference);
             $status = strtoupper((string) ($paymentResponse->data['status'] ?? ''));
 
             $transactionStatus = match (true) {
@@ -296,11 +296,11 @@ class CampayPaymentStrategy implements PaymentStrategy
 
             return new PaymentResult(
                 status: $transactionStatus,
-                transactionId: $transactionId,
+                providerReference: $providerReference,
                 paymentResponseModel: $paymentResponse,
                 amount: $paymentResponse->data['amount_total'] ?? null,
                 currency: $paymentResponse->data['currency'] ?? null,
-                paymentIntent: $paymentResponse->data['transaction_id'] ?? null,
+                paymentIntent: $paymentResponse->data['provider_reference'] ?? null,
             );
         } catch (\Throwable $e) {
             Log::error('CamPay verifyPayment error', ['error' => $e->getMessage()]);

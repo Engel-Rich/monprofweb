@@ -56,7 +56,7 @@ class PaiementsController extends Controller
             return back()->with('error', 'Aucune transaction n’est associée à ce paiement.');
         }
 
-        if (blank($paiement->transaction->transaction_id)) {
+        if (blank($paiement->transaction->provider_reference)) {
             return back()->with('error', 'La référence fournisseur est absente : la transaction ne peut pas être revérifiée.');
         }
 

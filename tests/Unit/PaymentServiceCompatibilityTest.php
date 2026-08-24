@@ -35,5 +35,6 @@ class PaymentServiceCompatibilityTest extends TestCase
         $this->assertArrayHasKey('sens', $serialized);
         $this->assertArrayHasKey('payment_provider_id', $serialized);
         $this->assertArrayHasKey('image_url', $serialized);
+        $this->assertSame(2, $serialized['provider_service_id']);
     }
 }

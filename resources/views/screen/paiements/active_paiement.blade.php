@@ -76,7 +76,7 @@
                         <div class="payment-reference-banner {{ strtolower($transaction->status) }}">
                             <div>
                                 <span>Référence fournisseur</span>
-                                <strong>{{ $transaction->transaction_id ?: 'Non disponible' }}</strong>
+                                <strong>{{ $transaction->provider_reference ?: 'Non disponible' }}</strong>
                                 <small>{{ $transaction->reference ?: 'Aucune référence MonProf' }}</small>
                             </div>
                             <span class="status-pill {{ strtolower($transaction->status) === 'success' ? 'success' : (strtolower($transaction->status) === 'failed' ? 'danger' : 'warning') }}">{{ $transaction->status }}</span>

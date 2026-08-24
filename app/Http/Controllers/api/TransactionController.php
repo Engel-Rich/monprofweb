@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Paiements;
+use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -22,9 +21,12 @@ class TransactionController extends Controller
             // 1. Spécifiez les colonnes pour éviter que l'ID de la transaction n'écrase celui du paiement
             ->select(
                 'paiements.*',
+                'transactions.id as local_transaction_id',
                 'transactions.status as trans_status',
                 'transactions.reference',
-                "transactions.phone_number as phone_number_payment"
+                'transactions.provider_reference',
+                'transactions.payment_token',
+                'transactions.phone_number as phone_number_payment'
             )
 
             // 2. Jointure interne (Inner Join)

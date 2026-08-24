@@ -32,7 +32,7 @@ class ProcessWebhook implements ShouldQueue
         $query = Transaction::query();
 
         if (filled($this->dto->id)) {
-            $query->where('transaction_id', $this->dto->id);
+            $query->where('provider_reference', $this->dto->id);
         }
 
         if (filled($this->dto->externalReference)) {
@@ -47,7 +47,7 @@ class ProcessWebhook implements ShouldQueue
 
         if (! $transaction) {
             Log::error('Transaction du webhook introuvable.', [
-                'transaction_id' => $this->dto->id,
+                'provider_reference' => $this->dto->id,
                 'external_reference' => $this->dto->externalReference,
             ]);
 
@@ -57,17 +57,17 @@ class ProcessWebhook implements ShouldQueue
         // La notification peut arriver avant que l'initiation n'ait eu le temps
         // d'écrire la référence fournisseur : on la récupère ici, sinon le
         // poller n'aurait plus rien pour interroger le fournisseur.
-        if (blank($transaction->transaction_id) && filled($this->dto->reference)) {
-            $transaction->update(['transaction_id' => $this->dto->reference]);
+        if (blank($transaction->provider_reference) && filled($this->dto->reference)) {
+            $transaction->update(['provider_reference' => $this->dto->reference]);
             $transaction->refresh();
         }
 
-        $providerReference = $this->dto->reference ?: $transaction->transaction_id;
+        $providerReference = $this->dto->reference ?: $transaction->provider_reference;
         $provider = $transaction->provider ?? PaymentProvider::active()->first();
 
         if (! $provider || blank($providerReference)) {
             Log::warning('Webhook non vérifiable : fournisseur ou référence manquants.', [
-                'transaction_id' => $transaction->id,
+                'local_transaction_id' => $transaction->id,
                 'provider' => $provider?->code,
                 'reference' => $providerReference,
             ]);
@@ -79,10 +79,13 @@ class ProcessWebhook implements ShouldQueue
         // n'est qu'un déclencheur. Le statut faisant foi est celui que le
         // fournisseur renvoie sur son API.
         try {
-            $result = PaymentFactory::make($provider)->verifyPayment((string) $providerReference);
+            $result = PaymentFactory::make($provider)->verifyPayment(
+                (string) $providerReference,
+                $this->dto->payToken ?: $transaction->payment_token,
+            );
         } catch (\Throwable $exception) {
             Log::error('Vérification du webhook auprès du fournisseur impossible.', [
-                'transaction_id' => $transaction->id,
+                'local_transaction_id' => $transaction->id,
                 'provider' => $provider->code,
                 'error' => $exception->getMessage(),
             ]);
@@ -94,7 +97,7 @@ class ProcessWebhook implements ShouldQueue
             // Rien n'est appliqué : la transaction reste en attente et le
             // scheduler la reprendra au passage suivant.
             Log::warning('Webhook reçu mais statut fournisseur indisponible.', [
-                'transaction_id' => $transaction->id,
+                'local_transaction_id' => $transaction->id,
                 'provider' => $provider->code,
                 'error' => $result->error,
                 'webhook_status' => $this->dto->status,

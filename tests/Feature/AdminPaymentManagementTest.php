@@ -170,7 +170,7 @@ class AdminPaymentManagementTest extends TestCase
                 'payment_provider_id' => $providerId,
                 'service_id' => $serviceId,
                 'user_id' => $userId,
-                'transaction_id' => 'provider-reference-100',
+                'provider_reference' => 'provider-reference-100',
                 'reference' => 'MPP-reference-100',
                 'amount' => 1025,
                 'phone_number' => '690000000',
@@ -245,7 +245,7 @@ class AdminPaymentManagementTest extends TestCase
             $table->unsignedBigInteger('payment_provider_id')->nullable();
             $table->unsignedBigInteger('service_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('transaction_id')->nullable();
+            $table->string('provider_reference')->nullable();
             $table->string('payment_token')->nullable();
             $table->string('reference')->nullable();
             $table->decimal('amount', 12, 2);

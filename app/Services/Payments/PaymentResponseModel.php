@@ -8,6 +8,11 @@ class PaymentResponseModel
 
     public function __construct(array $data)
     {
+        $providerReference = $data['provider_reference'] ?? $data['transaction_id'] ?? null;
+        $data['provider_reference'] = $providerReference;
+
+        // Compatibilité avec les consommateurs mobiles déjà déployés.
+        $data['transaction_id'] ??= $providerReference;
         $this->data = $data;
     }
 

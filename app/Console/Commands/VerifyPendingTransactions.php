@@ -85,7 +85,7 @@ class VerifyPendingTransactions extends Command
             return self::FAILURE;
         }
 
-        return collect($results)->contains(fn(TransactionVerificationResult $result) => $result->isError())
+        return collect($results)->contains(fn (TransactionVerificationResult $result) => $result->isError())
             ? self::FAILURE
             : self::SUCCESS;
     }
@@ -103,13 +103,13 @@ class VerifyPendingTransactions extends Command
             ->when(
                 $this->option('transaction'),
                 // Vérification manuelle ciblée : on court-circuite les filtres.
-                fn($query, $id) => $query->whereKey((int) $id),
+                fn ($query, $id) => $query->whereKey((int) $id),
                 // Sans référence fournisseur il n'y a rien à interroger, et au-delà
                 // de max_age la transaction est expirée : la repoller indéfiniment
                 // saturait le quota du fournisseur.
-                fn($query) => $query
-                    ->whereNotNull('transaction_id')
-                    ->where('transaction_id', '!=', '')
+                fn ($query) => $query
+                    ->whereNotNull('provider_reference')
+                    ->where('provider_reference', '!=', '')
                     ->where('created_at', '>=', now()->subMinutes($this->maxAge())),
             )
             ->orderBy('id')
@@ -131,7 +131,7 @@ class VerifyPendingTransactions extends Command
                             : new TransactionVerificationResult($transaction->id, 'ERROR', message: 'Résultat de vérification invalide.');
                     } catch (Throwable $exception) {
                         Log::error('Échec inattendu de la vérification d’une transaction.', [
-                            'transaction_id' => $transaction->id,
+                            'local_transaction_id' => $transaction->id,
                             'exception' => $exception,
                         ]);
                         $results[] = new TransactionVerificationResult(
@@ -198,11 +198,11 @@ class VerifyPendingTransactions extends Command
                             $transaction->id,
                             TransactionStatus::FAILED->value,
                             null,
-                            'Transaction expirée après ' . $this->maxAge() . ' minutes sans confirmation.',
+                            'Transaction expirée après '.$this->maxAge().' minutes sans confirmation.',
                         );
                     } catch (Throwable $exception) {
                         Log::error('Échec de l’expiration d’une transaction en attente.', [
-                            'transaction_id' => $transaction->id,
+                            'local_transaction_id' => $transaction->id,
                             'exception' => $exception,
                         ]);
                     }
@@ -210,7 +210,7 @@ class VerifyPendingTransactions extends Command
             });
 
         if ($results !== []) {
-            $this->components->info(count($results) . ' transaction(s) expirée(s).');
+            $this->components->info(count($results).' transaction(s) expirée(s).');
         }
 
         return $results;
@@ -222,11 +222,11 @@ class VerifyPendingTransactions extends Command
         if ($this->output->isVerbose() && $results !== []) {
             $this->table(
                 ['Transaction', 'Résultat', 'Statut provider', 'Message'],
-                array_map(fn(TransactionVerificationResult $result) => array_values($result->toArray()), $results),
+                array_map(fn (TransactionVerificationResult $result) => array_values($result->toArray()), $results),
             );
         }
 
-        $counts = collect($results)->countBy(fn(TransactionVerificationResult $result) => $result->outcome);
+        $counts = collect($results)->countBy(fn (TransactionVerificationResult $result) => $result->outcome);
         $this->components->info(sprintf(
             '%d vérification(s), %d succès, %d en attente, %d échec(s), %d ignorée(s), %d erreur(s), en %d passage(s).',
             count($results),

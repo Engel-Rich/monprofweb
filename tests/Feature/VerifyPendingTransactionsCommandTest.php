@@ -47,7 +47,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         Schema::create('transactions', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('payment_provider_id')->nullable();
-            $table->string('transaction_id')->nullable();
+            $table->string('provider_reference')->nullable();
             $table->string('payment_token')->nullable();
             $table->string('reference')->nullable();
             $table->string('amount');
@@ -112,7 +112,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
 
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-123',
+            'provider_reference' => 'provider-123',
             'reference' => 'MPP-test',
             'amount' => '1000',
             'phone_number' => '690000000',
@@ -149,7 +149,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-success-123',
+            'provider_reference' => 'provider-success-123',
             'reference' => 'MPP-provider-success',
             'amount' => '1000',
             'phone_number' => '690000002',
@@ -208,7 +208,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-course-access',
+            'provider_reference' => 'provider-course-access',
             'reference' => 'MPP-course-access',
             'amount' => '1000',
             'phone_number' => '690000003',
@@ -254,7 +254,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-without-payment',
+            'provider_reference' => 'provider-without-payment',
             'reference' => 'MPP-without-payment',
             'amount' => '1000',
             'phone_number' => '690000004',
@@ -285,7 +285,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-dry-run',
+            'provider_reference' => 'provider-dry-run',
             'reference' => 'MPP-dry-run',
             'amount' => '1000',
             'phone_number' => '690000005',
@@ -326,7 +326,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-success',
+            'provider_reference' => 'provider-success',
             'reference' => 'MPP-success',
             'amount' => '1500',
             'phone_number' => '690000001',
@@ -356,7 +356,8 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-late-success',
+            'provider_reference' => 'provider-late-success',
+            'payment_token' => 'provider-pay-token',
             'reference' => 'MPP-late-success',
             'amount' => '1500',
             'phone_number' => '690000008',
@@ -372,6 +373,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertSame(TransactionStatus::SUCCESS->value, $result->providerStatus);
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
         $this->assertSame(1, PollingPaymentStrategy::$verificationCount);
+        $this->assertSame('provider-pay-token', PollingPaymentStrategy::$lastPaymentToken);
     }
 
     public function test_a_transaction_without_a_provider_reference_is_never_sent_to_the_provider(): void
@@ -386,7 +388,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => null,
+            'provider_reference' => null,
             'reference' => 'MPP-no-reference',
             'amount' => '1000',
             'phone_number' => '690000006',
@@ -427,7 +429,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         ]);
         $transaction = Transaction::create([
             'payment_provider_id' => $provider->id,
-            'transaction_id' => 'provider-stale',
+            'provider_reference' => 'provider-stale',
             'reference' => 'MPP-stale',
             'amount' => '1000',
             'phone_number' => '690000007',
@@ -452,6 +454,8 @@ class PollingPaymentStrategy implements PaymentStrategy
 
     public static string $verificationStatus = 'PENDING';
 
+    public static ?string $lastPaymentToken = null;
+
     public function startPayment(CreateTransactionDto $dto): PaymentResponseModel
     {
         throw new \LogicException('Not used by this test.');
@@ -467,18 +471,19 @@ class PollingPaymentStrategy implements PaymentStrategy
         throw new \LogicException('Not used by this test.');
     }
 
-    public function cancelPayment(string $transactionId): PaymentResult
+    public function cancelPayment(string $providerReference): PaymentResult
     {
         throw new \LogicException('Not used by this test.');
     }
 
-    public function verifyPayment(string $transactionId): PaymentResult
+    public function verifyPayment(string $providerReference, ?string $paymentToken = null): PaymentResult
     {
         self::$verificationCount++;
+        self::$lastPaymentToken = $paymentToken;
 
         return new PaymentResult(
             status: TransactionStatus::from(self::$verificationStatus),
-            transactionId: $transactionId,
+            providerReference: $providerReference,
         );
     }
 

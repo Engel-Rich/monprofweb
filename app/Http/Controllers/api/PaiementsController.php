@@ -52,12 +52,19 @@ class PaiementsController extends Controller
                 'nombre_de_code' => 'integer|required',
                 'numero_payeur' => ['required', 'string', new CameroonMobileNumber],
                 'numero_client' => ['required', 'string', new CameroonMobileNumber],
-                'subscription_id' => 'integer|required|exists:payment_services,subscription_id',
+                'payment_service_id' => 'nullable|integer|required_without:subscription_id|exists:payment_services,id',
+                // Compatibilité mobile : les anciennes versions envoient encore
+                // directement l'identifiant de souscription fournisseur.
+                'subscription_id' => 'nullable|integer|required_without:payment_service_id|exists:payment_services,subscription_id',
             ]);
             $user = User::find(auth()->id());
             $categorie = Categorie::find($request->categorie_id);
             $paymentService = PayementServices::query()
-                ->where('subscription_id', $request->subscription_id)
+                ->when(
+                    $request->filled('payment_service_id'),
+                    fn ($query) => $query->whereKey($request->integer('payment_service_id')),
+                    fn ($query) => $query->where('subscription_id', $request->integer('subscription_id')),
+                )
                 ->where('is_active', true)
                 ->whereHas('provider', fn ($query) => $query->where('is_active', true))
                 ->firstOrFail();
@@ -80,7 +87,9 @@ class PaiementsController extends Controller
                 'sens' => 'IN',
                 'user_id' => $user->id,
                 'service_id' => (string) $paymentService->id,
-                'subscription_id' => $request['subscription_id'],
+                'subscription_id' => filled($paymentService->subscription_id)
+                    ? (string) $paymentService->subscription_id
+                    : null,
             ]);
 
             // Le paiement doit exister avant que le fournisseur ne puisse
@@ -107,7 +116,19 @@ class PaiementsController extends Controller
                 $notifManyCode->sendNotificationToToken($token);
             }
 
-            return response()->json(['status' => true, 'data' => $paiment], 200);
+            $paiment->setRelation('transaction', $trx);
+
+            return response()->json([
+                'status' => true,
+                'data' => $paiment,
+                'transaction' => [
+                    'id' => $trx->id,
+                    'reference' => $trx->reference,
+                    'provider_reference' => $trx->provider_reference,
+                    'payment_token' => $trx->payment_token,
+                    'status' => $trx->status,
+                ],
+            ], 200);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);
         }

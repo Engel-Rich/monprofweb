@@ -81,7 +81,9 @@ class TransactionController extends Controller
      */
     public static function initiateWithProvider(Transaction $transaction, TransactionPostDto $request): Transaction
     {
+        $transaction->loadMissing(['provider', 'paymentService']);
         $provider = $transaction->provider ?? PaymentProvider::active()->firstOrFail();
+        $providerServiceId = $transaction->paymentService?->subscription_id ?? $request->subscription_id;
         $reference = Str::replaceFirst('MPP-', '', (string) $transaction->reference);
 
         $createTransactionRequest = CreateTransactionDto::fromArray([
@@ -92,24 +94,24 @@ class TransactionController extends Controller
             'phoneNumber' => $request->phone_number,
             'countryCode' => '237',
             'reference' => $reference, //$transaction->reference,
-            'transactionPaymentId' => $request->subscription_id,
+            'providerServiceId' => filled($providerServiceId) ? (string) $providerServiceId : null,
         ]);
 
         try {
             $strategy = PaymentFactory::make($provider);
             $response = $strategy->processPayment($createTransactionRequest);
 
-            if ($response->isFailed() || ! $response->transactionId) {
+            if ($response->isFailed() || ! $response->providerReference) {
                 throw new \RuntimeException(
                     $response->error ?? 'Payment initiation failed with provider '.$strategy->getProviderName()
                 );
             }
 
-            $updates = ['transaction_id' => $response->transactionId];
+            $updates = ['provider_reference' => $response->providerReference];
 
             // MundiPay renvoie un pay_token distinct de la référence : sans lui
             // impossible de rejouer ou de tracer le paiement côté fournisseur.
-            if (filled($response->paymentIntent) && $response->paymentIntent !== $response->transactionId) {
+            if (filled($response->paymentIntent)) {
                 $updates['payment_token'] = $response->paymentIntent;
             }
 

@@ -61,7 +61,7 @@ class PaymentAdminPresenter
                 $payment->categorie?->libelle,
                 $transaction?->id,
                 $transaction?->reference,
-                $transaction?->transaction_id,
+                $transaction?->provider_reference,
                 $transaction?->payment_token,
                 $transaction?->phone_number,
                 $provider?->name,
@@ -95,7 +95,7 @@ class PaymentAdminPresenter
                 ['title' => 'Transaction associée', 'note' => $transaction ? 'Transaction #'.$transaction->id : 'Introuvable', 'fields' => [
                     ['label' => 'ID local', 'value' => $transaction?->id ? '#'.$transaction->id : null, 'type' => 'code'],
                     ['label' => 'Référence MonProf', 'value' => $transaction?->reference, 'type' => 'code'],
-                    ['label' => 'ID fournisseur', 'value' => $transaction?->transaction_id, 'type' => 'code'],
+                    ['label' => 'Référence fournisseur', 'value' => $transaction?->provider_reference, 'type' => 'code'],
                     ['label' => 'Pay token', 'value' => $transaction?->payment_token, 'type' => 'code'],
                     ['label' => 'Statut fournisseur', 'value' => $transaction?->status, 'type' => 'status'],
                     ['label' => 'Sens', 'value' => $transaction?->sens],
@@ -147,7 +147,7 @@ class PaymentAdminPresenter
                 'method' => 'POST',
                 'style' => 'secondary',
                 'icon' => 'refresh',
-                'disabled' => blank($transaction->transaction_id),
+                'disabled' => blank($transaction->provider_reference),
                 'confirm' => [
                     'title' => $status === TransactionStatus::FAILED->value
                         ? 'Revérifier une transaction échouée ?'

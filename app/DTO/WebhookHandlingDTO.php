@@ -5,37 +5,19 @@ namespace App\DTO;
 class WebhookHandlingDTO
 {
     public function __construct(
-        public readonly ?string $id,
-        public readonly ?string $reference,
-        public readonly ?string $externalReference,
+        public readonly string $providerCode,
+        public readonly ?string $providerReference,
+        public readonly ?string $localReference,
         public readonly string $status,
-        public readonly ?string $payToken = null,
-        public readonly ?string $raisonReject = null,
+        public readonly ?string $paymentToken = null,
+        public readonly ?string $reason = null,
+        public readonly array $payload = [],
     ) {}
 
-    /**
-     * Build DTO from request array
-     */
+    /** @deprecated Utiliser CampayWebhookPayload::normalize(). */
     public static function fromArray(array $data): self
     {
-        $reference = $data['provider_reference'] ?? $data['reference'] ?? null;
-
-        $externalReference = $data['local_reference'] ?? $data['external_reference'] ?? null;
-
-        if (filled($externalReference) && ! str_starts_with((string) $externalReference, 'MPP-')) {
-            $externalReference = 'MPP-'.$externalReference;
-        }
-
-        $id = $reference ?? $data['transaction_id'] ?? null;
-
-        return new self(
-            id: $id,
-            reference: $reference,
-            externalReference: $externalReference,
-            status: $data['status'],
-            payToken: $data['pay_token'] ?? null,
-            raisonReject: $data['raison_reject'] ?? null,
-        );
+        return CampayWebhookPayload::normalize($data);
     }
 
     /**
@@ -44,26 +26,24 @@ class WebhookHandlingDTO
     public function toString(): string
     {
         return json_encode([
-            'id' => $this->id,
-            'reference' => $this->reference,
-            'external_reference' => $this->externalReference,
+            'provider' => $this->providerCode,
+            'provider_reference' => $this->providerReference,
+            'local_reference' => $this->localReference,
             'status' => $this->status,
-            'pay_token' => $this->payToken,
-            'raison_reject' => $this->raisonReject,
+            'pay_token' => $this->paymentToken,
+            'raison_reject' => $this->reason,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function toArray(): array
     {
         return [
-            'provider_reference' => $this->id,
-            // Alias reçu par les anciens callbacks CamPay.
-            'transaction_id' => $this->id,
-            'reference' => $this->reference,
-            'external_reference' => $this->externalReference,
+            'provider' => $this->providerCode,
+            'provider_reference' => $this->providerReference,
+            'local_reference' => $this->localReference,
             'status' => $this->status,
-            'pay_token' => $this->payToken,
-            'raison_reject' => $this->raisonReject,
+            'pay_token' => $this->paymentToken,
+            'raison_reject' => $this->reason,
         ];
     }
 }

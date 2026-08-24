@@ -14,7 +14,8 @@ use App\Http\Controllers\AppMessageController;
 use App\Http\Controllers\PayementServicesController;
 use App\Http\Controllers\PaymentProviderController;
 use App\Http\Controllers\SuggestionController;
-use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\Webhooks\CampayWebhookController;
+use App\Http\Controllers\Webhooks\MundiPayWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,7 +66,11 @@ Route::middleware('emei-verify')->group(function () {
 
     Route::resource('payment_services', PayementServicesController::class)->only(['index']);
 });
-Route::post('transaction/webhook', [TransactionController::class, 'validatePaymentCallback'])->name('api.transaction.callback');
+Route::post('transaction/webhook/campay', CampayWebhookController::class)->name('api.transaction.webhook.campay');
+Route::post('transaction/webhook/mundipay', MundiPayWebhookController::class)->name('api.transaction.webhook.mundipay');
+
+// URL historique CamPay conservée pendant la bascule de configuration.
+Route::post('transaction/webhook', CampayWebhookController::class)->name('api.transaction.callback');
 
 Route::apiResource('payment-services', PayementServicesController::class)->middleware('auth:sanctum');
 Route::apiResource('payment-providers', PaymentProviderController::class)->middleware('auth:sanctum');

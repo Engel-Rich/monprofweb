@@ -8,6 +8,7 @@
         $service = $transaction?->paymentService;
         $provider = $transaction?->provider ?? $service?->provider;
         $checks = collect(data_get($transaction?->metadatas, 'status_checks', []))->reverse()->values();
+        $transactionLogs = collect($transaction?->logs ?? []);
         $statusTone = match ($status) {
             'Validé' => 'success',
             'Échoué' => 'danger',
@@ -137,6 +138,30 @@
                         </details>
                     @endif
                 </article>
+
+                <article class="admin-panel payment-detail-card">
+                    <header class="payment-card-heading">
+                        <div><p class="admin-eyebrow">Audit</p><h2>Journal de la transaction</h2></div>
+                        <span class="payment-section-count">{{ $transactionLogs->count() }} événement(s)</span>
+                    </header>
+
+                    @forelse ($transactionLogs as $log)
+                        <details class="payment-technical-details">
+                            <summary>
+                                {{ $log->event }} · {{ $log->source }} · {{ $log->created_at?->format('d/m/Y à H:i:s') }}
+                            </summary>
+                            <pre>{{ json_encode([
+                                'provider' => $log->provider_code,
+                                'status_from' => $log->status_from,
+                                'status_to' => $log->status_to,
+                                'changes' => $log->changes,
+                                'payload' => $log->payload,
+                            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                        </details>
+                    @empty
+                        <div class="admin-empty-state"><strong>Aucun journal disponible</strong><span>Les nouveaux événements apparaîtront après la migration.</span></div>
+                    @endforelse
+                </article>
             </div>
 
             <aside class="payment-detail-side">
@@ -171,7 +196,7 @@
                         @forelse ($paie->codes as $code)
                             <div class="payment-code-item">
                                 <div><code>{{ $code->code }}</code><small>{{ $code->active_date?->format('d/m/Y à H:i') ?: 'Jamais utilisé' }}</small></div>
-                                <span class="status-pill {{ $code->actif ? 'success' : 'muted' }}">{{ $code->actif ? 'Activé' : 'Disponible' }}</span>
+                                <span class="status-pill {{ $code->actif ? 'success' : 'muted' }}">{{ $code->actif ? 'Utilisé' : 'Disponible' }}</span>
                                 @if ($code->eleve?->user)
                                     <p>Utilisé par {{ trim($code->eleve->user->name.' '.$code->eleve->user->last_name) }} · Élève #{{ $code->eleve_id }}</p>
                                 @endif

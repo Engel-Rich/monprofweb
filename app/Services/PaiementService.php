@@ -96,7 +96,10 @@ class PaiementService
                     $notification->sendNotificationToToken($user->fcm_token);
                 }
 
-                Log::info('Code activé avec succès.', ['paiement_id' => $id]);
+                Log::info('Code généré et envoyé, en attente d’utilisation par un élève.', [
+                    'paiement_id' => $id,
+                    'code_status' => 'AVAILABLE',
+                ]);
 
                 return true;
             }

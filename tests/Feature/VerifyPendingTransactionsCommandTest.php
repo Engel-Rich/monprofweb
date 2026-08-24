@@ -190,7 +190,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertDatabaseCount('codes', 1);
     }
 
-    public function test_success_creates_the_activation_code_before_marking_the_transaction_successful(): void
+    public function test_success_creates_an_available_code_before_marking_the_transaction_successful(): void
     {
         Http::fake();
         PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;

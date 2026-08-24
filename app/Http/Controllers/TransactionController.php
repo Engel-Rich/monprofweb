@@ -5,17 +5,13 @@ namespace App\Http\Controllers;
 use App\DTO\CreateTransactionDto;
 use App\DTO\TransactionPostDto;
 use App\DTO\TransactionUpdateDto;
-use App\DTO\WebhookHandlingDTO;
-use App\Http\Requests\PaymentCallbackRequest;
-// use App\DTO\MundiPayRequestDTO;
-use App\Jobs\ProcessWebhook;
 use App\Models\PayementServices;
 use App\Models\PaymentProvider;
 use App\Models\Transaction;
 // use App\Models\Paiements;
 // use App\Models\User;
-use App\Services\Payments\CampayWebhookSignature;
 use App\Services\Payments\PaymentFactory;
+use App\Services\Payments\TransactionAuditService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -84,7 +80,7 @@ class TransactionController extends Controller
         $transaction->loadMissing(['provider', 'paymentService']);
         $provider = $transaction->provider ?? PaymentProvider::active()->firstOrFail();
         $providerServiceId = $transaction->paymentService?->subscription_id ?? $request->subscription_id;
-        $reference = Str::replaceFirst('MPP-', '', (string) $transaction->reference);
+        $reference = (string) $transaction->reference;
 
         $createTransactionRequest = CreateTransactionDto::fromArray([
             'userId' => $request->user_id,
@@ -116,12 +112,26 @@ class TransactionController extends Controller
             }
 
             $transaction->update($updates);
+            app(TransactionAuditService::class)->record(
+                transaction: $transaction->refresh(),
+                event: 'provider.payment_initiated',
+                source: 'initiation',
+                payload: $response->paymentResponseModel?->data,
+                providerCode: $provider->code,
+            );
         } catch (\Throwable $th) {
             Log::error('Payment initiation failed: '.$th->getMessage());
             $transaction->update([
                 'status' => 'FAILED',
                 'raison_reject' => Str::limit($th->getMessage(), 250),
             ]);
+            app(TransactionAuditService::class)->record(
+                transaction: $transaction->refresh(),
+                event: 'provider.payment_initiation_failed',
+                source: 'initiation',
+                payload: ['error' => $th->getMessage()],
+                providerCode: $provider->code,
+            );
             throw $th;
         }
 
@@ -149,44 +159,6 @@ class TransactionController extends Controller
         $transaction->update($request->toArray());
 
         return response()->json(['message' => 'Transaction status updated successfully', 'transaction' => $transaction]);
-    }
-
-    public function validatePaymentCallback(PaymentCallbackRequest $request)
-    {
-        $webhookKey = (string) config('campay.webhook_key');
-
-        if (filled($webhookKey)) {
-            if (! CampayWebhookSignature::isValid($request->input('signature'), $webhookKey)) {
-                Log::warning('Webhook de paiement rejeté : signature invalide ou absente.', [
-                    'reference' => $request->input('reference'),
-                    'external_reference' => $request->input('external_reference'),
-                    'ip' => $request->ip(),
-                ]);
-
-                return response()->json(['message' => 'Invalid signature'], 401);
-            }
-        } else {
-            Log::warning(
-                'CAMPAY_WEBHOOK_KEY absente : notification acceptée sans vérification de signature. '
-                .'Renseignez la clé pour fermer cet endpoint public.'
-            );
-        }
-
-        try {
-            $dto = WebhookHandlingDTO::fromArray($request->all());
-
-            // Traitement asynchrone : le fournisseur ne doit pas attendre les
-            // appels de vérification, sous peine de timeout puis de renvoi.
-            ProcessWebhook::dispatch($dto);
-
-            Log::info('Webhook de paiement reçu.', ['payload' => $dto->toString()]);
-        } catch (\Throwable $th) {
-            Log::error('Payment Callback : '.$th->getMessage(), ['exception' => $th]);
-        }
-
-        // Toujours acquitter : un corps vide ou une 500 pousse le fournisseur à
-        // rejouer la notification en boucle.
-        return response()->json(['message' => 'Processing started'], 200);
     }
 
     /**

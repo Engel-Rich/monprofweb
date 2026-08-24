@@ -7,6 +7,7 @@ use App\Enums\TransactionStatus;
 use App\Models\PaymentProvider;
 use App\Models\Transaction;
 use App\Services\Payments\PaymentFactory;
+use App\Services\Payments\TransactionAuditService;
 use App\Services\Payments\TransactionFinalizationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,36 +20,60 @@ class ProcessWebhook implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(protected WebhookHandlingDTO $dto) {}
+    public function __construct(public readonly WebhookHandlingDTO $dto) {}
 
-    public function handle(TransactionFinalizationService $finalizer): void
-    {
-        if (blank($this->dto->id) && blank($this->dto->externalReference)) {
+    public function handle(
+        TransactionFinalizationService $finalizer,
+        TransactionAuditService $audit,
+    ): void {
+        if (blank($this->dto->providerReference)
+            && blank($this->dto->localReference)
+            && blank($this->dto->paymentToken)) {
             Log::error('Webhook reçu sans identifiant de transaction.');
 
             return;
         }
 
-        $query = Transaction::query();
+        $provider = PaymentProvider::query()
+            ->where('code', strtoupper($this->dto->providerCode))
+            ->first();
 
-        if (filled($this->dto->id)) {
-            $query->where('provider_reference', $this->dto->id);
+        if (! $provider) {
+            Log::error('Fournisseur du webhook introuvable.', ['provider' => $this->dto->providerCode]);
+
+            return;
         }
 
-        if (filled($this->dto->externalReference)) {
-            $query->when(
-                filled($this->dto->id),
-                fn ($query) => $query->orWhere('reference', $this->dto->externalReference),
-                fn ($query) => $query->where('reference', $this->dto->externalReference),
-            );
-        }
+        $query = Transaction::query()
+            ->where('payment_provider_id', $provider->id)
+            ->where(function ($query): void {
+                $hasCondition = false;
+
+                if (filled($this->dto->providerReference)) {
+                    $query->where('provider_reference', $this->dto->providerReference);
+                    $hasCondition = true;
+                }
+
+                if (filled($this->dto->localReference)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $query->{$method}('reference', $this->dto->localReference);
+                    $hasCondition = true;
+                }
+
+                if (filled($this->dto->paymentToken)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $query->{$method}('payment_token', $this->dto->paymentToken);
+                }
+            });
 
         $transaction = $query->with('provider')->first();
 
         if (! $transaction) {
             Log::error('Transaction du webhook introuvable.', [
-                'provider_reference' => $this->dto->id,
-                'external_reference' => $this->dto->externalReference,
+                'provider' => $this->dto->providerCode,
+                'provider_reference' => $this->dto->providerReference,
+                'local_reference' => $this->dto->localReference,
+                'payment_token' => $this->dto->paymentToken,
             ]);
 
             return;
@@ -57,13 +82,25 @@ class ProcessWebhook implements ShouldQueue
         // La notification peut arriver avant que l'initiation n'ait eu le temps
         // d'écrire la référence fournisseur : on la récupère ici, sinon le
         // poller n'aurait plus rien pour interroger le fournisseur.
-        if (blank($transaction->provider_reference) && filled($this->dto->reference)) {
-            $transaction->update(['provider_reference' => $this->dto->reference]);
+        $audit->record(
+            transaction: $transaction,
+            event: 'provider.webhook_received',
+            source: 'webhook',
+            payload: $this->dto->payload,
+            providerCode: $provider->code,
+        );
+
+        if (blank($transaction->provider_reference) && filled($this->dto->providerReference)) {
+            $transaction->update(['provider_reference' => $this->dto->providerReference]);
             $transaction->refresh();
         }
 
-        $providerReference = $this->dto->reference ?: $transaction->provider_reference;
-        $provider = $transaction->provider ?? PaymentProvider::active()->first();
+        if (blank($transaction->payment_token) && filled($this->dto->paymentToken)) {
+            $transaction->update(['payment_token' => $this->dto->paymentToken]);
+            $transaction->refresh();
+        }
+
+        $providerReference = $this->dto->providerReference ?: $transaction->provider_reference;
 
         if (! $provider || blank($providerReference)) {
             Log::warning('Webhook non vérifiable : fournisseur ou référence manquants.', [
@@ -81,7 +118,7 @@ class ProcessWebhook implements ShouldQueue
         try {
             $result = PaymentFactory::make($provider)->verifyPayment(
                 (string) $providerReference,
-                $this->dto->payToken ?: $transaction->payment_token,
+                $this->dto->paymentToken ?: $transaction->payment_token,
             );
         } catch (\Throwable $exception) {
             Log::error('Vérification du webhook auprès du fournisseur impossible.', [
@@ -94,6 +131,13 @@ class ProcessWebhook implements ShouldQueue
         }
 
         if (! $result->status || $result->status === TransactionStatus::ERROR) {
+            $finalizer->applyProviderResult(
+                transaction: $transaction,
+                result: $result,
+                provider: $provider->code,
+                source: 'webhook',
+            );
+
             // Rien n'est appliqué : la transaction reste en attente et le
             // scheduler la reprendra au passage suivant.
             Log::warning('Webhook reçu mais statut fournisseur indisponible.', [

@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Log;
 
 class TransactionFinalizationService
 {
-    public function __construct(private readonly PaiementService $paiementService) {}
+    public function __construct(
+        private readonly PaiementService $paiementService,
+        private readonly ?TransactionAuditService $audit = null,
+    ) {}
 
     public function applyProviderResult(
         Transaction $transaction,
@@ -20,6 +23,19 @@ class TransactionFinalizationService
         string $provider,
         string $source = 'polling',
     ): bool {
+        ($this->audit ?? app(TransactionAuditService::class))->record(
+            transaction: $transaction,
+            event: 'provider.status_checked',
+            source: $source,
+            payload: [
+                'result' => $result->paymentResponseModel?->data,
+                'error' => $result->error,
+            ],
+            statusFrom: $transaction->status,
+            statusTo: $result->status?->value,
+            providerCode: $provider,
+        );
+
         if (! $result->status || $result->status === TransactionStatus::ERROR) {
             Log::warning('Vérification fournisseur temporairement indisponible.', [
                 'local_transaction_id' => $transaction->id,
@@ -40,7 +56,6 @@ class TransactionFinalizationService
             status: $result->status,
             context: [
                 'provider' => $provider,
-                'provider_response' => $result->paymentResponseModel?->data,
             ],
             reason: $reason,
             source: $source,
@@ -184,7 +199,7 @@ class TransactionFinalizationService
             'source' => $source,
             'status' => $status,
             'checked_at' => now()->toIso8601String(),
-            ...$context,
+            ...collect($context)->except('provider_response')->all(),
         ];
 
         $metadata['status_checks'] = array_slice($checks, -10);

@@ -134,3 +134,26 @@ Les anciennes variables `MUNDY_PAY_*` restent acceptées pendant la transition.
 Pour une nouvelle version de l’application mobile, envoyer l’ID local dans
 `payment_service_id`. Le champ historique `subscription_id` reste accepté afin
 de ne pas casser les clients déjà publiés.
+
+### Webhooks et journal d'audit
+
+Les fournisseurs disposent de routes distinctes, car leurs payloads ne suivent
+pas le même contrat :
+
+- CamPay : `POST /api/transaction/webhook/campay` ;
+- MundiPay : `POST /api/transaction/webhook/mundipay`.
+
+L'ancienne route `POST /api/transaction/webhook` reste un alias CamPay pendant
+la migration de sa configuration. Le statut reçu par webhook n'est jamais
+appliqué directement : le Job interroge d'abord l'API du fournisseur.
+
+`transactions.metadatas` contient uniquement un résumé des derniers contrôles.
+Les payloads de création, de webhook et de vérification sont conservés dans
+`transaction_logs`, avec les secrets et signatures masqués.
+
+### Cycle de vie d'un code
+
+Un paiement confirmé génère les codes et les rend disponibles. Il ne les
+consomme pas automatiquement, même lorsqu'il n'y en a qu'un. Le code passe à
+`actif = true` seulement lorsqu'un élève l'utilise via `PUT /api/code/active` ;
+il est alors lié à cet élève et lui donne accès à la catégorie achetée.

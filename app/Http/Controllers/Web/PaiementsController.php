@@ -15,6 +15,7 @@ use App\Services\SendMessageService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Throwable;
 
@@ -39,6 +40,15 @@ class PaiementsController extends Controller
     {
         $this->ensureAdmin();
         $paiement->load(PaymentAdminPresenter::RELATIONS);
+
+        if ($paiement->transaction && Schema::hasTable('transaction_logs')) {
+            $paiement->transaction->setRelation(
+                'logs',
+                $paiement->transaction->logs()->limit(50)->get(),
+            );
+        } elseif ($paiement->transaction) {
+            $paiement->transaction->setRelation('logs', collect());
+        }
 
         return view('screen.paiements.active_paiement', [
             'paie' => $paiement,

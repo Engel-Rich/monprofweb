@@ -104,6 +104,13 @@ class VerifyPendingTransaction implements ShouldQueue
             );
 
             if (! $result->status || $result->status === TransactionStatus::ERROR) {
+                $finalizer->applyProviderResult(
+                    transaction: $transaction,
+                    result: $result,
+                    provider: $provider->code,
+                    source: 'polling',
+                );
+
                 throw new \RuntimeException($result->error ?: 'Le fournisseur n’a retourné aucun statut exploitable.');
             }
 

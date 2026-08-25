@@ -87,6 +87,9 @@
                             <div><dt>ID transaction locale</dt><dd><code>#{{ $transaction->id }}</code></dd></div>
                             <div><dt>Pay token</dt><dd><code>{{ $transaction->payment_token ?: '—' }}</code></dd></div>
                             <div><dt>Montant fournisseur</dt><dd>{{ number_format((float) $transaction->amount, 0, ',', ' ') }} FCFA</dd></div>
+                            <div><dt>Montant hors frais</dt><dd>{{ number_format((float) ($transaction->base_amount ?? $paie->montant), 0, ',', ' ') }} FCFA</dd></div>
+                            <div><dt>Frais de service</dt><dd>{{ number_format((float) $transaction->service_fee, 0, ',', ' ') }} FCFA</dd></div>
+                            <div><dt>Mode de conclusion</dt><dd>{{ match ($transaction->conclusion_method) { 'webhook' => 'Webhook', 'checking' => 'Vérification fournisseur', default => '—' } }}</dd></div>
                             <div><dt>Téléphone</dt><dd><a href="tel:{{ $transaction->phone_number }}">{{ $transaction->phone_number ?: '—' }}</a></dd></div>
                             <div><dt>Sens</dt><dd>{{ $transaction->sens ?: '—' }}</dd></div>
                             <div><dt>Service interne</dt><dd><code>{{ $transaction->internal_service ?: '—' }}</code></dd></div>

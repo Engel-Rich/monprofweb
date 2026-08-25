@@ -59,6 +59,10 @@ class CoursController extends Controller
 
                 // $fileManager = new FileManager('Videos/'.$value->matiere->libelle);
                 $value->video_url = $fileManager->get($value->video_url);
+                $value->video_delivery = [
+                    'supports_range' => config('file-storage.driver') === 'minio',
+                    'resume_strategy' => 'http-range',
+                ];
 
                 // dd($value->video_url);
                 return $value;

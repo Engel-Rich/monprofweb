@@ -154,6 +154,10 @@ class TransactionFinalizationService
                 'metadatas' => $metadata,
             ];
 
+            if ($conclusionMethod = $this->conclusionMethod($source)) {
+                $updates['conclusion_method'] = $conclusionMethod;
+            }
+
             if ($targetStatus === TransactionStatus::FAILED->value && filled($reason)) {
                 $updates['raison_reject'] = $reason;
             }
@@ -184,6 +188,15 @@ class TransactionFinalizationService
             TransactionStatus::FAILED,
             TransactionStatus::CANCELLED => TransactionStatus::FAILED->value,
             default => TransactionStatus::PENDING->value,
+        };
+    }
+
+    private function conclusionMethod(string $source): ?string
+    {
+        return match ($source) {
+            'webhook' => 'webhook',
+            'polling' => 'checking',
+            default => null,
         };
     }
 

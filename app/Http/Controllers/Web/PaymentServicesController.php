@@ -29,7 +29,12 @@ class PaymentServicesController extends Controller
         $this->ensureAdministrator();
 
         return view('screen.payment_services.form', [
-            'service' => new PayementServices(['status' => 1, 'is_active' => true]),
+            'service' => new PayementServices([
+                'status' => 1,
+                'is_active' => true,
+                'provider_fee_percentage' => 2.5,
+                'user_fee_percentage' => 100,
+            ]),
             'providers' => PaymentProvider::orderByDesc('is_active')->orderBy('name')->get(),
         ]);
     }
@@ -119,6 +124,8 @@ class PaymentServicesController extends Controller
             'reg_exp' => ['nullable', 'string', 'max:500'],
             'subscription_id' => ['nullable', 'integer'],
             'sens' => ['required', 'in:IN,OUT'],
+            'provider_fee_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'user_fee_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'image' => ['nullable', 'image', 'max:5120'],
         ]);
     }

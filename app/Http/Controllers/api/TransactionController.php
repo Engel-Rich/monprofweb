@@ -29,7 +29,11 @@ class TransactionController extends Controller
                 'transactions.reference',
                 'transactions.provider_reference',
                 'transactions.payment_token',
-                'transactions.phone_number as phone_number_payment'
+                'transactions.phone_number as phone_number_payment',
+                'transactions.base_amount as transaction_base_amount',
+                'transactions.service_fee',
+                'transactions.amount as transaction_amount',
+                'transactions.conclusion_method'
             )
 
             // 2. Jointure interne (Inner Join)
@@ -71,6 +75,10 @@ class TransactionController extends Controller
                     : null,
                 'payment_id' => $transaction->paiement?->id,
                 'payment_validated_at' => $transaction->paiement?->paiement_date?->toIso8601String(),
+                'base_amount' => $transaction->base_amount,
+                'service_fee' => $transaction->service_fee,
+                'amount' => $transaction->amount,
+                'conclusion_method' => $transaction->conclusion_method,
             ],
         ]);
     }

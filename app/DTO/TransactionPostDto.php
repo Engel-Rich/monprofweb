@@ -14,6 +14,14 @@ class TransactionPostDto extends DataTransferObject
 
     public string $amount;
 
+    public ?string $base_amount;
+
+    public ?string $service_fee;
+
+    public ?string $provider_fee_percentage;
+
+    public ?string $user_fee_percentage;
+
     public string $phone_number;
 
     public ?string $status; // "PENDING", "SUCCESS", "FAILED"
@@ -34,6 +42,10 @@ class TransactionPostDto extends DataTransferObject
         $this->payment_token = $data['payment_token'] ?? null;
         $this->reference = $data['reference'] ?? null;
         $this->amount = $data['amount'];
+        $this->base_amount = isset($data['base_amount']) ? (string) $data['base_amount'] : null;
+        $this->service_fee = isset($data['service_fee']) ? (string) $data['service_fee'] : null;
+        $this->provider_fee_percentage = isset($data['provider_fee_percentage']) ? (string) $data['provider_fee_percentage'] : null;
+        $this->user_fee_percentage = isset($data['user_fee_percentage']) ? (string) $data['user_fee_percentage'] : null;
         $this->phone_number = $data['phone_number'];
         $this->status = $data['status'] ?? null;
         $this->sens = $data['sens'] ?? null;
@@ -50,6 +62,10 @@ class TransactionPostDto extends DataTransferObject
             'payment_token' => $this->payment_token,
             'reference' => $this->reference,
             'amount' => $this->amount,
+            'base_amount' => $this->base_amount,
+            'service_fee' => $this->service_fee,
+            'provider_fee_percentage' => $this->provider_fee_percentage,
+            'user_fee_percentage' => $this->user_fee_percentage,
             'phone_number' => $this->phone_number,
             'status' => $this->status ?? 'PENDING',
             'sens' => $this->sens ?? 'IN',

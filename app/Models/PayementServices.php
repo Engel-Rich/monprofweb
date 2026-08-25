@@ -25,11 +25,15 @@ class PayementServices extends Model
         'reg_exp',
         'subscription_id',
         'sens',
+        'provider_fee_percentage',
+        'user_fee_percentage',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'status' => 'integer',
+        'provider_fee_percentage' => 'float',
+        'user_fee_percentage' => 'float',
     ];
 
     protected $appends = [

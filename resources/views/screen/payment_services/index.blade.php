@@ -59,6 +59,8 @@
                     ['label' => 'ID service fournisseur', 'value' => $service->provider_service_id],
                     ['label' => 'Expression régulière', 'value' => $service->reg_exp],
                     ['label' => 'Statut technique', 'value' => $service->status],
+                    ['label' => 'Frais fournisseur', 'value' => number_format((float) $service->provider_fee_percentage, 2, ',', ' ').' %'],
+                    ['label' => 'Part payée par l’utilisateur', 'value' => number_format((float) $service->user_fee_percentage, 2, ',', ' ').' %'],
                 ],
             ]],
         ])->values();

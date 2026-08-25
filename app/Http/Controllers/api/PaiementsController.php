@@ -8,6 +8,7 @@ use App\Http\Requests\API\StorePaymentRequest;
 // use App\Models\AppMessage;
 use App\Models\Categorie;
 use App\Models\Paiements;
+use App\Services\Payments\PaymentFeeCalculator;
 use App\Services\PushNotifictaionService;
 // use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -58,15 +59,15 @@ class PaiementsController extends Controller
             $data['montant'] = $categorie->prix * $validated['nombre_de_code'];
             $uuid = (string) Str::uuid();
             $reference = 'MPP-'.$uuid; // strtoupper(substr(sha1(time()), 0, 10)) . rand(1000, 9999);
-
-            // montant + 2,5 % de frais, arrondi au multiple de 5 supérieur :
-            // les opérateurs mobile money camerounais refusent tout autre montant.
-            $montantAvecFrais = $data['montant'] + ($data['montant'] * 2.5 / 100);
-            $montantAPayer = (int) (ceil($montantAvecFrais / 5) * 5);
+            $fees = app(PaymentFeeCalculator::class)->calculate($data['montant'], $paymentService);
 
             $transactionPostDto = new \App\DTO\TransactionPostDto([
                 'reference' => $reference,
-                'amount' => (string) $montantAPayer,
+                'amount' => (string) $fees['total_amount'],
+                'base_amount' => (string) $fees['base_amount'],
+                'service_fee' => (string) $fees['service_fee'],
+                'provider_fee_percentage' => (string) $fees['provider_fee_percentage'],
+                'user_fee_percentage' => (string) $fees['user_fee_percentage'],
                 'phone_number' => $data['numero_payeur'],
                 'status' => 'PENDING',
                 'sens' => 'IN',
@@ -113,6 +114,9 @@ class PaiementsController extends Controller
                     'provider_reference' => $trx->provider_reference,
                     'payment_token' => $trx->payment_token,
                     'status' => $trx->status,
+                    'base_amount' => $trx->base_amount,
+                    'service_fee' => $trx->service_fee,
+                    'amount' => $trx->amount,
                 ],
             ], 201);
         } catch (\Throwable $th) {

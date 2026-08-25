@@ -100,6 +100,13 @@ class PaymentAdminPresenter
                     ['label' => 'Statut fournisseur', 'value' => $transaction?->status, 'type' => 'status'],
                     ['label' => 'Sens', 'value' => $transaction?->sens],
                     ['label' => 'Montant demandé au fournisseur', 'value' => $transaction?->amount, 'type' => 'currency'],
+                    ['label' => 'Montant hors frais', 'value' => $transaction?->base_amount, 'type' => 'currency'],
+                    ['label' => 'Frais de service', 'value' => $transaction?->service_fee, 'type' => 'currency'],
+                    ['label' => 'Taux fournisseur', 'value' => $transaction?->provider_fee_percentage !== null ? $transaction->provider_fee_percentage.' %' : null],
+                    ['label' => 'Part utilisateur', 'value' => $transaction?->user_fee_percentage !== null ? $transaction->user_fee_percentage.' %' : null],
+                    ['label' => 'Conclusion', 'value' => match ($transaction?->conclusion_method) {
+                        'webhook' => 'Webhook', 'checking' => 'Vérification', default => null
+                    }],
                     ['label' => 'Téléphone transaction', 'value' => $transaction?->phone_number, 'type' => 'phone'],
                     ['label' => 'Motif du rejet', 'value' => $transaction?->raison_reject],
                     ['label' => 'Service interne', 'value' => $transaction?->internal_service, 'type' => 'code'],

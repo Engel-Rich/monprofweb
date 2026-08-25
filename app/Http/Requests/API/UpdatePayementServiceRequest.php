@@ -33,6 +33,8 @@ class UpdatePayementServiceRequest extends FormRequest
             'reg_exp' => 'nullable|string',
             'subscription_id' => 'nullable|integer',
             'sens' => 'nullable|in:IN,OUT',
+            'provider_fee_percentage' => 'sometimes|required|numeric|min:0|max:100',
+            'user_fee_percentage' => 'sometimes|required|numeric|min:0|max:100',
         ];  //
     }
 }

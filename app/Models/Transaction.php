@@ -18,6 +18,10 @@ class Transaction extends Model
         'payment_provider_id',
         'user_id',
         'amount',
+        'base_amount',
+        'service_fee',
+        'provider_fee_percentage',
+        'user_fee_percentage',
         'phone_number',
         'status',
         'sens',
@@ -29,10 +33,16 @@ class Transaction extends Model
         'reference',
         'raison_reject',
         'metadatas',
+        'conclusion_method',
     ];
 
     protected $casts = [
         'metadatas' => 'array',
+        'amount' => 'float',
+        'base_amount' => 'float',
+        'service_fee' => 'float',
+        'provider_fee_percentage' => 'float',
+        'user_fee_percentage' => 'float',
     ];
 
     public function provider(): BelongsTo

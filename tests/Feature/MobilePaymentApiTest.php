@@ -44,6 +44,8 @@ class MobilePaymentApiTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $incomingId)
             ->assertJsonPath('data.0.sens', 'IN')
+            ->assertJsonPath('data.0.provider_fee_percentage', 2.5)
+            ->assertJsonPath('data.0.user_fee_percentage', 100)
             ->assertJsonMissingPath('data.0.provider')
             ->assertJsonMissingPath('data.0.payment_provider_id');
     }
@@ -192,6 +194,8 @@ class MobilePaymentApiTest extends TestCase
             'is_active' => $active,
             'reg_exp' => '^6[0-9]{8}$',
             'sens' => $sens,
+            'provider_fee_percentage' => 2.5,
+            'user_fee_percentage' => 100,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -234,6 +238,8 @@ class MobilePaymentApiTest extends TestCase
             $table->string('reg_exp')->nullable();
             $table->string('subscription_id')->nullable();
             $table->string('sens')->nullable();
+            $table->decimal('provider_fee_percentage', 8, 4)->default(2.5);
+            $table->decimal('user_fee_percentage', 5, 2)->default(100);
             $table->timestamps();
         });
         Schema::create('transactions', function (Blueprint $table): void {
@@ -241,6 +247,9 @@ class MobilePaymentApiTest extends TestCase
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('reference')->nullable();
             $table->decimal('amount', 12, 2);
+            $table->decimal('base_amount', 12, 2)->nullable();
+            $table->decimal('service_fee', 12, 2)->default(0);
+            $table->string('conclusion_method')->nullable();
             $table->string('phone_number');
             $table->string('status');
             $table->string('sens');

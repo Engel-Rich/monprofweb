@@ -60,6 +60,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             $table->string('user_id')->nullable();
             $table->string('raison_reject')->nullable();
             $table->text('metadatas')->nullable();
+            $table->string('conclusion_method')->nullable();
             $table->timestamps();
         });
 
@@ -162,6 +163,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
 
         $this->assertSame(0, $exitCode);
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+        $this->assertSame('checking', $transaction->fresh()->conclusion_method);
         $this->assertSame('TEST_SUCCESS', data_get($transaction->fresh()->metadatas, 'status_checks.0.provider'));
     }
 
@@ -344,6 +346,30 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
     }
 
+    public function test_a_webhook_records_how_the_transaction_was_concluded(): void
+    {
+        $transaction = Transaction::create([
+            'reference' => 'MPP-webhook-conclusion',
+            'amount' => '1500',
+            'phone_number' => '690000010',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'TEST',
+        ]);
+        $paymentService = Mockery::mock(PaiementService::class);
+        $paymentService->shouldNotReceive('validePayment');
+        $finalizer = new TransactionFinalizationService($paymentService);
+
+        $applied = $finalizer->applyStatus(
+            transaction: $transaction,
+            status: TransactionStatus::SUCCESS,
+            source: 'webhook',
+        );
+
+        $this->assertTrue($applied);
+        $this->assertSame('webhook', $transaction->fresh()->conclusion_method);
+    }
+
     public function test_an_admin_retry_can_reconcile_a_failed_transaction(): void
     {
         PollingPaymentStrategy::$verificationCount = 0;
@@ -372,6 +398,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertFalse($result->isError());
         $this->assertSame(TransactionStatus::SUCCESS->value, $result->providerStatus);
         $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+        $this->assertSame('checking', $transaction->fresh()->conclusion_method);
         $this->assertSame(1, PollingPaymentStrategy::$verificationCount);
         $this->assertSame('provider-pay-token', PollingPaymentStrategy::$lastPaymentToken);
     }

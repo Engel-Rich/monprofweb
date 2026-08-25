@@ -29,7 +29,7 @@ class MundiPayService implements PaymentStrategy
         $this->apiSecret = (string) config('payments.mundi.secret');
         $configuredUrl = rtrim((string) config('payments.mundi.url'), '/');
         $this->baseUrl = (string) preg_replace('#/smobilpay$#i', '', $configuredUrl);
-        $this->transactionPath = trim((string) config('payments.mundi.transaction_path', 'v1/transaction'), '/');
+        $this->transactionPath = trim((string) config('payments.mundi.transaction_path', '/transaction'), '/');
 
         if (blank($this->apiKey) || blank($this->apiSecret) || blank($this->baseUrl) || blank($this->transactionPath)) {
             throw new RuntimeException('Configuration MundiPay incomplète.');
@@ -58,7 +58,7 @@ class MundiPayService implements PaymentStrategy
             'amount' => $dto->amount,
             'subscription_id' => (int) $subscriptionId,
             'country_code' => $this->countryCode($dto->countryCode),
-            'phone_number' => '+'.PhoneNumber::msisdn($dto->phoneNumber),
+            'phone_number' => '+' . PhoneNumber::msisdn($dto->phoneNumber),
         ];
 
         Log::info('Initialisation d’un paiement MundiPay.', [
@@ -110,7 +110,7 @@ class MundiPayService implements PaymentStrategy
         $response = Http::withHeaders($this->getHeaders())
             ->timeout((int) config('payments.mundi.timeout', 30))
             ->retry(2, 250, throw: false)
-            ->get($this->endpoint($this->transactionPath.'/'.rawurlencode($paymentToken)));
+            ->get($this->endpoint($this->transactionPath . '/' . rawurlencode($paymentToken)));
 
         if ($response->failed() || (int) $response->json('success', 0) !== 1) {
             Log::error('MundiPay status check error', [
@@ -217,7 +217,7 @@ class MundiPayService implements PaymentStrategy
 
     private function endpoint(string $path): string
     {
-        return $this->baseUrl.'/'.ltrim($path, '/');
+        return $this->baseUrl . '/' . ltrim($path, '/');
     }
 
     private function countryCode(?string $countryCode): string

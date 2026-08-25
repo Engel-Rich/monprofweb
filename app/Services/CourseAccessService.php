@@ -29,6 +29,10 @@ class CourseAccessService
                 throw new DomainException('Ce code d’activation est invalide.');
             }
 
+            if ($code->revoked_at !== null || $code->paiement?->revoked_at !== null) {
+                throw new DomainException('Ce code d’activation a été révoqué par un administrateur.');
+            }
+
             if (! $code->paiement
                 || ! $code->paiement->status
                 || blank($code->paiement->paiement_date)) {
@@ -58,9 +62,11 @@ class CourseAccessService
         return Codes::query()
             ->where('eleve_id', $student->id)
             ->where('actif', true)
+            ->whereNull('revoked_at')
             ->whereHas('paiement', function ($query) use ($categoryId): void {
                 $query->where('categorie_id', $categoryId)
                     ->where('status', true)
+                    ->whereNull('revoked_at')
                     ->whereNotNull('paiement_date');
             })
             ->exists();

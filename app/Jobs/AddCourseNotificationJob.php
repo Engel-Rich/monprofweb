@@ -33,20 +33,23 @@ class AddCourseNotificationJob implements ShouldQueue
     public function handle(): void
     {
         // $status = $this->course->open;
-        $courseFromDB = Cours::with("categorie", "classe", "matiere")->find($this->courseId);
-        $message = "Un nouveau cours de " . $courseFromDB->matiere->libelle . " a été ajouté dans la catégorie " . $courseFromDB->categorie->libelle . " de la classe " . $courseFromDB->classe->libelle;
+        $courseFromDB = Cours::with('categorie', 'classe', 'matiere')->find($this->courseId);
+        $message = 'Un nouveau cours de '.$courseFromDB->matiere->libelle.' a été ajouté dans la catégorie '.$courseFromDB->categorie->libelle.' de la classe '.$courseFromDB->classe->libelle;
         $title = $courseFromDB->libelle;
         $status = $courseFromDB->open;
 
         if ($status) {
-            $eleves = Eleve::with("user")->where("classe_id", $courseFromDB->classe_id)->get();
-            $tokens = $eleves->pluck("user.fcm_token")->toArray();;
+            $eleves = Eleve::with('user')->where('classe_id', $courseFromDB->classe_id)->get();
+            $tokens = $eleves->pluck('user.fcm_token')->toArray();
         } else {
             // Récupérer les élèves avec codes actifs dans la catégorie du cours
             $eleves = Eleve::whereHas('codes', function ($query) use ($courseFromDB) {
                 $query->where('actif', true)
+                    ->whereNull('revoked_at')
                     ->whereHas('paiement', function ($q) use ($courseFromDB) {
-                        $q->where('categorie_id', $courseFromDB->categorie_id);
+                        $q->where('categorie_id', $courseFromDB->categorie_id)
+                            ->where('status', true)
+                            ->whereNull('revoked_at');
                     });
             })
                 ->with('user') // Chargement anticipé de la relation user
@@ -58,10 +61,10 @@ class AddCourseNotificationJob implements ShouldQueue
                 ->unique() // Évite les doublons
                 ->toArray();
         }
-        Log::info("Tokens trouvés pour ce cours: ", ["course_id" => $this->courseId, "tokens" => $tokens, "Count" => count($tokens)]);
+        Log::info('Tokens trouvés pour ce cours: ', ['course_id' => $this->courseId, 'tokens' => $tokens, 'Count' => count($tokens)]);
         if (count($tokens) > 0) {
             $notification = new PushNotifictaionService($message, $title);
-            $notification->sendMultiCastFCM($tokens, "NEW_COURSE");
+            $notification->sendMultiCastFCM($tokens, 'NEW_COURSE');
         }
     }
 }

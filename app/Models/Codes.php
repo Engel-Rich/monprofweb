@@ -10,11 +10,21 @@ class Codes extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'paiements_id', 'eleve_id', 'active_date', 'actif'];
+    protected $fillable = [
+        'code',
+        'paiements_id',
+        'eleve_id',
+        'active_date',
+        'actif',
+        'revoked_at',
+        'revoked_by',
+        'revocation_reason',
+    ];
 
     protected $casts = [
         'active_date' => 'datetime',
         'actif' => 'boolean',
+        'revoked_at' => 'datetime',
     ];
 
     /**
@@ -31,6 +41,11 @@ class Codes extends Model
     public function paiement(): BelongsTo
     {
         return $this->belongsTo(Paiements::class, 'paiements_id');
+    }
+
+    public function revoker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revoked_by');
     }
 
     public function categorie()

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Web;
 use App\DTO\TransactionVerificationResult;
 use App\Enums\TransactionStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RevokeAccessRequest;
 use App\Jobs\SendMailJob;
 use App\Jobs\VerifyPendingTransaction;
 use App\Models\Paiements;
+use App\Services\AccessRevocationService;
 use App\Services\Admin\PaymentAdminPresenter;
 use App\Services\PaiementService;
 use App\Services\Payments\TransactionFinalizationService;
@@ -94,6 +96,10 @@ class PaiementsController extends Controller
         $this->ensureAdmin();
         $paiement->load(['transaction', 'codes']);
 
+        if ($paiement->revoked_at !== null) {
+            return back()->with('error', 'Cet abonnement est révoqué et ne peut pas être réactivé.');
+        }
+
         try {
             if ($paiement->transaction) {
                 $finalizer->applyStatus(
@@ -128,6 +134,10 @@ class PaiementsController extends Controller
         $this->ensureAdmin();
         $paiement->load(['user', 'codes']);
 
+        if ($paiement->revoked_at !== null) {
+            return back()->with('error', 'Cet abonnement est révoqué : ses codes ne peuvent plus être renvoyés.');
+        }
+
         if (! $paiement->status || ! $paiement->paiement_date) {
             return back()->with('error', 'Le paiement doit être validé avant de renvoyer ses codes.');
         }
@@ -141,7 +151,11 @@ class PaiementsController extends Controller
         }
 
         $messageService = new SendMessageService($paiement, $paiement->user);
-        $codes = $paiement->codes->pluck('code')->all();
+        $codes = $paiement->codes->whereNull('revoked_at')->pluck('code')->all();
+
+        if ($codes === []) {
+            return back()->with('error', 'Tous les codes de cet abonnement sont révoqués.');
+        }
 
         if (count($codes) === 1) {
             if (! $messageService->sendSMS($codes[0])) {
@@ -156,6 +170,23 @@ class PaiementsController extends Controller
         return back()->with('success', 'Le renvoi de la liste des codes par e-mail a été programmé.');
     }
 
+    public function revoke(
+        RevokeAccessRequest $request,
+        Paiements $paiement,
+        AccessRevocationService $revocationService,
+    ): RedirectResponse {
+        $revokedCodes = $revocationService->revokeSubscription(
+            $paiement,
+            (int) $request->user()->id,
+            $request->validated('reason'),
+        );
+
+        return back()->with(
+            'success',
+            "L’abonnement et {$revokedCodes} code(s) associé(s) ont été révoqués.",
+        );
+    }
+
     /**
      * Route historique conservée pour ne pas casser les anciens formulaires.
      */
@@ -163,6 +194,12 @@ class PaiementsController extends Controller
     {
         $this->ensureAdmin();
         $validated = $request->validate(['paiement' => ['required', 'integer', 'exists:paiements,id']]);
+        $paiement = Paiements::findOrFail($validated['paiement']);
+
+        if ($paiement->revoked_at !== null) {
+            return back()->with('error', 'Cet abonnement est révoqué et ne peut pas être réactivé.');
+        }
+
         $paiementService->validePayment($validated);
 
         return to_route('paiement.active', $validated['paiement'])

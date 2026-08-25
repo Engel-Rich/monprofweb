@@ -4,15 +4,13 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Categorie;
-use App\Models\Eleve;
 use App\Models\Codes;
+use App\Models\Eleve;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CategorieController extends Controller
 {
-
-
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -25,7 +23,8 @@ class CategorieController extends Controller
     {
         try {
             $classe = Categorie::where('status', true)->get();
-            return response()->json(['status' => true, 'data' => $classe,], 200);
+
+            return response()->json(['status' => true, 'data' => $classe], 200);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()]);
         }
@@ -46,20 +45,24 @@ class CategorieController extends Controller
 
             $user = Auth::user();
             /**
-             * 
              *@var Illuminate\Database\Eloquent\Concerns\HasAttributes::$encrypter
              */
             $eleve = Eleve::where('user_id', $user->id)->get()[0];
 
-            $result = array();
+            $result = [];
 
             foreach ($categorie as $value) {
                 $exist = Codes::with('paiement')->whereHas(
                     'paiement',
                     function ($query) use ($value) {
-                        $query->where('categorie_id', $value->id);
+                        $query->where('categorie_id', $value->id)
+                            ->where('status', true)
+                            ->whereNull('revoked_at');
                     }
-                )->where('actif', 1)->where('eleve_id', $eleve->id)->exists();
+                )->where('actif', 1)
+                    ->whereNull('revoked_at')
+                    ->where('eleve_id', $eleve->id)
+                    ->exists();
                 // dd($exist);
                 array_push($result, ['categorie' => $value, 'status' => $exist]);
             }
@@ -70,7 +73,6 @@ class CategorieController extends Controller
         }
     }
 
-
     public function statusCodesParent()
     {
         try {
@@ -78,14 +80,17 @@ class CategorieController extends Controller
 
             $user = Auth::user();
 
-            $result = array();
+            $result = [];
 
             $filter_activeCode = function ($code) {
                 // dd($code['actif']);
-                return $code['actif'] == 1;
+                return $code['actif'] == 1 && empty($code['revoked_at']);
             };
             $filter_unactiveCode = function ($code) {
-                return $code['actif'] == 0;
+                return $code['actif'] == 0 && empty($code['revoked_at']);
+            };
+            $filter_revokedCode = function ($code) {
+                return ! empty($code['revoked_at']);
             };
 
             foreach ($categorie as $value) {
@@ -97,13 +102,16 @@ class CategorieController extends Controller
                 )->get();
                 $activeCode = array_filter($codes->toArray(), $filter_activeCode);
                 $unactiveCode = array_filter($codes->toArray(), $filter_unactiveCode);
-                $details  = [
-                    'total'  => count($codes),
-                    'actifs'  => count($activeCode),
-                    'unactifs'  => count($unactiveCode),
+                $revokedCode = array_filter($codes->toArray(), $filter_revokedCode);
+                $details = [
+                    'total' => count($codes),
+                    'actifs' => count($activeCode),
+                    'unactifs' => count($unactiveCode),
+                    'revoques' => count($revokedCode),
                 ];
                 array_push($result, ['categorie' => $value, 'details' => $details]);
             }
+
             return response()->json(['status' => true, 'data' => $result], 200);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);

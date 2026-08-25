@@ -47,6 +47,9 @@ class CourseAccessServiceTest extends TestCase
             $table->unsignedBigInteger('categorie_id');
             $table->dateTime('paiement_date')->nullable();
             $table->boolean('status')->default(false);
+            $table->dateTime('revoked_at')->nullable();
+            $table->unsignedBigInteger('revoked_by')->nullable();
+            $table->string('revocation_reason')->nullable();
             $table->timestamps();
         });
         Schema::create('codes', function (Blueprint $table): void {
@@ -56,6 +59,9 @@ class CourseAccessServiceTest extends TestCase
             $table->string('code')->unique();
             $table->dateTime('active_date')->nullable();
             $table->boolean('actif')->default(false);
+            $table->dateTime('revoked_at')->nullable();
+            $table->unsignedBigInteger('revoked_by')->nullable();
+            $table->string('revocation_reason')->nullable();
             $table->timestamps();
         });
     }
@@ -98,6 +104,57 @@ class CourseAccessServiceTest extends TestCase
         }
 
         $this->assertFalse(app(CourseAccessService::class)->studentHasCategoryAccess($student, 5));
+    }
+
+    public function test_a_revoked_code_cannot_be_activated_or_keep_course_access(): void
+    {
+        [$user, $student, $paymentId] = $this->createStudentAndPayment(true);
+        DB::table('codes')->insert([
+            'paiements_id' => $paymentId,
+            'eleve_id' => $student->id,
+            'code' => 'C-REVOKED',
+            'actif' => true,
+            'active_date' => now(),
+            'revoked_at' => now(),
+            'revoked_by' => 99,
+            'revocation_reason' => 'Compte compromis',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        try {
+            app(CourseAccessService::class)->activateCodeForUser($user, 'C-REVOKED');
+            $this->fail('Le code révoqué aurait dû être refusé.');
+        } catch (DomainException $exception) {
+            $this->assertStringContainsString('révoqué', $exception->getMessage());
+        }
+
+        $this->assertFalse(app(CourseAccessService::class)->studentHasCategoryAccess($student, 5));
+    }
+
+    public function test_revoking_the_payment_removes_access_from_all_its_codes(): void
+    {
+        [$user, $student, $paymentId] = $this->createStudentAndPayment(true);
+        DB::table('codes')->insert([
+            'paiements_id' => $paymentId,
+            'eleve_id' => $student->id,
+            'code' => 'C-REVOKED-SUBSCRIPTION',
+            'actif' => true,
+            'active_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('paiements')->where('id', $paymentId)->update([
+            'revoked_at' => now(),
+            'revoked_by' => 99,
+            'revocation_reason' => 'Abonnement révoqué',
+        ]);
+
+        $service = app(CourseAccessService::class);
+        $this->assertFalse($service->studentHasCategoryAccess($student, 5));
+
+        $this->expectException(DomainException::class);
+        $service->activateCodeForUser($user, 'C-REVOKED-SUBSCRIPTION');
     }
 
     private function createStudentAndPayment(bool $paid): array

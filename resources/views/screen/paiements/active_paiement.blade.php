@@ -11,7 +11,7 @@
         $transactionLogs = collect($transaction?->logs ?? []);
         $statusTone = match ($status) {
             'Validé' => 'success',
-            'Échoué' => 'danger',
+            'Échoué', 'Révoqué' => 'danger',
             default => 'warning',
         };
         $clientName = trim(($paie->user?->name ?? '').' '.($paie->user?->last_name ?? '')) ?: 'Utilisateur inconnu';
@@ -46,7 +46,7 @@
             <article>
                 <span>Codes</span>
                 <strong>{{ $paie->codes->count() }} / {{ $paie->nombre_de_code }}</strong>
-                <small>{{ $paie->codes->where('actif', true)->count() }} utilisé(s)</small>
+                <small>{{ $paie->codes->whereNotNull('revoked_at')->count() }} révoqué(s) · {{ $paie->codes->where('actif', true)->whereNull('revoked_at')->count() }} utilisé(s)</small>
             </article>
             <article>
                 <span>Dernière vérification</span>
@@ -195,13 +195,41 @@
                         <div><p class="admin-eyebrow">Accès</p><h2>Codes générés</h2></div>
                         <span class="payment-section-count">{{ $paie->codes->count() }}</span>
                     </header>
+                    @if ($paie->revoked_at)
+                        <div class="payment-rejection"><strong>Abonnement révoqué le {{ $paie->revoked_at->format('d/m/Y à H:i') }}</strong><span>{{ $paie->revocation_reason }}</span></div>
+                    @endif
                     <div class="payment-code-list">
                         @forelse ($paie->codes as $code)
+                            @php
+                                $codeStatus = $code->revoked_at ? 'Révoqué' : ($code->actif ? 'Utilisé' : 'Disponible');
+                                $codeActions = $code->revoked_at ? [] : [[
+                                    'label' => 'Révoquer',
+                                    'url' => route('codes.revoke', $code),
+                                    'method' => 'POST',
+                                    'style' => 'danger',
+                                    'icon' => 'revoke',
+                                    'confirm' => [
+                                        'title' => 'Révoquer ce code ?',
+                                        'description' => 'Ce code ne pourra plus être utilisé et l’accès déjà accordé sera retiré immédiatement.',
+                                        'warning' => 'Cette action ne peut pas être annulée depuis la console.',
+                                        'confirmLabel' => 'Révoquer le code',
+                                        'tone' => 'danger',
+                                        'reasonLabel' => 'Motif de la révocation',
+                                        'reasonRequired' => true,
+                                    ],
+                                ]];
+                            @endphp
                             <div class="payment-code-item">
-                                <div><code>{{ $code->code }}</code><small>{{ $code->active_date?->format('d/m/Y à H:i') ?: 'Jamais utilisé' }}</small></div>
-                                <span class="status-pill {{ $code->actif ? 'success' : 'muted' }}">{{ $code->actif ? 'Utilisé' : 'Disponible' }}</span>
+                                <div><code>{{ $code->code }}</code><small>{{ $code->revoked_at ? 'Révoqué le '.$code->revoked_at->format('d/m/Y à H:i') : ($code->active_date?->format('d/m/Y à H:i') ?: 'Jamais utilisé') }}</small></div>
+                                <span class="status-pill {{ $code->revoked_at ? 'danger' : ($code->actif ? 'success' : 'muted') }}">{{ $codeStatus }}</span>
                                 @if ($code->eleve?->user)
                                     <p>Utilisé par {{ trim($code->eleve->user->name.' '.$code->eleve->user->last_name) }} · Élève #{{ $code->eleve_id }}</p>
+                                @endif
+                                @if ($code->revocation_reason)
+                                    <p><strong>Motif :</strong> {{ $code->revocation_reason }}</p>
+                                @endif
+                                @if ($codeActions)
+                                    <admin-action-buttons :actions="{{ Js::from($codeActions) }}" compact></admin-action-buttons>
                                 @endif
                             </div>
                         @empty

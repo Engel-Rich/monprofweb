@@ -76,8 +76,8 @@ class DashboardStatisticsService
             'monthly' => $this->monthlySeries(),
             'categories' => $this->topCategories(),
             'operations' => [
-                'activeCodes' => Codes::where('actif', 1)->count(),
-                'unusedCodes' => Codes::where('actif', 0)->count(),
+                'activeCodes' => Codes::where('actif', 1)->whereNull('revoked_at')->count(),
+                'unusedCodes' => Codes::where('actif', 0)->whereNull('revoked_at')->count(),
                 'pendingPayments' => Paiements::whereNull('paiement_date')->count(),
                 'successfulTransactions' => Transaction::where('status', 'SUCCESS')->count(),
                 'failedTransactions' => Transaction::where('status', 'FAILED')->count(),

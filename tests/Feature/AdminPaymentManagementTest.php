@@ -133,6 +133,79 @@ class AdminPaymentManagementTest extends TestCase
         $this->assertStringContainsString('déjà été utilisé', $activation['confirm']['warning']);
     }
 
+    public function test_an_admin_can_revoke_one_code_without_making_it_reusable(): void
+    {
+        [$payment] = $this->createPayment(status: true, transactionStatus: 'SUCCESS');
+        $code = Codes::create([
+            'paiements_id' => $payment->id,
+            'code' => 'C-REVOKE-ONE',
+            'actif' => true,
+            'active_date' => now(),
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('codes.revoke', $code), [
+            'reason' => 'Accès accordé au mauvais élève',
+        ]);
+
+        $response->assertRedirect()->assertSessionHas('success');
+        $code->refresh();
+        $this->assertTrue($code->actif);
+        $this->assertNotNull($code->revoked_at);
+        $this->assertSame($this->admin->id, (int) $code->revoked_by);
+        $this->assertSame('Accès accordé au mauvais élève', $code->revocation_reason);
+    }
+
+    public function test_an_admin_can_revoke_an_entire_subscription_and_all_its_codes(): void
+    {
+        [$payment] = $this->createPayment(status: true, transactionStatus: 'SUCCESS');
+        Codes::create(['paiements_id' => $payment->id, 'code' => 'C-SUB-1']);
+        Codes::create(['paiements_id' => $payment->id, 'code' => 'C-SUB-2', 'actif' => true]);
+
+        $response = $this->actingAs($this->admin)->post(route('paiement.revoke', $payment), [
+            'reason' => 'Abonnement annulé pour fraude',
+        ]);
+
+        $response->assertRedirect()->assertSessionHas('success');
+        $this->assertNotNull($payment->fresh()->revoked_at);
+        $this->assertSame(2, Codes::where('paiements_id', $payment->id)->whereNotNull('revoked_at')->count());
+        $this->assertSame(
+            'Abonnement annulé pour fraude',
+            $payment->fresh()->revocation_reason,
+        );
+    }
+
+    public function test_a_revocation_requires_a_reason(): void
+    {
+        [$payment] = $this->createPayment(status: true, transactionStatus: 'SUCCESS');
+        $code = Codes::create(['paiements_id' => $payment->id, 'code' => 'C-REASON']);
+
+        $this->actingAs($this->admin)
+            ->from(route('codes.index', 'all'))
+            ->post(route('codes.revoke', $code))
+            ->assertRedirect(route('codes.index', 'all'))
+            ->assertSessionHasErrors('reason');
+
+        $this->assertNull($code->fresh()->revoked_at);
+    }
+
+    public function test_a_non_administrator_cannot_revoke_a_code(): void
+    {
+        [$payment] = $this->createPayment(status: true, transactionStatus: 'SUCCESS');
+        $code = Codes::create(['paiements_id' => $payment->id, 'code' => 'C-FORBIDDEN']);
+        $user = User::create([
+            'name' => 'Utilisateur',
+            'email' => 'user@example.test',
+            'password' => 'password',
+            'rule_id' => 2,
+        ]);
+
+        $this->actingAs($user)->post(route('codes.revoke', $code), [
+            'reason' => 'Tentative non autorisée',
+        ])->assertForbidden();
+
+        $this->assertNull($code->fresh()->revoked_at);
+    }
+
     private function createPayment(bool $status, ?string $transactionStatus): array
     {
         $userId = DB::table('users')->insertGetId([
@@ -269,6 +342,9 @@ class AdminPaymentManagementTest extends TestCase
             $table->string('numero_client')->nullable();
             $table->boolean('status')->default(false);
             $table->dateTime('paiement_date')->nullable();
+            $table->dateTime('revoked_at')->nullable();
+            $table->unsignedBigInteger('revoked_by')->nullable();
+            $table->string('revocation_reason')->nullable();
             $table->timestamps();
         });
         Schema::create('eleves', function (Blueprint $table): void {
@@ -283,6 +359,9 @@ class AdminPaymentManagementTest extends TestCase
             $table->string('code')->unique();
             $table->dateTime('active_date')->nullable();
             $table->boolean('actif')->default(false);
+            $table->dateTime('revoked_at')->nullable();
+            $table->unsignedBigInteger('revoked_by')->nullable();
+            $table->string('revocation_reason')->nullable();
             $table->timestamps();
         });
     }

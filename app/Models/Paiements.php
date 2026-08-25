@@ -21,6 +21,9 @@ class Paiements extends Model
         'numero_client',
         'status',
         'transaction_id',
+        'revoked_at',
+        'revoked_by',
+        'revocation_reason',
     ];
 
     protected $table = 'paiements';
@@ -28,6 +31,7 @@ class Paiements extends Model
     protected $casts = [
         'paiement_date' => 'datetime',
         'status' => 'boolean',
+        'revoked_at' => 'datetime',
     ];
 
     /**
@@ -54,5 +58,10 @@ class Paiements extends Model
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
+
+    public function revoker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revoked_by');
     }
 }

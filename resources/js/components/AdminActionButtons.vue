@@ -5,6 +5,7 @@ import {
     BadgeCheck,
     RefreshCw,
     Send,
+    Ban,
     X,
 } from '@lucide/vue';
 
@@ -14,15 +15,17 @@ const props = defineProps({
 });
 
 const confirmation = ref(null);
+const reason = ref('');
 const busy = ref(false);
 const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-const icons = { refresh: RefreshCw, send: Send, activate: BadgeCheck };
+const icons = { refresh: RefreshCw, send: Send, activate: BadgeCheck, revoke: Ban };
 const confirmTone = computed(() => confirmation.value?.confirm?.tone ?? confirmation.value?.style ?? 'primary');
 
 function requestAction(action) {
     if (action.disabled || busy.value) return;
 
     if (action.confirm) {
+        reason.value = '';
         confirmation.value = action;
         return;
     }
@@ -55,6 +58,14 @@ function submitAction(action = confirmation.value) {
     token.name = '_token';
     token.value = csrf;
     form.appendChild(token);
+
+    if (action.confirm?.reasonLabel) {
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason.value.trim();
+        form.appendChild(reasonInput);
+    }
 
     if (method !== 'POST') {
         const override = document.createElement('input');
@@ -108,9 +119,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
                         <AlertTriangle :size="16" />
                         <span>{{ confirmation.confirm.warning }}</span>
                     </div>
+                    <label v-if="confirmation.confirm.reasonLabel" class="admin-confirm-reason">
+                        <span>{{ confirmation.confirm.reasonLabel }}</span>
+                        <textarea v-model="reason" rows="3" maxlength="500" placeholder="Expliquez pourquoi cet accès doit être révoqué…" />
+                        <small>{{ reason.length }} / 500</small>
+                    </label>
                     <footer>
                         <button class="admin-button secondary" type="button" :disabled="busy" @click="closeConfirmation">Annuler</button>
-                        <button class="admin-button" :class="confirmTone" type="button" :disabled="busy" @click="submitAction()">
+                        <button class="admin-button" :class="confirmTone" type="button" :disabled="busy || (confirmation.confirm.reasonRequired && !reason.trim())" @click="submitAction()">
                             <RefreshCw v-if="busy" class="spin" :size="16" />
                             {{ busy ? 'Traitement…' : confirmation.confirm.confirmLabel }}
                         </button>

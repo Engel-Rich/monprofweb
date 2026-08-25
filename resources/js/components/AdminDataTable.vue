@@ -72,7 +72,7 @@ function format(value, type) {
 
 function badgeClass(value) {
     const normalized = String(value ?? '').toLowerCase();
-    if (['échoué', 'inactif', 'failed', 'annulé'].some((status) => normalized.includes(status))) return 'danger';
+    if (['échoué', 'inactif', 'failed', 'annulé', 'révoqué'].some((status) => normalized.includes(status))) return 'danger';
     if (['attente', 'pending'].some((status) => normalized.includes(status))) return 'warning';
     if (['validé', 'activé', 'actif', 'active', 'répondue', 'gratuit', 'success'].some((status) => normalized.includes(status))) return 'success';
     return 'muted';

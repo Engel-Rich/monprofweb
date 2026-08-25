@@ -13,10 +13,16 @@ class PaymentAdminPresenter
         'transaction.provider',
         'transaction.paymentService.provider',
         'codes.eleve.user',
+        'codes.revoker',
+        'revoker',
     ];
 
     public function status(Paiements $payment): string
     {
+        if ($payment->revoked_at !== null) {
+            return 'Révoqué';
+        }
+
         if ($payment->status && $payment->paiement_date) {
             return 'Validé';
         }
@@ -39,7 +45,7 @@ class PaymentAdminPresenter
         $codes = $payment->codes->map(fn ($code) => sprintf(
             '%s · %s%s',
             $code->code,
-            $code->actif ? 'utilisé' : 'disponible',
+            $code->revoked_at !== null ? 'révoqué' : ($code->actif ? 'utilisé' : 'disponible'),
             $code->eleve?->user ? ' par '.trim($code->eleve->user->name.' '.$code->eleve->user->last_name) : '',
         ))->values()->all();
 
@@ -91,6 +97,9 @@ class PaymentAdminPresenter
                     ['label' => 'Nombre de codes', 'value' => (int) $payment->nombre_de_code, 'type' => 'number'],
                     ['label' => 'Codes générés', 'value' => $codes, 'type' => 'tags'],
                     ['label' => 'Date de validation', 'value' => $payment->paiement_date?->format('d/m/Y à H:i:s') ?: 'Non validé'],
+                    ['label' => 'Révoqué le', 'value' => $payment->revoked_at?->format('d/m/Y à H:i:s')],
+                    ['label' => 'Motif de révocation', 'value' => $payment->revocation_reason],
+                    ['label' => 'Révoqué par', 'value' => $payment->revoker ? trim($payment->revoker->name.' '.$payment->revoker->last_name) : null],
                 ]],
                 ['title' => 'Transaction associée', 'note' => $transaction ? 'Transaction #'.$transaction->id : 'Introuvable', 'fields' => [
                     ['label' => 'ID local', 'value' => $transaction?->id ? '#'.$transaction->id : null, 'type' => 'code'],
@@ -146,6 +155,7 @@ class PaymentAdminPresenter
             || $hasUsedCode;
 
         $actions = [];
+        $isRevoked = $payment->revoked_at !== null;
 
         if ($transaction) {
             $actions[] = [
@@ -168,7 +178,7 @@ class PaymentAdminPresenter
             ];
         }
 
-        if ($hasCodes && $payment->status) {
+        if ($hasCodes && $payment->status && ! $isRevoked) {
             $actions[] = [
                 'label' => $payment->codes->count() === 1 ? 'Renvoyer le SMS' : 'Renvoyer les codes',
                 'url' => route('paiement.resend-notification', $payment),
@@ -186,20 +196,41 @@ class PaymentAdminPresenter
             ];
         }
 
-        $actions[] = [
-            'label' => 'Activer le code',
-            'url' => route('paiement.activate', $payment),
-            'method' => 'POST',
-            'style' => $riskyActivation ? 'danger' : 'primary',
-            'icon' => 'activate',
-            'confirm' => [
-                'title' => $payment->status ? 'Relancer l’activation du paiement ?' : 'Activer manuellement ce paiement ?',
-                'description' => 'Cette action valide le paiement et génère les codes manquants.',
-                'warning' => $this->activationWarning($status, $hasUsedCode),
-                'confirmLabel' => $riskyActivation ? 'Forcer l’activation' : 'Activer le code',
-                'tone' => $riskyActivation ? 'danger' : 'primary',
-            ],
-        ];
+        if (! $isRevoked) {
+            $actions[] = [
+                'label' => 'Activer le code',
+                'url' => route('paiement.activate', $payment),
+                'method' => 'POST',
+                'style' => $riskyActivation ? 'danger' : 'primary',
+                'icon' => 'activate',
+                'confirm' => [
+                    'title' => $payment->status ? 'Relancer l’activation du paiement ?' : 'Activer manuellement ce paiement ?',
+                    'description' => 'Cette action valide le paiement et génère les codes manquants.',
+                    'warning' => $this->activationWarning($status, $hasUsedCode),
+                    'confirmLabel' => $riskyActivation ? 'Forcer l’activation' : 'Activer le code',
+                    'tone' => $riskyActivation ? 'danger' : 'primary',
+                ],
+            ];
+
+            if ($payment->status || $hasCodes) {
+                $actions[] = [
+                    'label' => 'Révoquer l’abonnement',
+                    'url' => route('paiement.revoke', $payment),
+                    'method' => 'POST',
+                    'style' => 'danger',
+                    'icon' => 'revoke',
+                    'confirm' => [
+                        'title' => 'Révoquer tout l’abonnement ?',
+                        'description' => 'Tous les codes associés seront révoqués immédiatement et les élèves concernés perdront l’accès aux cours de cette catégorie.',
+                        'warning' => 'Cette action ne rembourse pas automatiquement la transaction et ne peut pas être annulée depuis la console.',
+                        'confirmLabel' => 'Révoquer l’abonnement',
+                        'tone' => 'danger',
+                        'reasonLabel' => 'Motif de la révocation',
+                        'reasonRequired' => true,
+                    ],
+                ];
+            }
+        }
 
         return $actions;
     }

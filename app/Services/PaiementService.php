@@ -37,6 +37,11 @@ class PaiementService
         try {
             $finalization = DB::transaction(function () use ($id): ?array {
                 $paiement = Paiements::query()->lockForUpdate()->findOrFail($id);
+
+                if ($paiement->revoked_at !== null) {
+                    throw new RuntimeException('Cet abonnement est révoqué et ne peut pas être réactivé.');
+                }
+
                 $quantity = max(1, (int) $paiement->nombre_de_code);
                 $existingCodes = Codes::query()
                     ->where('paiements_id', $id)

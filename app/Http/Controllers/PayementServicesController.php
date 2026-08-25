@@ -2,28 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\API\ListPaymentServicesRequest;
 use App\Http\Requests\API\StorePayementServiceRequest;
 use App\Http\Requests\API\UpdatePayementServiceRequest;
 use App\Models\PayementServices;
 use App\Services\FileManager;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use RuntimeException;
 
 class PayementServicesController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(ListPaymentServicesRequest $request): JsonResponse
     {
         try {
-            $query = PayementServices::query()->with('provider');
             $isManagementRoute = $request->routeIs('payment-services.*');
+            $query = PayementServices::query();
 
             if (! $isManagementRoute) {
                 $query->where('is_active', true)
+                    ->where('sens', 'IN')
                     ->whereHas('provider', fn ($query) => $query->where('is_active', true))
                     ->orderBy('id');
             } else {
                 $query
+                    ->with('provider')
                     ->when($request->filled('search'), function ($query) use ($request) {
                         $search = '%'.$request->string('search')->trim().'%';
                         $query->where(function ($query) use ($search) {
@@ -38,9 +40,15 @@ class PayementServicesController extends Controller
                     ->latest();
             }
 
+            $services = $query->get();
+
+            if (! $isManagementRoute) {
+                $services->each->makeHidden(['payment_provider_id', 'provider']);
+            }
+
             return response()->json([
                 'status' => true,
-                'data' => $query->get(),
+                'data' => $services,
                 'error' => null,
             ]);
         } catch (\Throwable $exception) {

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Enums\TransactionStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Paiements;
+use App\Models\Transaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -39,5 +42,36 @@ class TransactionController extends Controller
             ->get();
 
         return $transactions;
+    }
+
+    public function status(Request $request, Transaction $transaction): JsonResponse
+    {
+        abort_unless((int) $transaction->user_id === (int) $request->user()->id, 404);
+
+        $transaction->load('paiement');
+        $status = strtoupper((string) $transaction->status);
+        $isSuccessful = $status === TransactionStatus::SUCCESS->value
+            && (bool) $transaction->paiement?->status;
+        $isFailed = in_array($status, [
+            TransactionStatus::FAILED->value,
+            TransactionStatus::CANCELLED->value,
+            TransactionStatus::ERROR->value,
+        ], true);
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $transaction->id,
+                'reference' => $transaction->reference,
+                'status' => $isSuccessful ? TransactionStatus::SUCCESS->value : $status,
+                'is_final' => $isSuccessful || $isFailed,
+                'is_successful' => $isSuccessful,
+                'failure_reason' => $isFailed
+                    ? ($transaction->raison_reject ?: 'Le fournisseur a refusé le paiement.')
+                    : null,
+                'payment_id' => $transaction->paiement?->id,
+                'payment_validated_at' => $transaction->paiement?->paiement_date?->toIso8601String(),
+            ],
+        ]);
     }
 }

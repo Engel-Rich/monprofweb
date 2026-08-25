@@ -50,7 +50,10 @@ Route::middleware('emei-verify')->group(function () {
     Route::resource('matiere', MatiereController::class)->only(['index']);
     Route::middleware('auth:sanctum')->put('/auth/fcm_token', [UserController::class, 'updateTocken']);
     Route::middleware('auth:sanctum')->put('/auth/update_profile', [UserController::class, 'updateTocken']);
-    Route::middleware('auth:sanctum')->get('/transactions', [ApiTransactionController::class, 'index']);
+    Route::get('/transactions', [ApiTransactionController::class, 'index']);
+    Route::get('/transactions/{transaction}/status', [ApiTransactionController::class, 'status'])
+        ->whereNumber('transaction')
+        ->name('api.transactions.status');
     Route::post('/sugestion', [SuggestionController::class, 'store']);
     Route::resource('categorie', CategorieController::class)->only(['index']);
     Route::get('categorie/status', [CategorieController::class, 'status']);

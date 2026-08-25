@@ -29,7 +29,7 @@ return [
 
     'mundi' => [
         'url' => env('MUNDIPAY_API_URL', env('MUNDY_PAY_API_URL', 'https://gateway.mundipay.pro/api')),
-        'transaction_path' => env('MUNDIPAY_TRANSACTION_PATH', '/transaction'),
+        'transaction_path' => env('MUNDIPAY_TRANSACTION_PATH', 'v1/transaction'),
         'key' => env('MUNDIPAY_API_KEY', env('MUNDY_PAY_API_KEY')),
         'secret' => env('MUNDIPAY_API_SECRET', env('MUNDY_PAY_API_SECRET')),
         'timeout' => (int) env('MUNDIPAY_TIMEOUT', 30),

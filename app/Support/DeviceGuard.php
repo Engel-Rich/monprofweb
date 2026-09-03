@@ -12,6 +12,40 @@ use App\Models\User;
  */
 class DeviceGuard
 {
+    /**
+     * Liste normalisée des adresses exemptées du contrôle d'appareil.
+     *
+     * La normalisation est faite ici plutôt que dans le fichier de
+     * configuration : elle s'applique ainsi aux adresses déclarées dans le code
+     * comme à celles ajoutées par variable d'environnement, et elle n'est pas
+     * figée par « config:cache ».
+     *
+     * @return array<int, string>
+     */
+    public static function bypassEmails(): array
+    {
+        $configured = config('devices.bypass_emails', []);
+
+        // Tolère une liste déjà éclatée comme une chaîne « a@b.com, c@d.com ».
+        $values = is_array($configured)
+            ? $configured
+            : preg_split('/[\s,;]+/', (string) $configured, -1, PREG_SPLIT_NO_EMPTY);
+
+        $emails = [];
+
+        foreach ($values ?: [] as $value) {
+            $email = strtolower(trim((string) $value));
+
+            // Une entrée mal saisie ne doit surtout pas ouvrir une brèche : on
+            // ignore tout ce qui n'est pas une adresse valide.
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = $email;
+            }
+        }
+
+        return array_values(array_unique($emails));
+    }
+
     /** Compte exempté du contrôle (comptes de test/recette). */
     public static function bypasses(?string $email): bool
     {
@@ -19,9 +53,7 @@ class DeviceGuard
             return false;
         }
 
-        $allowed = array_map('strtolower', (array) config('devices.bypass_emails', []));
-
-        return in_array(strtolower($email), $allowed, true);
+        return in_array(strtolower(trim($email)), self::bypassEmails(), true);
     }
 
     /** Le rôle de cet utilisateur est-il soumis au verrouillage ? */

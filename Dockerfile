@@ -22,7 +22,7 @@ ENV APP_ENV=production \
     COMPOSER_CACHE_DIR=/tmp/composer-cache \
     COMPOSER_PROCESS_TIMEOUT=900 \
     COMPOSER_MAX_PARALLEL_HTTP=4 \
-    RUN_MIGRATIONS=false \
+    RUN_MIGRATIONS=true \
     SEED_ADMIN=false
 
 RUN apk add --no-cache \

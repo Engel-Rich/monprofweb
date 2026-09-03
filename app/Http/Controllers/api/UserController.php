@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Enums\ApiErrorCode;
 use App\Http\Controllers\Controller;
 // use App\Http\Requests\UserValidateRequest;
 use App\Models\Classe;
@@ -10,6 +11,7 @@ use App\Models\OTP;
 // use App\Models\Parents;
 use App\Models\User;
 use App\Services\FileManager;
+use App\Support\DeviceGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -54,6 +56,19 @@ class UserController extends Controller
             $user = Auth::user();
 
             $isParent = $user->rule_id == 3;
+
+            // Contrôle de l'appareil AVANT l'émission du jeton : sinon la
+            // connexion réussit puis chaque appel authentifié échoue en 422, et
+            // le mobile n'a aucun moyen de savoir pourquoi.
+            if (! DeviceGuard::isAuthorized($user, $request->header('phone-emei'))) {
+                return response()->json(
+                    ApiErrorCode::DEVICE_NOT_AUTHORIZED->response([
+                        'phone_hint' => DeviceGuard::maskPhone($user->phone),
+                    ]),
+                    422
+                );
+            }
+
             $token = User::find($user->id)->createToken('MONPROF_WEB')->plainTextToken;
             $refreshToken = $this->createRefreshTokem($user);
 
@@ -66,15 +81,6 @@ class UserController extends Controller
                     'data' => ['user' => $user, 'parent' => $parent],
                 ], 200);
             } else {
-                //     if ($user->user_phone_emei != $request->header('phone-emei')) {
-                //   //      Auth::guard('api')->logout();
-                //         return response()->json([
-                //             'status' => false,
-                //             'data' => null,
-                //             'type' => 'phone-emei',
-                //             'error' => 'Vous n\'etes pas autorisé a vous connecter sur ce telephone',
-                //         ], 422);
-                //     }
                 $eleve = Eleve::where('user_id', $user->id)->limit(1)->get()[0];
                 $classe = Classe::where('id', '=', $eleve->classe_id)->limit(1)->get()[0];
                 if ($user->profile_image != null) {

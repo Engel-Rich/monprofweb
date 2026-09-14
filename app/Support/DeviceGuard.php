@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use Illuminate\Http\Request;
 
 /**
  * Règles de rattachement d'un compte à un téléphone.
@@ -54,6 +55,19 @@ class DeviceGuard
         }
 
         return in_array(strtolower(trim($email)), self::bypassEmails(), true);
+    }
+
+    /**
+     * Route par laquelle un utilisateur bloqué réassocie son compte.
+     *
+     * Elle ne peut pas exiger que l'appareil corresponde déjà : ce serait
+     * demander d'être déjà réparé pour pouvoir se réparer.
+     */
+    public static function isRecoveryRoute(Request $request): bool
+    {
+        $routes = (array) config('devices.recovery_routes', []);
+
+        return $routes !== [] && $request->routeIs(...$routes);
     }
 
     /** Le rôle de cet utilisateur est-il soumis au verrouillage ? */

@@ -40,6 +40,22 @@ return [
     ),
 
     /*
+    | Routes de récupération : l'en-tête « phone-emei » y reste obligatoire —
+    | la réinitialisation s'en sert pour enregistrer le nouvel appareil — mais
+    | la correspondance avec l'appareil enregistré n'y est pas exigée.
+    |
+    | Sans cette exemption, un compte dont la session est encore ouverte sur
+    | l'ancien appareil ne peut plus rien faire : l'application est bloquée et
+    | le seul chemin de réparation l'est aussi. La preuve de propriété, ici,
+    | c'est le code reçu par SMS.
+    */
+    'recovery_routes' => [
+        'api.otp.request',
+        'api.otp.verify',
+        'api.user.reset_password',
+    ],
+
+    /*
     | Rôle soumis au verrouillage. Les parents/bienfaiteurs (rule_id 3) peuvent
     | se connecter depuis n'importe quel téléphone.
     */

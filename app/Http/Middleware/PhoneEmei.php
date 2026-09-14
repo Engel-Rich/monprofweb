@@ -32,6 +32,11 @@ class PhoneEmei
             return $next($request);
         }
 
+        // Chemin de réparation : on exige l'en-tête, pas la correspondance.
+        if (DeviceGuard::isRecoveryRoute($request)) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user !== null && ! DeviceGuard::isAuthorized($user, $requestHeaderEmei)) {

@@ -309,6 +309,14 @@ class UserController extends Controller
                 $user->user_phone_emei = $request->header('phone-emei');
                 $user->save();
             }
+
+            // Une réinitialisation change le titulaire effectif de la session :
+            // nouvel appareil, ou nouveau mot de passe. Les jetons émis avant
+            // cet instant doivent cesser de fonctionner, sinon l'ancien
+            // téléphone garde un accès valide sur les routes qui ne passent pas
+            // par le contrôle d'appareil.
+            $user->tokens()->delete();
+
             $otp->update(['is_used' => true]);
 
             return response()->json([
@@ -322,12 +330,6 @@ class UserController extends Controller
                 'data' => null,
                 'error' => $th->getMessage(),
             ], 400);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'error' => $th->getMessage(),
-            ]);
         }
     }
 

@@ -38,5 +38,17 @@
             ];
         })->values();
     @endphp
-    <x-admin.data-table eyebrow="Utilisateurs" title="Élèves" description="Consultez les comptes élèves et leurs informations scolaires." :columns="$columns" :items="$items" :paginator="$eleves" search-placeholder="Nom, email, téléphone ou classe…" />
+    <x-admin.data-table
+        eyebrow="Utilisateurs"
+        title="Élèves"
+        description="Consultez les comptes élèves et leurs informations scolaires."
+        :columns="$columns"
+        :items="$items"
+        :paginator="$eleves"
+        :filters="$filterDefinitions"
+        :filter-values="$filters"
+        :per-page="$perPage"
+        :server-side="true"
+        search-placeholder="Nom, email, téléphone, classe ou établissement…"
+    />
 @endsection

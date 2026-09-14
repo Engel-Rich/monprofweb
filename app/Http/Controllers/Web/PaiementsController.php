@@ -8,13 +8,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RevokeAccessRequest;
 use App\Jobs\SendMailJob;
 use App\Jobs\VerifyPendingTransaction;
+use App\Models\Categorie;
 use App\Models\Paiements;
+use App\Models\PayementServices;
+use App\Models\PaymentProvider;
 use App\Services\AccessRevocationService;
 use App\Services\Admin\PaymentAdminPresenter;
 use App\Services\PaiementService;
 use App\Services\Payments\TransactionFinalizationService;
 use App\Services\SendMessageService;
+use App\Support\TableFilters;
 use Illuminate\Bus\Dispatcher;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -23,19 +28,181 @@ use Throwable;
 
 class PaiementsController extends Controller
 {
-    public function index(PaymentAdminPresenter $presenter): View
+    /** Clés de filtre reconnues sur la liste des paiements. */
+    private const FILTER_KEYS = [
+        'search', 'status', 'provider', 'service', 'categorie',
+        'code', 'email', 'phone', 'reference', 'from', 'to',
+    ];
+
+    public function index(Request $request, PaymentAdminPresenter $presenter): View
     {
         $this->ensureAdmin();
 
-        $payments = Paiements::query()
+        $filters = TableFilters::values($request, self::FILTER_KEYS);
+        $perPage = TableFilters::perPage($request);
+
+        $payments = $this->filteredQuery($filters)
             ->with(PaymentAdminPresenter::RELATIONS)
             ->latest('id')
-            ->paginate(25);
+            ->paginate($perPage)
+            ->withQueryString();
+
         $items = $payments->getCollection()
             ->map(fn (Paiements $payment) => $presenter->item($payment))
             ->values();
 
-        return view('screen.paiements.index_paiements', compact('payments', 'items'));
+        return view('screen.paiements.index_paiements', [
+            'payments' => $payments,
+            'items' => $items,
+            'filters' => $filters,
+            'perPage' => $perPage,
+            'filterDefinitions' => $this->filterDefinitions(),
+        ]);
+    }
+
+    /**
+     * @param  array<string, string>  $filters
+     */
+    private function filteredQuery(array $filters): Builder
+    {
+        return Paiements::query()
+            // Recherche transversale : le client, son compte, la transaction
+            // fournisseur, les codes émis et la catégorie achetée.
+            ->when($filters['search'], function (Builder $query, string $term): void {
+                $query->where(function (Builder $query) use ($term): void {
+                    $query->whereLike('numero_payeur', $term)
+                        ->orWhereLike('numero_client', $term)
+                        ->orWhereHas('user', fn (Builder $user) => $user
+                            ->whereLike('name', $term)
+                            ->orWhereLike('last_name', $term)
+                            ->orWhereLike('email', $term)
+                            ->orWhereLike('phone', $term))
+                        ->orWhereHas('transaction', fn (Builder $transaction) => $transaction
+                            ->whereLike('reference', $term)
+                            ->orWhereLike('provider_reference', $term)
+                            ->orWhereLike('payment_token', $term)
+                            ->orWhereLike('phone_number', $term))
+                        ->orWhereHas('codes', fn (Builder $code) => $code->whereLike('code', $term))
+                        ->orWhereHas('categorie', fn (Builder $categorie) => $categorie->whereLike('libelle', $term));
+
+                    // Recherche par identifiant de paiement ou de transaction.
+                    if (ctype_digit($term)) {
+                        $query->orWhere('id', (int) $term)
+                            ->orWhere('transaction_id', (int) $term);
+                    }
+                });
+            })
+            ->when($filters['status'], fn (Builder $query, string $status) => $this->applyStatusFilter($query, $status))
+            ->when($filters['provider'], fn (Builder $query, string $provider) => $query
+                ->whereHas('transaction', fn (Builder $transaction) => $transaction
+                    ->where('payment_provider_id', $provider)))
+            ->when($filters['service'], fn (Builder $query, string $service) => $query
+                ->whereHas('transaction', fn (Builder $transaction) => $transaction
+                    ->where('service_id', $service)))
+            ->when($filters['categorie'], fn (Builder $query, string $categorie) => $query
+                ->where('categorie_id', $categorie))
+            ->when($filters['code'], fn (Builder $query, string $code) => $query
+                ->whereHas('codes', fn (Builder $codes) => $codes->whereLike('code', $code)))
+            ->when($filters['email'], fn (Builder $query, string $email) => $query
+                ->whereHas('user', fn (Builder $user) => $user->whereLike('email', $email)))
+            ->when($filters['phone'], fn (Builder $query, string $phone) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereLike('numero_payeur', $phone)
+                    ->orWhereLike('numero_client', $phone)
+                    ->orWhereHas('user', fn (Builder $user) => $user->whereLike('phone', $phone))
+                    ->orWhereHas('transaction', fn (Builder $transaction) => $transaction
+                        ->whereLike('phone_number', $phone))))
+            ->when($filters['reference'], fn (Builder $query, string $reference) => $query
+                ->whereHas('transaction', fn (Builder $transaction) => $transaction
+                    ->whereLike('reference', $reference)
+                    ->orWhereLike('provider_reference', $reference)
+                    ->orWhereLike('payment_token', $reference)))
+            ->when($filters['from'], fn (Builder $query, string $from) => $query
+                ->whereDate('created_at', '>=', $from))
+            ->when($filters['to'], fn (Builder $query, string $to) => $query
+                ->whereDate('created_at', '<=', $to));
+    }
+
+    /**
+     * Les statuts affichés sont calculés par le présentateur à partir de trois
+     * sources (révocation, validation locale, statut fournisseur) : le filtre
+     * reproduit exactement ces règles en SQL.
+     */
+    private function applyStatusFilter(Builder $query, string $status): Builder
+    {
+        $validated = fn (Builder $query) => $query
+            ->whereNull('revoked_at')
+            ->where('status', true)
+            ->whereNotNull('paiement_date');
+
+        $transactionStatusIs = fn (Builder $query, string $value) => $query
+            ->whereNull('revoked_at')
+            ->where(fn (Builder $inner) => $inner->where('status', false)->orWhereNull('paiement_date'))
+            ->whereHas('transaction', fn (Builder $transaction) => $transaction
+                ->whereRaw('UPPER(status) = ?', [$value]));
+
+        return match ($status) {
+            'revoked' => $query->whereNotNull('revoked_at'),
+            'validated' => $validated($query),
+            'failed' => $transactionStatusIs($query, TransactionStatus::FAILED->value),
+            'processing' => $transactionStatusIs($query, TransactionStatus::PROCESSING->value),
+            'to_finalize' => $transactionStatusIs($query, TransactionStatus::SUCCESS->value),
+            'pending' => $query
+                ->whereNull('revoked_at')
+                ->where(fn (Builder $inner) => $inner->where('status', false)->orWhereNull('paiement_date'))
+                ->where(fn (Builder $inner) => $inner
+                    ->whereDoesntHave('transaction')
+                    ->orWhereHas('transaction', fn (Builder $transaction) => $transaction
+                        ->whereRaw('UPPER(status) = ?', [TransactionStatus::PENDING->value]))),
+            default => $query,
+        };
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterDefinitions(): array
+    {
+        return [
+            [
+                'key' => 'status',
+                'label' => 'Statut',
+                'display' => 'chips',
+                'allLabel' => 'Tous',
+                'options' => [
+                    ['value' => 'pending', 'label' => 'En attente'],
+                    ['value' => 'processing', 'label' => 'Traitement'],
+                    ['value' => 'to_finalize', 'label' => 'À finaliser'],
+                    ['value' => 'validated', 'label' => 'Validé'],
+                    ['value' => 'failed', 'label' => 'Échoué'],
+                    ['value' => 'revoked', 'label' => 'Révoqué'],
+                ],
+            ],
+            [
+                'key' => 'provider',
+                'label' => 'Fournisseur',
+                'type' => 'select',
+                'options' => TableFilters::options(PaymentProvider::orderBy('name')->get(), 'name'),
+            ],
+            [
+                'key' => 'service',
+                'label' => 'Service de paiement',
+                'type' => 'select',
+                'options' => TableFilters::options(PayementServices::orderBy('title')->get(), 'title'),
+            ],
+            [
+                'key' => 'categorie',
+                'label' => 'Catégorie',
+                'type' => 'select',
+                'options' => TableFilters::options(Categorie::orderBy('libelle')->get()),
+            ],
+            ['key' => 'code', 'label' => 'Code', 'type' => 'text', 'placeholder' => 'Code contient…'],
+            ['key' => 'email', 'label' => 'Email', 'type' => 'text', 'placeholder' => 'Email contient…'],
+            ['key' => 'phone', 'label' => 'Téléphone', 'type' => 'text', 'placeholder' => 'Numéro contient…'],
+            ['key' => 'reference', 'label' => 'Référence', 'type' => 'text', 'placeholder' => 'Référence contient…'],
+            ['key' => 'from', 'label' => 'Depuis le', 'type' => 'date'],
+            ['key' => 'to', 'label' => 'Jusqu’au', 'type' => 'date'],
+        ];
     }
 
     public function active(Paiements $paiement, PaymentAdminPresenter $presenter): View

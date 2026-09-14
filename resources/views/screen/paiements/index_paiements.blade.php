@@ -21,6 +21,10 @@
         :columns="$columns"
         :items="$items"
         :paginator="$payments"
-        search-placeholder="Client, téléphone, transaction, provider ou catégorie…"
+        :filters="$filterDefinitions"
+        :filter-values="$filters"
+        :per-page="$perPage"
+        :server-side="true"
+        search-placeholder="Client, email, téléphone, référence, code ou catégorie…"
     />
 @endsection

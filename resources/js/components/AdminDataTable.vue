@@ -25,21 +25,43 @@ const props = defineProps({
     pagination: { type: Object, default: () => ({}) },
     searchPlaceholder: { type: String, default: 'Rechercher…' },
     filters: { type: Array, default: () => [] },
+    // Mode serveur : la recherche et les filtres deviennent des paramètres
+    // d'URL traités par le contrôleur. Indispensable dès que la table dépasse
+    // une page — filtrer côté navigateur ne voit que les lignes déjà chargées.
+    serverSide: { type: Boolean, default: false },
+    filterValues: { type: Object, default: () => ({}) },
+    searchKey: { type: String, default: 'search' },
+    perPage: { type: [Number, String], default: null },
+    perPageOptions: { type: Array, default: () => [15, 25, 50, 100, 200] },
 });
 
-const query = ref('');
+const query = ref(props.serverSide ? (props.filterValues[props.searchKey] ?? '') : '');
 const statusFilter = ref('all');
-const extraFilters = ref(Object.fromEntries(props.filters.map((filter) => [filter.key, 'all'])));
+const extraFilters = ref(Object.fromEntries(props.filters.map((filter) => [
+    filter.key,
+    props.serverSide ? (props.filterValues[filter.key] ?? '') : 'all',
+])));
+const perPageValue = ref(String(props.perPage ?? ''));
 const showFilters = ref(false);
 const selected = ref(null);
 const drawer = ref(null);
+const navigating = ref(false);
 
 const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 });
 const number = new Intl.NumberFormat('fr-FR');
 
 const statuses = computed(() => [...new Set(props.items.map((item) => item.status).filter(Boolean))]);
 const searchableKeys = computed(() => props.columns.filter((column) => column.searchable !== false).map((column) => column.key));
+
+// Filtre affiché sous forme de pastilles plutôt que de liste déroulante.
+const chipFilter = computed(() => props.filters.find((filter) => filter.display === 'chips') ?? null);
+const panelFilters = computed(() => props.filters.filter((filter) => filter.display !== 'chips'));
+
 const filteredItems = computed(() => {
+    // En mode serveur le contrôleur a déjà filtré : re-filtrer ici masquerait
+    // des lignes légitimes de la page courante.
+    if (props.serverSide) return props.items;
+
     const needle = query.value.trim().toLocaleLowerCase('fr');
 
     return props.items.filter((item) => {
@@ -56,7 +78,69 @@ const filteredItems = computed(() => {
         return matchesStatus && matchesExtraFilters && matchesSearch;
     });
 });
-const activeExtraFilterCount = computed(() => Object.values(extraFilters.value).filter((value) => value !== 'all').length);
+const activeExtraFilterCount = computed(() => Object.entries(extraFilters.value)
+    .filter(([key, value]) => {
+        if (value === '' || value === null || value === undefined || value === 'all') return false;
+        return props.serverSide ? chipFilter.value?.key !== key : true;
+    }).length);
+
+const activeFilterCount = computed(() => activeExtraFilterCount.value + (query.value.trim() ? 1 : 0));
+
+function buildUrl(overrides = {}) {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    const set = (key, value) => {
+        const normalized = value === null || value === undefined ? '' : String(value);
+        if (normalized === '' || normalized === 'all') params.delete(key);
+        else params.set(key, normalized);
+    };
+
+    set(props.searchKey, query.value.trim());
+    props.filters.forEach((filter) => set(filter.key, extraFilters.value[filter.key]));
+    if (props.perPage) set('per_page', perPageValue.value);
+    Object.entries(overrides).forEach(([key, value]) => set(key, value));
+
+    // Tout changement de critère renvoie au début de la liste : rester page 7
+    // d'un résultat qui n'en compte plus que 2 donne une page vide.
+    params.delete('page');
+    url.search = params.toString();
+
+    return url.toString();
+}
+
+function applyFilters(overrides = {}) {
+    if (!props.serverSide) return;
+    navigating.value = true;
+    window.location.assign(buildUrl(overrides));
+}
+
+function resetFilters() {
+    if (props.serverSide) {
+        navigating.value = true;
+        window.location.assign(window.location.pathname);
+        return;
+    }
+    query.value = '';
+    statusFilter.value = 'all';
+    Object.keys(extraFilters.value).forEach((key) => { extraFilters.value[key] = 'all'; });
+}
+
+let searchTimer = null;
+watch(query, () => {
+    if (!props.serverSide) return;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => applyFilters(), 450);
+});
+
+function onFilterChange() {
+    clearTimeout(searchTimer);
+    applyFilters();
+}
+
+function clearSearch() {
+    query.value = '';
+    if (props.serverSide) onFilterChange();
+}
 
 function resolve(item, key) {
     return key.split('.').reduce((value, part) => value?.[part], item);
@@ -93,10 +177,16 @@ function onKeydown(event) {
 }
 
 watch(selected, (value) => document.body.classList.toggle('admin-no-scroll', Boolean(value)));
-onMounted(() => window.addEventListener('keydown', onKeydown));
+onMounted(() => {
+    window.addEventListener('keydown', onKeydown);
+    // Panneau déplié d'entrée de jeu quand un filtre est déjà appliqué :
+    // sinon un résultat restreint semble être la liste complète.
+    if (props.serverSide && activeExtraFilterCount.value) showFilters.value = true;
+});
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     document.body.classList.remove('admin-no-scroll');
+    clearTimeout(searchTimer);
 });
 </script>
 
@@ -121,24 +211,43 @@ onBeforeUnmount(() => {
             <div class="table-toolbar">
                 <label class="admin-search-field">
                     <Search :size="18" />
-                    <input v-model="query" type="search" :placeholder="searchPlaceholder">
-                    <span v-if="query" role="button" tabindex="0" @click="query = ''"><X :size="15" /></span>
+                    <input v-model="query" type="search" :placeholder="searchPlaceholder" @keydown.enter.prevent="onFilterChange">
+                    <span v-if="query" role="button" tabindex="0" @click="clearSearch"><X :size="15" /></span>
                 </label>
-                <div class="table-filter-chips" v-if="statuses.length">
+                <div v-if="serverSide && chipFilter" class="table-filter-chips">
+                    <button type="button" :class="{ active: !extraFilters[chipFilter.key] }" @click="extraFilters[chipFilter.key] = ''; onFilterChange()">{{ chipFilter.allLabel ?? 'Tous' }}</button>
+                    <button v-for="option in chipFilter.options" :key="option.value" type="button" :class="{ active: String(extraFilters[chipFilter.key]) === String(option.value) }" @click="extraFilters[chipFilter.key] = String(option.value); onFilterChange()">{{ option.label }}</button>
+                </div>
+                <div v-else-if="!serverSide && statuses.length" class="table-filter-chips">
                     <button type="button" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">Tous</button>
                     <button v-for="status in statuses" :key="status" type="button" :class="{ active: statusFilter === status }" @click="statusFilter = status">{{ status }}</button>
                 </div>
-                <button v-if="filters.length" class="admin-button secondary compact" :class="{ active: activeExtraFilterCount }" type="button" @click="showFilters = !showFilters"><SlidersHorizontal :size="16" /> Filtres <span v-if="activeExtraFilterCount">{{ activeExtraFilterCount }}</span></button>
+                <button v-if="panelFilters.length" class="admin-button secondary compact" :class="{ active: activeExtraFilterCount }" type="button" @click="showFilters = !showFilters"><SlidersHorizontal :size="16" /> Filtres <span v-if="activeExtraFilterCount">{{ activeExtraFilterCount }}</span></button>
             </div>
-            <div v-if="filters.length && showFilters" class="table-advanced-filters">
-                <label v-for="filter in filters" :key="filter.key">
+            <div v-if="panelFilters.length && showFilters" class="table-advanced-filters">
+                <label v-for="filter in panelFilters" :key="filter.key">
                     <span>{{ filter.label }}</span>
-                    <select v-model="extraFilters[filter.key]">
-                        <option value="all">{{ filter.allLabel ?? 'Tous' }}</option>
+                    <input
+                        v-if="filter.type === 'text'"
+                        v-model="extraFilters[filter.key]"
+                        type="search"
+                        :placeholder="filter.placeholder ?? 'Contient…'"
+                        @keydown.enter.prevent="onFilterChange"
+                        @search="onFilterChange"
+                    >
+                    <input
+                        v-else-if="filter.type === 'date'"
+                        v-model="extraFilters[filter.key]"
+                        type="date"
+                        @change="onFilterChange"
+                    >
+                    <select v-else v-model="extraFilters[filter.key]" @change="onFilterChange">
+                        <option :value="serverSide ? '' : 'all'">{{ filter.allLabel ?? 'Tous' }}</option>
                         <option v-for="option in filter.options" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
                     </select>
                 </label>
-                <button v-if="activeExtraFilterCount" type="button" @click="Object.keys(extraFilters).forEach((key) => extraFilters[key] = 'all')">Réinitialiser</button>
+                <button v-if="serverSide" type="button" class="filters-apply" @click="onFilterChange">Appliquer</button>
+                <button v-if="activeFilterCount" type="button" @click="resetFilters">Réinitialiser</button>
             </div>
 
             <div class="admin-table-wrap">
@@ -164,11 +273,22 @@ onBeforeUnmount(() => {
                         </tr>
                     </tbody>
                 </table>
-                <div v-if="!filteredItems.length" class="admin-empty-state large"><Search :size="28" /><strong>Aucun résultat</strong><span>Essayez une autre recherche ou retirez un filtre.</span></div>
+                <div v-if="!filteredItems.length" class="admin-empty-state large">
+                    <Search :size="28" />
+                    <strong>Aucun résultat</strong>
+                    <span>Essayez une autre recherche ou retirez un filtre.</span>
+                    <button v-if="serverSide && activeFilterCount" type="button" class="admin-button secondary compact" @click="resetFilters">Réinitialiser les filtres</button>
+                </div>
             </div>
 
             <div v-if="pagination.total" class="table-pagination">
                 <p>Affichage de <strong>{{ pagination.from ?? 0 }}–{{ pagination.to ?? 0 }}</strong> sur <strong>{{ pagination.total }}</strong></p>
+                <label v-if="perPage" class="table-per-page">
+                    <span>Par page</span>
+                    <select v-model="perPageValue" @change="onFilterChange">
+                        <option v-for="size in perPageOptions" :key="size" :value="String(size)">{{ size }}</option>
+                    </select>
+                </label>
                 <div>
                     <a :href="pagination.prevUrl || '#'" :class="{ disabled: !pagination.prevUrl }" aria-label="Page précédente"><ChevronLeft :size="17" /></a>
                     <span>Page {{ pagination.currentPage }} sur {{ pagination.lastPage }}</span>

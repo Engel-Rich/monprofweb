@@ -40,5 +40,19 @@
             ],
         ])->values();
     @endphp
-    <x-admin.data-table eyebrow="Bibliothèque pédagogique" title="Cours" description="Gérez le catalogue vidéo, sa classification et ses droits d’accès." :columns="$columns" :items="$items" :paginator="$cours" :create-url="route('cours.create')" create-label="Nouveau cours" search-placeholder="Titre, matière, classe ou catégorie…" />
+    <x-admin.data-table
+        eyebrow="Bibliothèque pédagogique"
+        title="Cours"
+        description="Gérez le catalogue vidéo, sa classification et ses droits d’accès."
+        :columns="$columns"
+        :items="$items"
+        :paginator="$cours"
+        :create-url="route('cours.create')"
+        create-label="Nouveau cours"
+        :filters="$filterDefinitions"
+        :filter-values="$filters"
+        :per-page="$perPage"
+        :server-side="true"
+        search-placeholder="Titre, description, matière, classe, catégorie ou auteur…"
+    />
 @endsection

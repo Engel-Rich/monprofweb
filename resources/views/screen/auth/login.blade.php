@@ -81,7 +81,6 @@
                 </button>
             </form>
 
-            <p class="auth-register">Vous n’avez pas encore de compte ? <a href="{{ route('auth.register') }}">Créer un compte</a></p>
             <p class="auth-security">Vos identifiants sont transmis via une connexion sécurisée.</p>
         </div>
     </section>
@@ -180,9 +179,6 @@
     .auth-submit:hover { background: #0b659c; transform: translateY(-1px); }
     .auth-submit:focus-visible { outline: 3px solid rgba(15, 120, 184, .24); outline-offset: 3px; }
     .auth-submit svg { width: 18px; height: 18px; }
-    .auth-register { margin: 27px 0 0; color: #7b8795; text-align: center; font-size: 11px; }
-    .auth-register a { color: #0f78b8; font-weight: 800; }
-    .auth-register a:hover { text-decoration: underline; }
     .auth-security { margin: 28px 0 0; color: #a0a8b3; text-align: center; font-size: 9px; }
 
     @media (max-width: 860px) {

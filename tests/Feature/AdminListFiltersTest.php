@@ -234,6 +234,34 @@ class AdminListFiltersTest extends TestCase
         $this->assertCourseResults(['title' => '_'], []);
     }
 
+    /**
+     * Non-régression vidéo : l'URL doit être résolue exactement comme avant
+     * l'ajout des filtres — même dossier « Videos/{catégorie}/{classe}/{matière} »,
+     * même nom de fichier stocké — sinon les vidéos ne s'affichent plus en prod.
+     */
+    public function test_course_video_urls_are_resolved_exactly_as_before(): void
+    {
+        $storage = new RecordingFileStorage;
+        $this->app->instance(FileStorageService::class, $storage);
+
+        $classe = $this->classe('Terminale C');
+        $matiere = $this->matiere('Mathématiques');
+        $categorie = $this->categorie('Lycée');
+        $id = $this->course('Les limites', 'Description', $matiere, $classe, $categorie);
+        DB::table('cours')->where('id', $id)->update(['video_url' => 'uuid-limites.mp4']);
+
+        $cours = $this->courses([]);
+
+        $this->assertSame(
+            [['uuid-limites.mp4', 'Videos/Lycée/Terminale C/Mathématiques']],
+            $storage->gets,
+        );
+        $this->assertSame(
+            'https://files.test/Videos/Lycée/Terminale C/Mathématiques/uuid-limites.mp4',
+            $cours->first()->video_url,
+        );
+    }
+
     // ─── Utilitaires ──────────────────────────────────────────────────────
 
     private function payments(array $query)
@@ -546,6 +574,34 @@ class FakeFileStorage implements FileStorageService
     public function get(string $filename, string $folder): ?string
     {
         return $filename;
+    }
+
+    public function getDecrypted(string $filename, string $folder): ?string
+    {
+        return $filename;
+    }
+}
+
+class RecordingFileStorage implements FileStorageService
+{
+    /** @var array<int, array{0: string, 1: string}> */
+    public array $gets = [];
+
+    public function store(UploadedFile $file, string $folder): ?string
+    {
+        return $file->getClientOriginalName();
+    }
+
+    public function delete(string $filename, string $folder): bool
+    {
+        return true;
+    }
+
+    public function get(string $filename, string $folder): ?string
+    {
+        $this->gets[] = [$filename, $folder];
+
+        return "https://files.test/{$folder}/{$filename}";
     }
 
     public function getDecrypted(string $filename, string $folder): ?string

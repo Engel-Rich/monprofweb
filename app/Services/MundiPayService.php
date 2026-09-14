@@ -29,7 +29,7 @@ class MundiPayService implements PaymentStrategy
         $this->apiSecret = (string) config('payments.mundi.secret');
         $configuredUrl = rtrim((string) config('payments.mundi.url'), '/');
         $this->baseUrl = (string) preg_replace('#/smobilpay$#i', '', $configuredUrl);
-        $this->transactionPath = trim((string) config('payments.mundi.transaction_path', '/transaction'), '/');
+        $this->transactionPath = trim((string) config('payments.mundi.transaction_path', 'v1/transaction'), '/');
 
         if (blank($this->apiKey) || blank($this->apiSecret) || blank($this->baseUrl) || blank($this->transactionPath)) {
             throw new RuntimeException('Configuration MundiPay incomplète.');

@@ -246,8 +246,10 @@ onBeforeUnmount(() => {
                         <option v-for="option in filter.options" :key="option.value" :value="String(option.value)">{{ option.label }}</option>
                     </select>
                 </label>
-                <button v-if="serverSide" type="button" class="filters-apply" @click="onFilterChange">Appliquer</button>
-                <button v-if="activeFilterCount" type="button" @click="resetFilters">Réinitialiser</button>
+                <div v-if="serverSide || activeFilterCount" class="table-advanced-filters-actions">
+                    <button v-if="activeFilterCount" type="button" class="filters-reset" @click="resetFilters">Réinitialiser</button>
+                    <button v-if="serverSide" type="button" class="filters-apply" @click="onFilterChange">Appliquer</button>
+                </div>
             </div>
 
             <div class="admin-table-wrap">

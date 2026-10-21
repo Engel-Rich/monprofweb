@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Eleve;
+use App\Models\Paiements;
 use App\Models\User;
 use App\Services\CourseAccessService;
 use DomainException;
@@ -45,6 +46,7 @@ class CourseAccessServiceTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('categorie_id');
+            $table->integer('nombre_de_code')->default(1);
             $table->dateTime('paiement_date')->nullable();
             $table->boolean('status')->default(false);
             $table->dateTime('revoked_at')->nullable();
@@ -155,6 +157,100 @@ class CourseAccessServiceTest extends TestCase
 
         $this->expectException(DomainException::class);
         $service->activateCodeForUser($user, 'C-REVOKED-SUBSCRIPTION');
+    }
+
+    public function test_a_student_with_an_active_subscription_cannot_activate_another_code_for_the_category(): void
+    {
+        [$user, $student, $paymentId] = $this->createStudentAndPayment(true);
+        DB::table('codes')->insert([
+            ['paiements_id' => $paymentId, 'eleve_id' => $student->id, 'code' => 'C-ALREADY-ACTIVE', 'actif' => true, 'active_date' => now(), 'created_at' => now(), 'updated_at' => now()],
+            ['paiements_id' => $this->createPayment($user->id), 'eleve_id' => null, 'code' => 'C-SECOND-CODE', 'actif' => false, 'active_date' => null, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        try {
+            app(CourseAccessService::class)->activateCodeForUser($user, 'C-SECOND-CODE');
+            $this->fail('Le second code de la même catégorie aurait dû être refusé.');
+        } catch (DomainException $exception) {
+            $this->assertStringContainsString('déjà un abonnement actif pour la catégorie Premium', $exception->getMessage());
+        }
+
+        $this->assertFalse((bool) DB::table('codes')->where('code', 'C-SECOND-CODE')->value('actif'));
+    }
+
+    public function test_the_single_code_of_a_student_payer_is_activated_automatically(): void
+    {
+        [, $student, $paymentId] = $this->createStudentAndPayment(true);
+        $this->insertCode($paymentId, 'C-AUTO');
+
+        $code = app(CourseAccessService::class)->autoActivateForPayer(Paiements::find($paymentId));
+
+        $this->assertNotNull($code);
+        $this->assertTrue((bool) $code->actif);
+        $this->assertSame($student->id, (int) $code->eleve_id);
+    }
+
+    public function test_a_batch_of_codes_is_never_activated_automatically(): void
+    {
+        [, , $paymentId] = $this->createStudentAndPayment(true);
+        DB::table('paiements')->where('id', $paymentId)->update(['nombre_de_code' => 2]);
+        $this->insertCode($paymentId, 'C-BATCH-1');
+        $this->insertCode($paymentId, 'C-BATCH-2');
+
+        $this->assertNull(app(CourseAccessService::class)->autoActivateForPayer(Paiements::find($paymentId)));
+        $this->assertSame(0, DB::table('codes')->where('actif', true)->count());
+    }
+
+    public function test_a_code_paid_by_a_non_student_is_never_activated_automatically(): void
+    {
+        DB::table('categories')->insert(['id' => 5, 'libelle' => 'Premium', 'created_at' => now(), 'updated_at' => now()]);
+        $parent = User::create(['name' => 'Parent']);
+        $paymentId = $this->createPayment($parent->id);
+        $this->insertCode($paymentId, 'C-PARENT');
+
+        $this->assertNull(app(CourseAccessService::class)->autoActivateForPayer(Paiements::find($paymentId)));
+        $this->assertFalse((bool) DB::table('codes')->where('code', 'C-PARENT')->value('actif'));
+    }
+
+    public function test_a_student_who_already_has_the_category_keeps_the_new_code_available(): void
+    {
+        [$user, $student, $paymentId] = $this->createStudentAndPayment(true);
+        DB::table('codes')->insert([
+            'paiements_id' => $paymentId,
+            'eleve_id' => $student->id,
+            'code' => 'C-CURRENT',
+            'actif' => true,
+            'active_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $secondPaymentId = $this->createPayment($user->id);
+        $this->insertCode($secondPaymentId, 'C-SPARE');
+
+        $this->assertNull(app(CourseAccessService::class)->autoActivateForPayer(Paiements::find($secondPaymentId)));
+        $this->assertFalse((bool) DB::table('codes')->where('code', 'C-SPARE')->value('actif'));
+    }
+
+    private function createPayment(int $userId): int
+    {
+        return DB::table('paiements')->insertGetId([
+            'user_id' => $userId,
+            'categorie_id' => 5,
+            'paiement_date' => now(),
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function insertCode(int $paymentId, string $value): void
+    {
+        DB::table('codes')->insert([
+            'paiements_id' => $paymentId,
+            'code' => $value,
+            'actif' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     private function createStudentAndPayment(bool $paid): array

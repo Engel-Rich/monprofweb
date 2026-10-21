@@ -9,33 +9,24 @@ use App\Models\PaymentProvider;
 use App\Models\Transaction;
 use App\Services\Payments\PaymentFactory;
 use App\Services\Payments\TransactionFinalizationService;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class VerifyPendingTransaction implements ShouldQueue
+/**
+ * Exécuté uniquement en synchrone (commande de polling, revérification admin) :
+ * l'appelant a besoin du résultat, et aucun worker de file ne tourne.
+ */
+class VerifyPendingTransaction
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    public int $tries = 3;
-
-    public int $timeout = 30;
+    use Dispatchable;
 
     public function __construct(
         public readonly int $transactionId,
         public readonly bool $dryRun = false,
         public readonly bool $force = false,
     ) {}
-
-    public function backoff(): array
-    {
-        return [5, 15, 30];
-    }
 
     public function handle(TransactionFinalizationService $finalizer): TransactionVerificationResult
     {

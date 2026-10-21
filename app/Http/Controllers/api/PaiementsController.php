@@ -94,7 +94,7 @@ class PaiementsController extends Controller
 
             // transaction Post DTO
             $token = $user->fcm_token;
-            if ($validated['nombre_de_code'] === 1) {
+            if ((int) $validated['nombre_de_code'] === 1) {
                 $notifOneCode = new PushNotifictaionService("Votre nouvelle commande de code chez Monprof a été enrégistrée avec succès\n Veillez valider le paiment et vous recevrez le code par SMS.\n Monprof vous remercie 🤗🤗🤗🤗", 'Nouvelle Commande de code Monprof');
                 $notifOneCode->sendNotificationToToken($token);
             } else {

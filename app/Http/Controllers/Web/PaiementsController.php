@@ -139,7 +139,7 @@ class PaiementsController extends Controller
             ->whereNull('revoked_at')
             ->where(fn (Builder $inner) => $inner->where('status', false)->orWhereNull('paiement_date'))
             ->whereHas('transaction', fn (Builder $transaction) => $transaction
-                ->whereRaw('UPPER(status) = ?', [$value]));
+                ->where('status', $value));
 
         return match ($status) {
             'revoked' => $query->whereNotNull('revoked_at'),
@@ -153,7 +153,7 @@ class PaiementsController extends Controller
                 ->where(fn (Builder $inner) => $inner
                     ->whereDoesntHave('transaction')
                     ->orWhereHas('transaction', fn (Builder $transaction) => $transaction
-                        ->whereRaw('UPPER(status) = ?', [TransactionStatus::PENDING->value]))),
+                        ->where('status', TransactionStatus::PENDING->value))),
             default => $query,
         };
     }
@@ -239,7 +239,7 @@ class PaiementsController extends Controller
             return back()->with('error', 'La référence fournisseur est absente : la transaction ne peut pas être revérifiée.');
         }
 
-        $result = $dispatcher->dispatchNow(
+        $result = $dispatcher->dispatchSync(
             new VerifyPendingTransaction($paiement->transaction->id, dryRun: false, force: true)
         );
 

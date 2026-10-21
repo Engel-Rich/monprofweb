@@ -96,7 +96,7 @@ class VerifyPendingTransactions extends Command
         $results = [];
 
         Transaction::query()
-            ->whereRaw('UPPER(status) IN (?, ?)', [
+            ->whereIn('status', [
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
             ])
@@ -120,7 +120,7 @@ class VerifyPendingTransactions extends Command
                     }
 
                     try {
-                        $result = app(Dispatcher::class)->dispatchNow(
+                        $result = app(Dispatcher::class)->dispatchSync(
                             new VerifyPendingTransaction(
                                 $transaction->id,
                                 (bool) $this->option('dry-run'),
@@ -177,7 +177,7 @@ class VerifyPendingTransactions extends Command
         $results = [];
 
         Transaction::query()
-            ->whereRaw('UPPER(status) IN (?, ?)', [
+            ->whereIn('status', [
                 TransactionStatus::PENDING->value,
                 TransactionStatus::PROCESSING->value,
             ])

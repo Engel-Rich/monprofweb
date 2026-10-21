@@ -9,6 +9,7 @@ use App\Services\PaiementService;
 use App\Services\PushNotifictaionService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TransactionFinalizationService
 {
@@ -77,108 +78,137 @@ class TransactionFinalizationService
             return false;
         }
 
+        // SMS et push sont lents : ils partent une fois le verrou libéré, pour
+        // qu'un envoi qui traîne ne le laisse pas expirer en pleine finalisation.
+        // Ils partent aussi si la suite échoue : un paiement finalisé ne serait
+        // plus jamais renotifié.
+        $afterRelease = [];
+
         try {
-            $transaction = Transaction::query()
-                ->with(['paiement', 'provider'])
-                ->find($transaction->id);
-
-            if (! $transaction) {
-                return false;
-            }
-
-            $targetStatus = $this->databaseStatus($status);
-            $metadata = $this->appendCheckMetadata($transaction, $targetStatus, $source, $context);
-
-            if ($transaction->status === TransactionStatus::SUCCESS->value
-                && $targetStatus !== TransactionStatus::SUCCESS->value) {
-                $transaction->update(['metadatas' => $metadata]);
-                Log::warning('Statut fournisseur tardif ignoré après un succès définitif.', [
-                    'local_transaction_id' => $transaction->id,
-                    'received_status' => $targetStatus,
-                ]);
-
-                return false;
-            }
-
-            if ($transaction->status === TransactionStatus::FAILED->value
-                && $targetStatus === TransactionStatus::PENDING->value) {
-                $transaction->update(['metadatas' => $metadata]);
-
-                return false;
-            }
-
-            if ($targetStatus === TransactionStatus::PENDING->value) {
-                $transaction->update(['metadatas' => $metadata]);
-
-                return false;
-            }
-
-            if ($targetStatus === TransactionStatus::SUCCESS->value
-                && strtoupper((string) $transaction->internal_service) === 'MONPROF_PURCHASE') {
-                $paiement = $transaction->paiement;
-
-                if (! $paiement) {
-                    Log::warning('Paiement associé encore introuvable, la transaction reste en attente.', [
-                        'local_transaction_id' => $transaction->id,
-                    ]);
-
-                    $transaction->update(['metadatas' => $metadata]);
-
-                    return false;
-                }
-
-                $this->paiementService->validePayment([
-                    ...$context,
-                    'paiement' => $paiement->id,
-                ]);
-
-                $paiement->refresh();
-                $expectedCodes = max(1, (int) $paiement->nombre_de_code);
-
-                if (! $paiement->status
-                    || blank($paiement->paiement_date)
-                    || $paiement->codes()->count() < $expectedCodes) {
-                    Log::warning('Le paiement n’est pas complètement finalisé, la transaction reste en attente.', [
-                        'local_transaction_id' => $transaction->id,
-                        'paiement_id' => $paiement->id,
-                    ]);
-                    $transaction->update(['metadatas' => $metadata]);
-
-                    return false;
-                }
-            }
-
-            $previousStatus = $transaction->status;
-            $updates = [
-                'status' => $targetStatus,
-                'metadatas' => $metadata,
-            ];
-
-            if ($conclusionMethod = $this->conclusionMethod($source)) {
-                $updates['conclusion_method'] = $conclusionMethod;
-            }
-
-            if ($targetStatus === TransactionStatus::FAILED->value && filled($reason)) {
-                $updates['raison_reject'] = $reason;
-            }
-
-            $transaction->update($updates);
-
-            if ($previousStatus !== $targetStatus) {
-                $this->notifyUser($transaction->fresh(), $reason);
-            }
-
-            Log::info('Transaction réconciliée avec le fournisseur.', [
-                'local_transaction_id' => $transaction->id,
-                'source' => $source,
-                'previous_status' => $previousStatus,
-                'status' => $targetStatus,
-            ]);
-
-            return true;
+            return $this->reconcile($transaction, $status, $context, $reason, $source, $afterRelease);
         } finally {
             $lock->release();
+
+            foreach ($afterRelease as $notify) {
+                try {
+                    $notify();
+                } catch (Throwable $exception) {
+                    Log::error('Notification de finalisation non envoyée.', [
+                        'local_transaction_id' => $transaction->id,
+                        'exception' => $exception,
+                    ]);
+                }
+            }
         }
+    }
+
+    /** @param array<int, callable> $afterRelease */
+    private function reconcile(
+        Transaction $transaction,
+        TransactionStatus $status,
+        array $context,
+        ?string $reason,
+        string $source,
+        array &$afterRelease,
+    ): bool {
+        $transaction = Transaction::query()
+            ->with(['paiement', 'provider'])
+            ->find($transaction->id);
+
+        if (! $transaction) {
+            return false;
+        }
+
+        $targetStatus = $this->databaseStatus($status);
+        $metadata = $this->appendCheckMetadata($transaction, $targetStatus, $source, $context);
+
+        if ($transaction->status === TransactionStatus::SUCCESS->value
+            && $targetStatus !== TransactionStatus::SUCCESS->value) {
+            $transaction->update(['metadatas' => $metadata]);
+            Log::warning('Statut fournisseur tardif ignoré après un succès définitif.', [
+                'local_transaction_id' => $transaction->id,
+                'received_status' => $targetStatus,
+            ]);
+
+            return false;
+        }
+
+        if ($transaction->status === TransactionStatus::FAILED->value
+            && $targetStatus === TransactionStatus::PENDING->value) {
+            $transaction->update(['metadatas' => $metadata]);
+
+            return false;
+        }
+
+        if ($targetStatus === TransactionStatus::PENDING->value) {
+            $transaction->update(['metadatas' => $metadata]);
+
+            return false;
+        }
+
+        if ($targetStatus === TransactionStatus::SUCCESS->value
+            && strtoupper((string) $transaction->internal_service) === 'MONPROF_PURCHASE') {
+            $paiement = $transaction->paiement;
+
+            if (! $paiement) {
+                Log::warning('Paiement associé encore introuvable, la transaction reste en attente.', [
+                    'local_transaction_id' => $transaction->id,
+                ]);
+
+                $transaction->update(['metadatas' => $metadata]);
+
+                return false;
+            }
+
+            if ($finalization = $this->paiementService->finalizePayment($paiement->id)) {
+                $afterRelease[] = fn () => $this->paiementService->notifyFinalization($finalization);
+            }
+
+            $paiement->refresh();
+            $expectedCodes = max(1, (int) $paiement->nombre_de_code);
+
+            if (! $paiement->status
+                || blank($paiement->paiement_date)
+                || $paiement->codes()->count() < $expectedCodes) {
+                Log::warning('Le paiement n’est pas complètement finalisé, la transaction reste en attente.', [
+                    'local_transaction_id' => $transaction->id,
+                    'paiement_id' => $paiement->id,
+                ]);
+                $transaction->update(['metadatas' => $metadata]);
+
+                return false;
+            }
+        }
+
+        $previousStatus = $transaction->status;
+        $updates = [
+            'status' => $targetStatus,
+            'metadatas' => $metadata,
+        ];
+
+        if ($conclusionMethod = $this->conclusionMethod($source)) {
+            $updates['conclusion_method'] = $conclusionMethod;
+        }
+
+        if ($targetStatus === TransactionStatus::FAILED->value && filled($reason)) {
+            $updates['raison_reject'] = $reason;
+        }
+
+        $transaction->update($updates);
+
+        if ($previousStatus !== $targetStatus) {
+            $notified = $transaction->fresh();
+            $afterRelease[] = fn () => $this->notifyUser($notified, $reason);
+        }
+
+        Log::info('Transaction réconciliée avec le fournisseur.', [
+            'local_transaction_id' => $transaction->id,
+            'source' => $source,
+            'previous_status' => $previousStatus,
+            'status' => $targetStatus,
+        ]);
+
+        return true;
     }
 
     private function databaseStatus(TransactionStatus $status): string

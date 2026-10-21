@@ -4,6 +4,8 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ActiveCourseJob;
+use App\Models\Codes;
+use App\Models\User;
 use App\Services\CourseAccessService;
 use App\Services\PushNotifictaionService;
 use Illuminate\Http\Request;
@@ -26,22 +28,6 @@ class CodeController extends Controller
             ]);
             $user = Auth::user();
             $code = $courseAccess->activateCodeForUser($user, $validated['code']);
-            $student = $user->eleve()->with('classe')->first();
-            $category = $code->paiement->categorie;
-
-            if ($user->fcm_token) {
-                $notificationService = new PushNotifictaionService(
-                    "Félicitations {$user->name} {$user->last_name}, vous venez de débloquer les cours de la catégorie {$category->libelle} dans votre classe {$student->classe->libelle}.",
-                    'Validation des cours dans Monprof',
-                );
-                ActiveCourseJob::dispatch($notificationService, $user->fcm_token);
-            }
-
-            return response()->json([
-                'status' => true,
-                'data' => $code,
-                'error' => null,
-            ]);
         } catch (\Throwable $th) {
             Log::warning('Activation de code refusée.', [
                 'user_id' => Auth::id(),
@@ -49,6 +35,43 @@ class CodeController extends Controller
             ]);
 
             return response()->json(['status' => false, 'data' => null, 'error' => $th->getMessage()], 400);
+        }
+
+        // Le code est déjà activé en base : un échec de notification ne doit
+        // pas faire croire à l'élève que l'activation a échoué.
+        $this->notifyActivation($user, $code);
+
+        return response()->json([
+            'status' => true,
+            'data' => $code,
+            'error' => null,
+        ]);
+    }
+
+    private function notifyActivation(User $user, Codes $code): void
+    {
+        if (! $user->fcm_token) {
+            return;
+        }
+
+        try {
+            $category = $code->paiement?->categorie?->libelle;
+            $classe = $user->eleve()->with('classe')->first()?->classe?->libelle;
+            $message = "Félicitations {$user->name} {$user->last_name}, vous venez de débloquer les cours"
+                .($category ? " de la catégorie {$category}" : '')
+                .($classe ? " dans votre classe {$classe}" : '')
+                .'.';
+
+            ActiveCourseJob::dispatch(
+                new PushNotifictaionService($message, 'Validation des cours dans Monprof'),
+                $user->fcm_token,
+            );
+        } catch (\Throwable $th) {
+            Log::error('Notification d’activation de code non envoyée.', [
+                'user_id' => $user->id,
+                'code_id' => $code->id,
+                'exception' => $th,
+            ]);
         }
     }
 }

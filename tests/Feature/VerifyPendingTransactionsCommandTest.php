@@ -95,6 +95,20 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             $table->string('code')->unique();
             $table->dateTime('active_date')->nullable();
             $table->boolean('actif')->default(false);
+            $table->dateTime('revoked_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('eleves', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('classe_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('categories', function (Blueprint $table): void {
+            $table->id();
+            $table->string('libelle');
             $table->timestamps();
         });
     }
@@ -245,6 +259,73 @@ class VerifyPendingTransactionsCommandTest extends TestCase
         $this->assertFalse((bool) DB::table('codes')->where('paiements_id', $paymentId)->value('actif'));
     }
 
+    public function test_success_activates_the_code_when_the_payer_is_the_student(): void
+    {
+        Http::fake();
+        PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
+        PaymentFactory::extend('TEST_AUTO_ACTIVATION', PollingPaymentStrategy::class);
+        $provider = PaymentProvider::create([
+            'name' => 'Test activation automatique',
+            'code' => 'TEST_AUTO_ACTIVATION',
+            'is_active' => true,
+        ]);
+        $userId = DB::table('users')->insertGetId([
+            'name' => 'Élève payeur',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $studentId = DB::table('eleves')->insertGetId([
+            'user_id' => $userId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $transaction = Transaction::create([
+            'payment_provider_id' => $provider->id,
+            'provider_reference' => 'provider-auto-activation',
+            'reference' => 'MPP-auto-activation',
+            'amount' => '1000',
+            'phone_number' => '690000011',
+            'status' => TransactionStatus::PENDING->value,
+            'sens' => 'IN',
+            'internal_service' => 'MONPROF_PURCHASE',
+            'user_id' => $userId,
+        ]);
+        $paymentId = DB::table('paiements')->insertGetId([
+            'transaction_id' => $transaction->id,
+            'user_id' => $userId,
+            'categorie_id' => 10,
+            'nombre_de_code' => 1,
+            'montant' => 1000,
+            'numero_payeur' => '690000011',
+            'numero_client' => '690000011',
+            'status' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $exitCode = Artisan::call('payments:verify-pending', [
+            '--once' => true,
+            '--transaction' => $transaction->id,
+        ]);
+
+        $this->assertSame(0, $exitCode, Artisan::output());
+        $this->assertSame(TransactionStatus::SUCCESS->value, $transaction->fresh()->status);
+        $code = DB::table('codes')->where('paiements_id', $paymentId)->first();
+        $this->assertTrue((bool) $code->actif);
+        $this->assertSame($studentId, (int) $code->eleve_id);
+        $this->assertNotNull($code->active_date);
+        Http::assertSent(fn ($request) => str_contains((string) data_get($request->data(), 'message'), 'activé automatiquement'));
+    }
+
+    public function test_generated_codes_are_random_and_unambiguous(): void
+    {
+        $service = app(PaiementService::class);
+        $codes = collect(range(1, 50))->map(fn () => $service->genererCodeActivation());
+
+        $this->assertCount(50, $codes->unique());
+        $codes->each(fn (string $code) => $this->assertMatchesRegularExpression('/^C[A-HJKMNP-Z2-9]{10}$/', $code));
+    }
+
     public function test_provider_success_without_a_linked_payment_is_reported_as_an_error(): void
     {
         PollingPaymentStrategy::$verificationStatus = TransactionStatus::SUCCESS->value;
@@ -337,7 +418,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             'internal_service' => 'TEST',
         ]);
         $paymentService = Mockery::mock(PaiementService::class);
-        $paymentService->shouldNotReceive('validePayment');
+        $paymentService->shouldNotReceive('finalizePayment');
         $finalizer = new TransactionFinalizationService($paymentService);
 
         $applied = $finalizer->applyStatus($transaction, TransactionStatus::PENDING);
@@ -357,7 +438,7 @@ class VerifyPendingTransactionsCommandTest extends TestCase
             'internal_service' => 'TEST',
         ]);
         $paymentService = Mockery::mock(PaiementService::class);
-        $paymentService->shouldNotReceive('validePayment');
+        $paymentService->shouldNotReceive('finalizePayment');
         $finalizer = new TransactionFinalizationService($paymentService);
 
         $applied = $finalizer->applyStatus(

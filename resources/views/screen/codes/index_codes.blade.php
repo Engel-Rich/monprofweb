@@ -12,8 +12,17 @@
             ['key' => 'activatedAt', 'label' => 'Activé le'],
         ];
         $items = $codes->map(function ($item) {
-            $student = trim(($item->eleve?->user?->name ?? '').' '.($item->eleve?->user?->last_name ?? '')) ?: 'Non attribué';
+            $isGrant = (bool) $item->paiement?->isAdminGrant();
+            // Un code offert est destiné à un élève précis avant même d'être activé.
+            $holder = $item->eleve?->user ?? ($isGrant ? $item->paiement?->user : null);
+            $student = trim(($holder?->name ?? '').' '.($holder?->last_name ?? '')) ?: 'Non attribué';
             $status = $item->revoked_at ? 'Révoqué' : ($item->actif ? 'Activé' : 'En attente');
+            $actions = $isGrant ? [[
+                'label' => 'Voir et partager',
+                'url' => route('codes.grant.show', $item),
+                'method' => 'GET',
+                'icon' => 'send',
+            ]] : [];
             return [
                 'id' => $item->id,
                 'code' => $item->code,
@@ -36,10 +45,11 @@
                     ['title' => 'Attribution', 'fields' => [
                         ['label' => 'Élève', 'value' => $student],
                         ['label' => 'Numéro SMS', 'value' => $item->paiement?->numero_client, 'type' => 'phone'],
-                        ['label' => 'Paiement', 'value' => $item->paiements_id ? '#'.$item->paiements_id : null],
+                        ['label' => 'Origine', 'value' => $isGrant ? 'Offert depuis la console' : 'Achat'],
+                        ['label' => 'Paiement', 'value' => ! $isGrant && $item->paiements_id ? '#'.$item->paiements_id : null],
                     ]],
                 ],
-                'actions' => $item->revoked_at ? [] : [[
+                'actions' => $item->revoked_at ? $actions : [...$actions, [
                     'label' => 'Révoquer le code',
                     'url' => route('codes.revoke', $item),
                     'method' => 'POST',
@@ -58,5 +68,5 @@
             ];
         })->values();
     @endphp
-    <x-admin.data-table eyebrow="Accès" title="Codes d’activation" description="Contrôlez la génération, l’attribution et l’activation des codes élèves." :columns="$columns" :items="$items" :paginator="$codes" search-placeholder="Code, élève ou numéro SMS…" />
+    <x-admin.data-table eyebrow="Accès" title="Codes d’activation" description="Contrôlez la génération, l’attribution et l’activation des codes élèves." :columns="$columns" :items="$items" :paginator="$codes" :create-url="route('codes.grant.create')" create-label="Attribuer un code" search-placeholder="Code, élève ou numéro SMS…" />
 @endsection

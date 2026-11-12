@@ -18,7 +18,7 @@ class CodesController extends Controller
     {
         $this->ensureAdmin();
 
-        $query = Codes::with('eleve.user', 'paiement', 'revoker')->latest('id');
+        $query = Codes::with('eleve.user', 'paiement.user', 'revoker')->latest('id');
 
         if ($status === 'actif') {
             $query->where('actif', true)->whereNull('revoked_at');

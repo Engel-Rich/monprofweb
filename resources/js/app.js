@@ -6,6 +6,7 @@ import AdminDataTable from './components/AdminDataTable.vue';
 import AdminStatistics from './components/AdminStatistics.vue';
 import CourseUploadForm from './components/CourseUploadForm.vue';
 import AdminActionButtons from './components/AdminActionButtons.vue';
+import AdminCopyButton from './components/AdminCopyButton.vue';
 
 const adminRoot = document.getElementById('admin-app');
 
@@ -18,5 +19,6 @@ if (adminRoot) {
     app.component('admin-statistics', AdminStatistics);
     app.component('course-upload-form', CourseUploadForm);
     app.component('admin-action-buttons', AdminActionButtons);
+    app.component('admin-copy-button', AdminCopyButton);
     app.mount(adminRoot);
 }

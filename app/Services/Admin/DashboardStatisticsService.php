@@ -24,7 +24,7 @@ class DashboardStatisticsService
         $coursesCurrent = Cours::whereBetween('created_at', [$currentPeriodStart, $now])->count();
         $coursesPrevious = Cours::whereBetween('created_at', [$previousPeriodStart, $currentPeriodStart])->count();
 
-        $validatedPayments = Paiements::query()->whereNotNull('paiement_date');
+        $validatedPayments = Paiements::query()->purchases()->whereNotNull('paiement_date');
         $currentRevenue = (float) (clone $validatedPayments)
             ->whereBetween('paiement_date', [$currentPeriodStart, $now])
             ->sum('montant');
@@ -78,7 +78,7 @@ class DashboardStatisticsService
             'operations' => [
                 'activeCodes' => Codes::where('actif', 1)->whereNull('revoked_at')->count(),
                 'unusedCodes' => Codes::where('actif', 0)->whereNull('revoked_at')->count(),
-                'pendingPayments' => Paiements::whereNull('paiement_date')->count(),
+                'pendingPayments' => Paiements::purchases()->whereNull('paiement_date')->count(),
                 'successfulTransactions' => Transaction::where('status', 'SUCCESS')->count(),
                 'failedTransactions' => Transaction::where('status', 'FAILED')->count(),
             ],
@@ -99,7 +99,7 @@ class DashboardStatisticsService
             ];
         });
 
-        $payments = Paiements::whereNotNull('paiement_date')
+        $payments = Paiements::purchases()->whereNotNull('paiement_date')
             ->whereBetween('paiement_date', [$months->first()['start'], $months->last()['end']])
             ->get(['montant', 'paiement_date']);
 
@@ -120,8 +120,8 @@ class DashboardStatisticsService
     private function topCategories(): array
     {
         return Categorie::query()
-            ->withSum(['paiements as validated_revenue' => fn ($query) => $query->whereNotNull('paiement_date')], 'montant')
-            ->withCount(['paiements as validated_payments_count' => fn ($query) => $query->whereNotNull('paiement_date')])
+            ->withSum(['paiements as validated_revenue' => fn ($query) => $query->purchases()->whereNotNull('paiement_date')], 'montant')
+            ->withCount(['paiements as validated_payments_count' => fn ($query) => $query->purchases()->whereNotNull('paiement_date')])
             ->orderByDesc('validated_revenue')
             ->limit(5)
             ->get()
@@ -137,7 +137,8 @@ class DashboardStatisticsService
 
     private function recentPayments(): array
     {
-        return Paiements::with(['user:id,name,last_name,email', 'categorie:id,libelle'])
+        return Paiements::purchases()
+            ->with(['user:id,name,last_name,email', 'categorie:id,libelle'])
             ->latest()
             ->limit(6)
             ->get()

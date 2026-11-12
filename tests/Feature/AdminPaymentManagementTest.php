@@ -345,6 +345,7 @@ class AdminPaymentManagementTest extends TestCase
             $table->dateTime('revoked_at')->nullable();
             $table->unsignedBigInteger('revoked_by')->nullable();
             $table->string('revocation_reason')->nullable();
+            $table->string('origin', 20)->default('PURCHASE');
             $table->timestamps();
         });
         Schema::create('eleves', function (Blueprint $table): void {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminStatisticsController;
 use App\Http\Controllers\Web\CategoriController;
 use App\Http\Controllers\Web\ClasseController;
+use App\Http\Controllers\Web\CodeGrantController;
 use App\Http\Controllers\Web\CodesController;
 use App\Http\Controllers\Web\CoursController;
 use App\Http\Controllers\Web\EleveController;
@@ -47,6 +48,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('reponse', ReponsesController::class)->only(['store', 'update']);
     Route::resource('paiements', ReponsesController::class)->only(['index']);
     Route::prefix('/code')->group(function () {
+        // Déclarées avant « /{status} », qui capturerait « attribuer ».
+        Route::controller(CodeGrantController::class)->group(function () {
+            Route::get('/attribuer', 'create')->name('codes.grant.create');
+            Route::post('/attribuer', 'store')->name('codes.grant.store');
+            Route::get('/attribution/{code}', 'show')->name('codes.grant.show');
+            Route::post('/attribution/{code}/sms', 'sendSms')->name('codes.grant.sms');
+            Route::post('/attribution/{code}/email', 'sendEmail')->name('codes.grant.email');
+        });
         Route::get('/{status}', [CodesController::class, 'index'])->name('codes.index');
         Route::post('/{code}/revoke', [CodesController::class, 'revoke'])->name('codes.revoke');
     });

@@ -66,6 +66,7 @@ class PaiementsController extends Controller
     private function filteredQuery(array $filters): Builder
     {
         return Paiements::query()
+            ->purchases()
             // Recherche transversale : le client, son compte, la transaction
             // fournisseur, les codes émis et la catégorie achetée.
             ->when($filters['search'], function (Builder $query, string $term): void {

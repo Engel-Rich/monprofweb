@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Paiements extends Model
 {
     use HasFactory;
+
+    public const ORIGIN_PURCHASE = 'PURCHASE';
+
+    /** Code offert depuis la console d'administration, sans transaction. */
+    public const ORIGIN_ADMIN_GRANT = 'ADMIN_GRANT';
 
     protected $fillable = [
         'paiement_date',
@@ -24,6 +30,9 @@ class Paiements extends Model
         'revoked_at',
         'revoked_by',
         'revocation_reason',
+        'origin',
+        'granted_by',
+        'grant_reason',
     ];
 
     protected $table = 'paiements';
@@ -63,5 +72,21 @@ class Paiements extends Model
     public function revoker(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revoked_by');
+    }
+
+    public function granter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'granted_by');
+    }
+
+    public function isAdminGrant(): bool
+    {
+        return $this->origin === self::ORIGIN_ADMIN_GRANT;
+    }
+
+    /** Achats réels, hors codes offerts par l'administration. */
+    public function scopePurchases(Builder $query): Builder
+    {
+        return $query->where('origin', self::ORIGIN_PURCHASE);
     }
 }

@@ -35,6 +35,12 @@
                         ['label' => 'Inscrit le', 'value' => $student->created_at?->format('d/m/Y à H:i')],
                     ]],
                 ],
+                'actions' => [[
+                    'label' => 'Attribuer un code',
+                    'url' => route('codes.grant.create', ['eleve' => $student->id]),
+                    'method' => 'GET',
+                    'icon' => 'activate',
+                ]],
             ];
         })->values();
     @endphp

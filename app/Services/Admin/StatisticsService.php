@@ -14,7 +14,7 @@ class StatisticsService
         $classId = $selectedClass?->id;
 
         $validatedPayments = function ($query) use ($classId) {
-            $query->whereNotNull('paiement_date');
+            $query->purchases()->whereNotNull('paiement_date');
 
             if ($classId) {
                 $query->whereHas('user.eleve', fn ($student) => $student->where('classe_id', $classId));
